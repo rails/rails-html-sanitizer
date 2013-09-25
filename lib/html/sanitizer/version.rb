@@ -1,5 +1,5 @@
 module Html
-  module Sanitizer
+  class Sanitizer
     VERSION = "0.0.1"
   end
 end
