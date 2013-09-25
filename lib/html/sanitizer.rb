@@ -83,18 +83,6 @@ module Html
     end
 
     class << self
-      def protocol_separator
-        ActiveSupport::Deprecation.warn('protocol_separator has been deprecated and has no effect.')
-      end
-
-      def protocol_separator=(value)
-        protocol_separator
-      end
-
-      def bad_tags
-        ActiveSupport::Deprecation.warn('bad_tags has been deprecated and has no effect. You can still affect the tags being sanitized using ActionView::WhiteListSanitizer.bad_tags= which changes the allowed_tags.')
-      end
-
       def bad_tags=(tags)
         allowed_tags.replace(allowed_tags - tags)
       end
