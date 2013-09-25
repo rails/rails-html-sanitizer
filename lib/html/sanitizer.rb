@@ -1,6 +1,3 @@
-# require 'active_support/core_ext/class/attribute'
-# require 'active_support/core_ext/object/blank'
-
 module Html
   XPATHS_TO_REMOVE = %w{.//script .//form comment()}
 
