@@ -4,3 +4,4 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'loofah', github: 'flavorjones/loofah'
+gem 'rails-dom-testing', github: 'kaspth/rails-dom-testing'

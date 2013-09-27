@@ -1,10 +1,10 @@
 require "minitest/autorun"
 require "minitest/mock"
 require "html-sanitizer"
-require "html/testing/assertions/dom"
+require "rails/dom/testing/assertions/dom_assertions"
 
 class SanitizersTest < Minitest::Test
-  include Html::Assertions::DomAssertions
+  include Rails::Dom::Testing::Assertions::DomAssertions
 
   def setup
     @sanitizer = nil # used by assert_sanitizer
