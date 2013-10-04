@@ -70,18 +70,6 @@ module Html
       Loofah::HTML5::Scrub.scrub_css(style_string)
     end
 
-    def protocol_separator
-      self.class.protocol_separator
-    end
-
-    def protocol_separator=(value)
-      self.class.protocol_separator
-    end
-
-    def bad_tags
-      self.class.bad_tags
-    end
-
     class << self
       def bad_tags=(tags)
         allowed_tags.replace(allowed_tags - tags)
