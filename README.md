@@ -1,4 +1,4 @@
-# Html::Sanitizer
+# Rails::Html::Sanitizer
 
 TODO: Write a gem description
 

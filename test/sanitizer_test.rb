@@ -1,5 +1,5 @@
 require "minitest/autorun"
-require "html-sanitizer"
+require "rails-html-sanitizer"
 require "rails/dom/testing/assertions/dom_assertions"
 
 class SanitizersTest < Minitest::Test
@@ -11,52 +11,52 @@ class SanitizersTest < Minitest::Test
 
   def test_sanitizer_sanitize_raises_not_implemented_error
     assert_raises NotImplementedError do
-      Html::Sanitizer.new.sanitize('')
+      Rails::Html::Sanitizer.new.sanitize('')
     end
   end
 
   def test_remove_xpaths_removes_an_xpath
-    sanitizer = Html::Sanitizer.new
+    sanitizer = Rails::Html::Sanitizer.new
     html = %(<h1>hello <script>code!</script></h1>)
     assert_equal %(<h1>hello </h1>), sanitizer.remove_xpaths(html, %w(.//script))
   end
 
   def test_remove_xpaths_removes_all_occurences_of_xpath
-    sanitizer = Html::Sanitizer.new
+    sanitizer = Rails::Html::Sanitizer.new
     html = %(<section><header><script>code!</script></header><p>hello <script>code!</script></p></section>)
     assert_equal %(<section><header></header><p>hello </p></section>), sanitizer.remove_xpaths(html, %w(.//script))
   end
 
   def test_remove_xpaths_called_with_faulty_xpath
-    sanitizer = Html::Sanitizer.new
+    sanitizer = Rails::Html::Sanitizer.new
     assert_raises Nokogiri::XML::XPath::SyntaxError do
       sanitizer.remove_xpaths('<h1>hello<h1>', %w(..faulty_xpath))
     end
   end
 
   def test_remove_xpaths_called_with_xpath_string
-    sanitizer = Html::Sanitizer.new
+    sanitizer = Rails::Html::Sanitizer.new
     assert_equal '', sanitizer.remove_xpaths('<a></a>', './/a')
   end
 
   def test_remove_xpaths_called_with_enumerable_xpaths
-    sanitizer = Html::Sanitizer.new
+    sanitizer = Rails::Html::Sanitizer.new
     assert_equal '', sanitizer.remove_xpaths('<a><span></span></a>', %w(.//a .//span))
   end
 
   def test_remove_xpaths_called_with_string_returns_string
-    sanitizer = Html::Sanitizer.new
+    sanitizer = Rails::Html::Sanitizer.new
     assert_equal '<a></a>', sanitizer.remove_xpaths('<a></a>', [])
   end
 
   def test_remove_xpaths_called_with_fragment_returns_fragment
-    sanitizer = Html::Sanitizer.new
+    sanitizer = Rails::Html::Sanitizer.new
     fragment = sanitizer.remove_xpaths(Loofah.fragment('<a></a>'), [])
     assert_kind_of Loofah::HTML::DocumentFragment, fragment
   end
 
   def test_strip_tags_with_quote
-    sanitizer = Html::FullSanitizer.new
+    sanitizer = Rails::Html::FullSanitizer.new
     string    = '<" <img src="trollface.gif" onload="alert(1)"> hi'
 
     assert_equal ' hi', sanitizer.sanitize(string)
@@ -64,7 +64,7 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_tags_pending
     skip "Pending. These methods don't pass."
-    sanitizer = Html::FullSanitizer.new
+    sanitizer = Rails::Html::FullSanitizer.new
 
     # Loofah doesn't see any elements in this
     # Actual: ""
@@ -96,7 +96,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_tags
-    sanitizer = Html::FullSanitizer.new
+    sanitizer = Rails::Html::FullSanitizer.new
 
     assert_equal("Dont touch me", sanitizer.sanitize("Dont touch me"))
     assert_equal("This is a test.", sanitizer.sanitize("<p>This <u>is<u> a <a href='test.html'><strong>test</strong></a>.</p>"))
@@ -111,7 +111,7 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_links_pending
     skip "Pending. Extracted from test_strip_links."
-    sanitizer = Html::LinkSanitizer.new
+    sanitizer = Rails::Html::LinkSanitizer.new
 
     # Only one of the a-tags are parsed here
     # Actual: "a href='hello'&gt;all <b>day</b> long/a&gt;"
@@ -123,7 +123,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_links
-    sanitizer = Html::LinkSanitizer.new
+    sanitizer = Rails::Html::LinkSanitizer.new
     assert_equal "Dont touch me", sanitizer.sanitize("Dont touch me")
     assert_equal "on my mind\nall day long", sanitizer.sanitize("<a href='almost'>on my mind</a>\n<A href='almost'>all day long</A>")
     assert_equal "0wn3d", sanitizer.sanitize("<a href='http://www.rubyonrails.com/'><a href='http://www.rubyonrails.com/' onlclick='steal()'>0wn3d</a></a>")
@@ -161,7 +161,7 @@ class SanitizersTest < Minitest::Test
     assert_sanitized raw, %{src="javascript:bang" <img width="5">foo</img>, <span>bar</span>}
   end
 
-  Html::WhiteListSanitizer.allowed_tags.each do |tag_name|
+  Rails::Html::WhiteListSanitizer.allowed_tags.each do |tag_name|
     define_method "test_should_allow_#{tag_name}_tag" do
       assert_sanitized "start <#{tag_name} title=\"1\" onclick=\"foo\">foo <bad>bar</bad> baz</#{tag_name}> end", %(start <#{tag_name} title="1">foo bar baz</#{tag_name}> end)
     end
@@ -198,37 +198,37 @@ class SanitizersTest < Minitest::Test
 
   def test_should_allow_custom_tags
     text = "<u>foo</u>"
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     assert_equal(text, sanitizer.sanitize(text, :tags => %w(u)))
   end
 
   def test_should_allow_only_custom_tags
     text = "<u>foo</u> with <i>bar</i>"
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     assert_equal("<u>foo</u> with bar", sanitizer.sanitize(text, :tags => %w(u)))
   end
 
   def test_should_allow_custom_tags_with_attributes
     text = %(<blockquote cite="http://example.com/">foo</blockquote>)
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     assert_equal(text, sanitizer.sanitize(text))
   end
 
   def test_should_allow_custom_tags_with_custom_attributes
     text = %(<blockquote foo="bar">Lorem ipsum</blockquote>)
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     assert_equal(text, sanitizer.sanitize(text, :attributes => ['foo']))
   end
 
   def test_should_raise_argument_error_if_tags_is_not_enumerable
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     assert_raises(ArgumentError) do
       sanitizer.sanitize('<a>some html</a>', :tags => 'foo')
     end
   end
 
   def test_should_raise_argument_error_if_attributes_is_not_enumerable
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
 
     assert_raises(ArgumentError) do
       sanitizer.sanitize('<a>some html</a>', :attributes => 'foo')
@@ -236,7 +236,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_not_accept_non_loofah_inheriting_scrubber
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     scrubber = Object.new
     def scrubber.scrub(node); node.name = 'h1'; end
 
@@ -246,7 +246,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_accept_loofah_inheriting_scrubber
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     scrubber = Loofah::Scrubber.new
     def scrubber.scrub(node); node.name = 'h1'; end
 
@@ -255,14 +255,14 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_accept_loofah_scrubber_that_wraps_a_block
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, :scrubber => scrubber)
   end
 
   def test_custom_scrubber_takes_precedence_over_other_options
-    sanitizer = Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::WhiteListSanitizer.new
     scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, :scrubber => scrubber, :tags => ['foo'])
@@ -431,7 +431,7 @@ class SanitizersTest < Minitest::Test
 
 protected
   def assert_sanitized(input, expected = nil)
-    @sanitizer ||= Html::WhiteListSanitizer.new
+    @sanitizer ||= Rails::Html::WhiteListSanitizer.new
     if input
       assert_dom_equal expected || input, @sanitizer.sanitize(input)
     else
@@ -440,6 +440,6 @@ protected
   end
 
   def sanitize_css(input)
-    (@sanitizer ||= Html::WhiteListSanitizer.new).sanitize_css(input)
+    (@sanitizer ||= Rails::Html::WhiteListSanitizer.new).sanitize_css(input)
   end
 end
