@@ -1,5 +1,4 @@
 require "minitest/autorun"
-require "minitest/mock"
 require "html-sanitizer"
 
 class ScrubberTest < Minitest::Test
@@ -10,18 +9,21 @@ class ScrubberTest < Minitest::Test
       assert_equal expected, output
     end
 
-    def assert_node_skipped(text)
-      node = to_node(text)
-      assert_equal Loofah::Scrubber::CONTINUE, @scrubber.scrub(node)
-    end
-
     def to_node(text)
       Loofah.fragment(text).children.first
     end
 
-    def scrub_expectations(text, &expectations)
-      @scrubber.instance_eval(&expectations)
-      @scrubber.scrub to_node(text)
+    def assert_node_skipped(text)
+      assert_scrub_returns(Loofah::Scrubber::CONTINUE, text)
+    end
+
+    def assert_scrub_stopped(text)
+      assert_scrub_returns(Loofah::Scrubber::STOP, text)
+    end
+
+    def assert_scrub_returns(return_value, text)
+      node = to_node(text)
+      assert_equal return_value, @scrubber.scrub(node)
     end
 end
 
@@ -88,7 +90,7 @@ class PermitScrubberTest < ScrubberTest
   end
 
   def test_skips_text_nodes
-    assert_node_skipped 'some text'
+    assert_node_skipped('some text')
   end
 
   def test_tags_accessor_validation
@@ -108,66 +110,6 @@ class PermitScrubberTest < ScrubberTest
     assert_equal "You should pass :attributes as an Enumerable", e.message
     assert_nil @scrubber.attributes, "Attributes should be nil when validation fails"
   end
-
-  # def test_scrub_uses_public_api
-  #   @scrubber.tags = %w(tag)
-  #   @scrubber.attributes = %w(cooler)
-
-  #   scrub_expectations '<p id="hello">some text</p>' do
-  #     expects(skip_node?: false)
-  #     expects(allowed_node?: false)
-
-  #     expects(:scrub_node)
-
-  #     expects(scrub_attribute?: false)
-  #   end
-  # end
-
-  # def test_keep_node_returns_false_node_will_be_stripped
-  #   scrub_expectations '<p>normally p tags are kept<p>' do
-  #     stubs(keep_node?: false)
-  #     expects(:scrub_node)
-  #   end
-  # end
-
-  # def test_skip_node_returns_false_node_will_be_stripped
-  #   scrub_expectations 'normally text nodes are skipped' do
-  #     stubs(skip_node?: false)
-  #     expects(keep_node?: true)
-  #   end
-  # end
-
-  # def test_stripping_of_normally_skipped_and_kept_node
-  #   scrub_expectations 'text is skipped by default' do
-  #     stubs(skip_node?: false, keep_node?: false)
-  #     expects(:scrub_node)
-  #     expects(:scrub_attributes) # expected since scrub_node doesn't return STOP
-  #   end
-  # end
-
-  # def test_attributes_are_scrubbed_for_kept_node
-  #   scrub_expectations 'text is kept, but normally skipped' do
-  #     stubs(skip_node?: false)
-  #     expects(:scrub_attributes)
-  #   end
-  # end
-
-  # def test_scrubbing_of_empty_node
-  #   scrubbing = scrub_expectations '' do
-  #     expects(skip_node?: true)
-  #   end
-
-  #   assert_equal Loofah::Scrubber::CONTINUE, scrubbing
-  # end
-
-  # def test_scrub_returns_stop_if_scrub_node_does
-  #   scrubbing = scrub_expectations '<script>free me</script>' do
-  #     stubs(scrub_node: Loofah::Scrubber::STOP)
-  #     expects(:scrub_attributes).never
-  #   end
-
-  #   assert_equal Loofah::Scrubber::STOP, scrubbing
-  # end
 end
 
 class TargetScrubberTest < ScrubberTest
@@ -198,5 +140,21 @@ class TargetScrubberTest < ScrubberTest
     @scrubber.attributes = %w(remove)
     html = '<tag remove="" other=""></tag><a remove="" other=""></a>'
     assert_scrubbed html, '<a other=""></a>'
+  end
+end
+
+class ReturningStopFromScrubNodeTest < ScrubberTest
+  class ScrubStopper < Html::PermitScrubber
+    def scrub_node(node)
+      Loofah::Scrubber::STOP
+    end
+  end
+
+  def setup
+    @scrubber = ScrubStopper.new
+  end
+
+  def test_returns_stop_from_scrub_if_scrub_node_does
+    assert_scrub_stopped '<script>remove me</script>'
   end
 end

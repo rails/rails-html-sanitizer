@@ -1,5 +1,4 @@
 require "minitest/autorun"
-require "minitest/mock"
 require "html-sanitizer"
 require "rails/dom/testing/assertions/dom_assertions"
 
