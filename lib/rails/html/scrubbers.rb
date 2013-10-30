@@ -1,13 +1,13 @@
 module Rails
   module Html
-    # === Html::PermitScrubber
+    # === Rails::Html::PermitScrubber
     #
-    # Html::PermitScrubber allows you to permit only your own tags and/or attributes.
+    # Rails::Html::PermitScrubber allows you to permit only your own tags and/or attributes.
     #
-    # Html::PermitScrubber can be subclassed to determine:
-    # - When a node should be skipped via +skip_node?+
-    # - When a node is allowed via +allowed_node?+
-    # - When an attribute should be scrubbed via +scrub_attribute?+
+    # Rails::Html::PermitScrubber can be subclassed to determine:
+    # - When a node should be skipped via +skip_node?+>
+    # - When a node is allowed via +allowed_node?+.
+    # - When an attribute should be scrubbed via +scrub_attribute?+.
     #
     # Subclasses don't need to worry if tags or attributes are set or not.
     # If tags or attributes are not set, Loofah's behavior will be used.
@@ -17,15 +17,15 @@ module Rails
     #
     # Text and CDATA nodes are skipped by default.
     # Unallowed elements will be stripped, i.e. element is removed but its subtree kept.
-    # Supplied tags and attributes should be Enumerables
+    # Supplied tags and attributes should be Enumerables.
     #
     # +tags=+
     # If set, elements excluded will be stripped.
-    # If not, elements are stripped based on Loofahs +HTML5::Scrub.allowed_element?+
+    # If not, elements are stripped based on Loofahs +HTML5::Scrub.allowed_element?+>
     #
     # +attributes=+
     # If set, attributes excluded will be removed.
-    # If not, attributes are removed based on Loofahs +HTML5::Scrub.scrub_attributes+
+    # If not, attributes are removed based on Loofahs +HTML5::Scrub.scrub_attributes+.
     #
     # class CommentScrubber < Html::PermitScrubber
     #   def allowed_node?(node)
@@ -114,16 +114,10 @@ module Rails
       end
     end
 
-    # === TargetScrubber
+    # === Rails::Html::TargetScrubber
     #
-    # Where PermitScrubber picks out tags and attributes to permit in
-    # sanitization, TargetScrubber targets them for removal
-    #
-    # The open architecture of PermitScrubber is used to redefine:
-    # - +allowed_node?+
-    #   # allowed if node is not in tags
-    # - +scrub_attribute?+
-    #   # should scrub if attribute name is not in attributes
+    # Where Rails::Html::PermitScrubber picks out tags and attributes to permit in
+    # sanitization, Rails::Html::TargetScrubber targets them for removal.
     #
     # +tags=+
     # If set, elements included will be stripped.
