@@ -6,7 +6,7 @@ This gem is resposible to sanitize HTML fragments in Rails applications.
 
 Add this line to your application's Gemfile:
 
-    gem 'html-sanitizer'
+    gem 'rails-html-sanitizer'
 
 And then execute:
 
@@ -14,7 +14,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install html-sanitizer
+    $ gem install rails-html-sanitizer
 
 ## Usage
 
