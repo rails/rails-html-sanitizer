@@ -7,6 +7,8 @@ module Rails
         raise NotImplementedError, "subclasses must implement sanitize method."
       end
 
+      private
+
       # call +remove_xpaths+ with string and get a string back
       # call it with a node or nodeset and get back a node/nodeset
       def remove_xpaths(html, xpaths)

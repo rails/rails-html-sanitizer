@@ -15,43 +15,49 @@ class SanitizersTest < Minitest::Test
     end
   end
 
+  class TestSanitizer < Rails::Html::Sanitizer
+    def sanitize(html, options = {})
+      remove_xpaths(html, options[:xpaths])
+    end
+  end
+
   def test_remove_xpaths_removes_an_xpath
-    sanitizer = Rails::Html::Sanitizer.new
+    sanitizer = TestSanitizer.new
     html = %(<h1>hello <script>code!</script></h1>)
-    assert_equal %(<h1>hello </h1>), sanitizer.remove_xpaths(html, %w(.//script))
+    assert_equal %(<h1>hello </h1>), sanitizer.sanitize(html, xpaths: %w(.//script))
   end
 
   def test_remove_xpaths_removes_all_occurences_of_xpath
-    sanitizer = Rails::Html::Sanitizer.new
+    sanitizer = TestSanitizer.new
     html = %(<section><header><script>code!</script></header><p>hello <script>code!</script></p></section>)
-    assert_equal %(<section><header></header><p>hello </p></section>), sanitizer.remove_xpaths(html, %w(.//script))
+    assert_equal %(<section><header></header><p>hello </p></section>), sanitizer.sanitize(html, xpaths: %w(.//script))
   end
 
   def test_remove_xpaths_called_with_faulty_xpath
-    sanitizer = Rails::Html::Sanitizer.new
+    sanitizer = TestSanitizer.new
     assert_raises Nokogiri::XML::XPath::SyntaxError do
-      sanitizer.remove_xpaths('<h1>hello<h1>', %w(..faulty_xpath))
+      sanitizer.sanitize('<h1>hello<h1>', xpaths: %w(..faulty_xpath))
     end
   end
 
   def test_remove_xpaths_called_with_xpath_string
-    sanitizer = Rails::Html::Sanitizer.new
-    assert_equal '', sanitizer.remove_xpaths('<a></a>', './/a')
+    sanitizer = TestSanitizer.new
+    assert_equal '', sanitizer.sanitize('<a></a>', xpaths: './/a')
   end
 
   def test_remove_xpaths_called_with_enumerable_xpaths
-    sanitizer = Rails::Html::Sanitizer.new
-    assert_equal '', sanitizer.remove_xpaths('<a><span></span></a>', %w(.//a .//span))
+    sanitizer = TestSanitizer.new
+    assert_equal '', sanitizer.sanitize('<a><span></span></a>', xpaths: %w(.//a .//span))
   end
 
   def test_remove_xpaths_called_with_string_returns_string
-    sanitizer = Rails::Html::Sanitizer.new
-    assert_equal '<a></a>', sanitizer.remove_xpaths('<a></a>', [])
+    sanitizer = TestSanitizer.new
+    assert_equal '<a></a>', sanitizer.sanitize('<a></a>', xpaths: [])
   end
 
   def test_remove_xpaths_called_with_fragment_returns_fragment
-    sanitizer = Rails::Html::Sanitizer.new
-    fragment = sanitizer.remove_xpaths(Loofah.fragment('<a></a>'), [])
+    sanitizer = TestSanitizer.new
+    fragment = sanitizer.sanitize(Loofah.fragment('<a></a>'), xpaths: [])
     assert_kind_of Loofah::HTML::DocumentFragment, fragment
   end
 
