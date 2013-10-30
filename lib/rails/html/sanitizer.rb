@@ -4,7 +4,7 @@ module Rails
 
     class Sanitizer # :nodoc:
       def sanitize(html, options = {})
-        raise NotImplementedError, "subclasses must implement"
+        raise NotImplementedError, "subclasses must implement sanitize method."
       end
 
       # call +remove_xpaths+ with string and get a string back
