@@ -18,7 +18,13 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Sanitizers
+
+TODO: show some examples of the sanitizers
+
+### Scrubers
+
+TODO: show some examples how to use the scrubbers
 
 ## Contributing
 
