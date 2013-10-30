@@ -1,6 +1,6 @@
-# Rails::Html::Sanitizer
+# Rails Html Sanitizers
 
-TODO: Write a gem description
+This gem is resposible to sanitize HTML fragments in Rails applications.
 
 ## Installation
 
