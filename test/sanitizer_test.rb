@@ -205,13 +205,13 @@ class SanitizersTest < Minitest::Test
   def test_should_allow_custom_tags
     text = "<u>foo</u>"
     sanitizer = Rails::Html::WhiteListSanitizer.new
-    assert_equal(text, sanitizer.sanitize(text, :tags => %w(u)))
+    assert_equal(text, sanitizer.sanitize(text, tags: %w(u)))
   end
 
   def test_should_allow_only_custom_tags
     text = "<u>foo</u> with <i>bar</i>"
     sanitizer = Rails::Html::WhiteListSanitizer.new
-    assert_equal("<u>foo</u> with bar", sanitizer.sanitize(text, :tags => %w(u)))
+    assert_equal("<u>foo</u> with bar", sanitizer.sanitize(text, tags: %w(u)))
   end
 
   def test_should_allow_custom_tags_with_attributes
@@ -223,13 +223,13 @@ class SanitizersTest < Minitest::Test
   def test_should_allow_custom_tags_with_custom_attributes
     text = %(<blockquote foo="bar">Lorem ipsum</blockquote>)
     sanitizer = Rails::Html::WhiteListSanitizer.new
-    assert_equal(text, sanitizer.sanitize(text, :attributes => ['foo']))
+    assert_equal(text, sanitizer.sanitize(text, attributes: ['foo']))
   end
 
   def test_should_raise_argument_error_if_tags_is_not_enumerable
     sanitizer = Rails::Html::WhiteListSanitizer.new
     assert_raises(ArgumentError) do
-      sanitizer.sanitize('<a>some html</a>', :tags => 'foo')
+      sanitizer.sanitize('<a>some html</a>', tags: 'foo')
     end
   end
 
@@ -237,7 +237,7 @@ class SanitizersTest < Minitest::Test
     sanitizer = Rails::Html::WhiteListSanitizer.new
 
     assert_raises(ArgumentError) do
-      sanitizer.sanitize('<a>some html</a>', :attributes => 'foo')
+      sanitizer.sanitize('<a>some html</a>', attributes: 'foo')
     end
   end
 
@@ -247,7 +247,7 @@ class SanitizersTest < Minitest::Test
     def scrubber.scrub(node); node.name = 'h1'; end
 
     assert_raises Loofah::ScrubberNotFound do
-      sanitizer.sanitize('<a>some html</a>', :scrubber => scrubber)
+      sanitizer.sanitize('<a>some html</a>', scrubber: scrubber)
     end
   end
 
@@ -257,21 +257,21 @@ class SanitizersTest < Minitest::Test
     def scrubber.scrub(node); node.name = 'h1'; end
 
     html = "<script>hello!</script>"
-    assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, :scrubber => scrubber)
+    assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, scrubber: scrubber)
   end
 
   def test_should_accept_loofah_scrubber_that_wraps_a_block
     sanitizer = Rails::Html::WhiteListSanitizer.new
     scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
     html = "<script>hello!</script>"
-    assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, :scrubber => scrubber)
+    assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, scrubber: scrubber)
   end
 
   def test_custom_scrubber_takes_precedence_over_other_options
     sanitizer = Rails::Html::WhiteListSanitizer.new
     scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
     html = "<script>hello!</script>"
-    assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, :scrubber => scrubber, :tags => ['foo'])
+    assert_equal "<h1>hello!</h1>", sanitizer.sanitize(html, scrubber: scrubber, tags: ['foo'])
   end
 
   [%w(img src), %w(a href)].each do |(tag, attr)|
