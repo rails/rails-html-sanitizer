@@ -117,6 +117,15 @@ Using the `CommentScrubber` from above, you can use this in a Rails view like so
 <%= sanitize @comment, CommentScrubber.new %>
 ```
 
+## Read more
+
+Loofah is what underlies the sanitizers and scrubbers of rails-html-sanitizer.
+- [Loofah and Loofah Scrubbers](https://github.com/flavorjones/loofah)
+
+The `node` argument passed to some methods in a custom scrubber is an instance of `Nokogiri::XML::Node`.
+- [`Nokogiri::XML::Node`](http://nokogiri.org/Nokogiri/XML/Node.html)
+- [Nokogiri](http://nokogiri.org)
+
 ## Contributing
 
 1. Fork it
