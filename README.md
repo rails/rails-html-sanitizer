@@ -1,6 +1,6 @@
 # Rails Html Sanitizers
 
-This gem is responsible for sanitizing HTML fragments in Rails applications, i.e. in the `sanitize`, `sanitize_css` and `strip_tags` methods.
+This gem is responsible for sanitizing HTML fragments in Rails applications, i.e. in the `sanitize`, `sanitize_css`, `strip_tags` and `strip_links` methods.
 
 ## Installation
 
