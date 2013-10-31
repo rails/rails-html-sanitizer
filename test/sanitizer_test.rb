@@ -276,6 +276,12 @@ class SanitizersTest < Minitest::Test
     assert_equal(text, sanitizer.sanitize(text, attributes: ['foo']))
   end
 
+  def test_scrub_style_if_style_attribute_option_is_passed
+    sanitizer = Rails::Html::WhiteListSanitizer.new
+    input = '<p style="background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
+    assert_equal '<p></p>', sanitizer.sanitize(input, attributes: %w(style))
+  end
+
   def test_should_raise_argument_error_if_tags_is_not_enumerable
     sanitizer = Rails::Html::WhiteListSanitizer.new
     assert_raises(ArgumentError) do
