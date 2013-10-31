@@ -5,7 +5,7 @@ module Rails
     # Rails::Html::PermitScrubber allows you to permit only your own tags and/or attributes.
     #
     # Rails::Html::PermitScrubber can be subclassed to determine:
-    # - When a node should be skipped via +skip_node?+>
+    # - When a node should be skipped via +skip_node?+.
     # - When a node is allowed via +allowed_node?+.
     # - When an attribute should be scrubbed via +scrub_attribute?+.
     #
@@ -21,7 +21,7 @@ module Rails
     #
     # +tags=+
     # If set, elements excluded will be stripped.
-    # If not, elements are stripped based on Loofahs +HTML5::Scrub.allowed_element?+>
+    # If not, elements are stripped based on Loofahs +HTML5::Scrub.allowed_element?+.
     #
     # +attributes=+
     # If set, attributes excluded will be removed.
