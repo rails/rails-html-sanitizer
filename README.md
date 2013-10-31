@@ -25,32 +25,32 @@ All sanitizers respond to `sanitize`.
 #### FullSanitizer
 
 ```ruby
-@full_sanitizer = Rails::Html::FullSanitizer.new
-@full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
+full_sanitizer = Rails::Html::FullSanitizer.new
+full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
 # => Bold no more!  See more here...
 ```
 
 #### LinkSanitizer
 
 ```ruby
-@link_sanitizer = Rails::Html::LinkSanitizer.new
-@link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+link_sanitizer = Rails::Html::LinkSanitizer.new
+link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
 # => Only the link text will be kept.
 ```
 
 #### WhiteListSanitizer
 
 ```ruby
-@white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
+white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
 
 # sanitize via an extensive white list of allowed elements
-@white_list_sanitizer.sanitize(@article.body)
+white_list_sanitizer.sanitize(@article.body)
 
 # white list only the supplied tags and attributes
-@white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
+white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
 
 # white list via a custom scrubber
-@white_list_sanitizer.sanitize(@article.body, ArticleScrubber.new)
+white_list_sanitizer.sanitize(@article.body, ArticleScrubber.new)
 ```
 
 ### Scrubbers
