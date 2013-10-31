@@ -50,7 +50,7 @@ white_list_sanitizer.sanitize(@article.body)
 white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
 
 # white list via a custom scrubber
-white_list_sanitizer.sanitize(@article.body, ArticleScrubber.new)
+white_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
 
 # white list sanitizer can also sanitize css
 white_list_sanitizer.sanitize_css('background-color: #000;')
@@ -117,7 +117,7 @@ See `Rails::Html::PermitScrubber` documentation to learn more about which method
 Using the `CommentScrubber` from above, you can use this in a Rails view like so:
 
 ```ruby
-<%= sanitize @comment, CommentScrubber.new %>
+<%= sanitize @comment, scrubber: CommentScrubber.new %>
 ```
 
 ## Read more
