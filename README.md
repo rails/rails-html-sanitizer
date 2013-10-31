@@ -1,6 +1,6 @@
 # Rails Html Sanitizers
 
-This gem is resposible to sanitize HTML fragments in Rails applications.
+This gem is responsible for sanitizing HTML fragments in Rails applications, i.e. in the `sanitize`, `sanitize_css` and `strip_tags` methods.
 
 ## Installation
 
@@ -24,10 +24,9 @@ TODO: show some examples of the sanitizers
 
 ### Scrubbers
 
-Scrubbers are objects responsible to remove nodes or attributtes you don't want in your HTML
-document.
+Scrubbers are objects responsible for removing nodes or attributes you don't want in your HTML document.
 
-This gem includes two scrubber `Rails::Html::PermitScrubber` and `Rails::Html::TargetScrubber`.
+This gem includes two scrubbers `Rails::Html::PermitScrubber` and `Rails::Html::TargetScrubber`.
 
 #### `Rails::Html::PermitScrubber`
 
@@ -44,7 +43,7 @@ html_fragment.to_s # => "<a></a>"
 
 #### `Rails::Html::TargetScrubber`
 
-Where PermitScrubber picks out tags and attributes to permit in sanitization,
+Where `PermitScrubber` picks out tags and attributes to permit in sanitization,
 `Rails::Html::TargetScrubber` targets them for removal.
 
 
