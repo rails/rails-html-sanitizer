@@ -51,6 +51,9 @@ white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: 
 
 # white list via a custom scrubber
 white_list_sanitizer.sanitize(@article.body, ArticleScrubber.new)
+
+# white list sanitizer can also sanitize css
+white_list_sanitizer.sanitize_css('background-color: #000;')
 ```
 
 ### Scrubbers
