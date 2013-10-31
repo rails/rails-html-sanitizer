@@ -78,6 +78,14 @@ end
 
 See `Rails::Html::PermitScrubber` documentation to learn more about which methods can be overridden.
 
+#### Custom Scrubber in a Rails app
+
+Using the `CommentScrubber` from above, you can use this in a Rails view like so:
+
+```ruby
+<%= sanitize @comment, CommentScrubber.new %>
+```
+
 ## Contributing
 
 1. Fork it
