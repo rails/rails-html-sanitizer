@@ -17,20 +17,28 @@ module Rails
   # # => Only the link text will be kept.
   #
   # === Rails::Html::WhiteListSanitizer
+  # Sanitizes both html and css via the white lists found here:
+  # https://github.com/flavorjones/loofah/blob/master/lib/loofah/html5/whitelist.rb
   #
+  # However, WhiteListSanitizer also accepts options to configure
+  # the white list used when sanitizing html.
+  # See the examples below.
+  #
+  # === Examples
   # white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
   #
-  # # sanitize via an extensive white list of allowed elements
+  # Sanitize css doesn't take options
+  # white_list_sanitizer.sanitize_css('background-color: #000;')
+  #
+  # Default: sanitize via a extensive white list of allowed elements
   # white_list_sanitizer.sanitize(@article.body)
   #
-  # # white list only the supplied tags and attributes
-  # white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
+  # White list via the supplied tags and attributes
+  # white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td),
+  # attributes: %w(id class style))
   #
-  # # white list via a custom scrubber
+  # White list via a custom scrubber
   # white_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
-  #
-  # # white list sanitizer can also sanitize css
-  # white_list_sanitizer.sanitize_css('background-color: #000;')
   module Html
     XPATHS_TO_REMOVE = %w{.//script .//form comment()}
 
