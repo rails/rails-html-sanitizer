@@ -1,4 +1,36 @@
 module Rails
+  # Rails::Html::Sanitizer includes three sanitizers
+  # FullSanitizer, LinkSanitizer and WhiteListSanitizer
+  #
+  # === Rails::Html::FullSanitizer
+  # Removes all tags but strips out scripts, forms and comments.
+  #
+  # full_sanitizer = Rails::Html::FullSanitizer.new
+  # full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
+  # # => Bold no more!  See more here...
+  #
+  # === Rails::Html::LinkSanitizer
+  # Removes links and href attributes leaving only the link text
+  #
+  # link_sanitizer = Rails::Html::LinkSanitizer.new
+  # link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+  # # => Only the link text will be kept.
+  #
+  # === Rails::Html::WhiteListSanitizer
+  #
+  # white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
+  #
+  # # sanitize via an extensive white list of allowed elements
+  # white_list_sanitizer.sanitize(@article.body)
+  #
+  # # white list only the supplied tags and attributes
+  # white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
+  #
+  # # white list via a custom scrubber
+  # white_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
+  #
+  # # white list sanitizer can also sanitize css
+  # white_list_sanitizer.sanitize_css('background-color: #000;')
   module Html
     XPATHS_TO_REMOVE = %w{.//script .//form comment()}
 
