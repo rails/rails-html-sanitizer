@@ -48,6 +48,7 @@ module Rails
       def initialize
         @link_scrubber = TargetScrubber.new
         @link_scrubber.tags = %w(a href)
+        @link_scrubber.attributes = %w(href)
       end
 
       def sanitize(html, options = {})
