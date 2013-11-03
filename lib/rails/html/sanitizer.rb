@@ -21,6 +21,12 @@ module Rails
       end
     end
 
+    # === Rails::Html::FullSanitizer
+    # Removes all tags but strips out scripts, forms and comments.
+    #
+    # full_sanitizer = Rails::Html::FullSanitizer.new
+    # full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
+    # # => Bold no more!  See more here...
     class FullSanitizer < Sanitizer
       def sanitize(html, options = {})
         return unless html
@@ -32,6 +38,12 @@ module Rails
       end
     end
 
+    # === Rails::Html::LinkSanitizer
+    # Removes a tags and href attributes leaving only the link text
+    #
+    # link_sanitizer = Rails::Html::LinkSanitizer.new
+    # link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+    # # => Only the link text will be kept.
     class LinkSanitizer < Sanitizer
       def initialize
         @link_scrubber = TargetScrubber.new
@@ -43,6 +55,28 @@ module Rails
       end
     end
 
+    # === Rails::Html::WhiteListSanitizer
+    # Sanitizes both html and css via the white lists found here:
+    # https://github.com/flavorjones/loofah/blob/master/lib/loofah/html5/whitelist.rb
+    #
+    # However, WhiteListSanitizer also accepts options to configure
+    # the white list used when sanitizing html.
+    #
+    # === Examples
+    # white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
+    #
+    # Sanitize css doesn't take options
+    # white_list_sanitizer.sanitize_css('background-color: #000;')
+    #
+    # Default: sanitize via a extensive white list of allowed elements
+    # white_list_sanitizer.sanitize(@article.body)
+    #
+    # White list via the supplied tags and attributes
+    # white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td),
+    # attributes: %w(id class style))
+    #
+    # White list via a custom scrubber
+    # white_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
     class WhiteListSanitizer < Sanitizer
       def initialize
         @permit_scrubber = PermitScrubber.new
