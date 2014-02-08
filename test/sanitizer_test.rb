@@ -167,7 +167,8 @@ class SanitizersTest < Minitest::Test
     assert_sanitized raw, %{src="javascript:bang" <img width="5">foo</img>, <span>bar</span>}
   end
 
-  Rails::Html::WhiteListSanitizer.allowed_tags.each do |tag_name|
+  tags = Loofah::HTML5::WhiteList::ALLOWED_ELEMENTS - %w(script form)
+  tags.each do |tag_name|
     define_method "test_should_allow_#{tag_name}_tag" do
       assert_sanitized "start <#{tag_name} title=\"1\" onclick=\"foo\">foo <bad>bar</bad> baz</#{tag_name}> end", %(start <#{tag_name} title="1">foo bar baz</#{tag_name}> end)
     end

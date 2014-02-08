@@ -93,8 +93,8 @@ module Rails
           # No duck typing, Loofah ensures subclass of Loofah::Scrubber
           loofah_fragment.scrub!(scrubber)
         elsif options[:tags] || options[:attributes]
-          @permit_scrubber.tags = options[:tags]
-          @permit_scrubber.attributes = options[:attributes]
+          self.tags = options[:tags]
+          self.attributes = options[:attributes]
           loofah_fragment.scrub!(@permit_scrubber)
         else
           remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
@@ -108,112 +108,21 @@ module Rails
         Loofah::HTML5::Scrub.scrub_css(style_string)
       end
 
-      class << self
-        def bad_tags=(tags)
-          allowed_tags.replace(allowed_tags - tags)
-        end
-
-        def uri_attributes
-          @uri_attributes
-        end
-
-        def uri_attributes=(attributes)
-          @uri_attributes = attributes
-        end
-
-        def update_uri_attributes(new_attributes)
-          @uri_attributes.merge new_attributes
-        end
-
-        def allowed_attributes
-          @allowed_attributes
-        end
-
-        def allowed_attributes=(attributes)
-          @allowed_attributes = attributes
-        end
-
-        def update_allowed_attributes(new_attributes)
-          @allowed_attributes.merge new_attributes
-        end
-
-        def allowed_tags
-          @allowed_tags
-        end
-
-        def allowed_tags=(tags)
-          @allowed_tags = tags
-        end
-
-        def update_allowed_tags(new_tags)
-          @allowed_tags.merge new_tags
-        end
-
-        def allowed_protocols
-          @allowed_protocols
-        end
-
-        def allowed_protocols=(protocols)
-          @allowed_protocols = protocols
-        end
-
-        def update_allowed_protocols(new_protocols)
-          @allowed_protocols.merge new_protocols
-        end
-
-        def allowed_css_properties
-          @allowed_css_properties
-        end
-
-        def allowed_css_properties=(css_properties)
-          @allowed_css_properties = css_properties
-        end
-
-        def update_allowed_css_properties(new_css_properties)
-          @allowed_css_properties.merge new_css_properties
-        end
-
-        def allowed_css_keywords
-          @allowed_css_keywords
-        end
-
-        def allowed_css_keywords=(css_keywords)
-          @allowed_css_keywords = css_keywords
-        end
-
-        def update_allowed_css_keywords(new_css_keywords)
-          @allowed_css_keywords.merge new_css_keywords
-        end
-
-        def shorthand_css_properties
-          @shorthand_css_properties
-        end
-
-        def shorthand_css_properties=(css_properties)
-          @shorthand_css_properties = css_properties
-        end
-
-        def update_shorthand_css_properties(new_css_properties)
-          @shorthand_css_properties.merge new_css_properties
-        end
+      def tags
+        @permit_scrubber.tags
       end
 
-      # Constants are from Loofahs source at lib/loofah/html5/whitelist.rb
-      self.uri_attributes = Loofah::HTML5::WhiteList::ATTR_VAL_IS_URI
+      def tags=(tags)
+        @permit_scrubber.tags = tags
+      end
 
-      self.allowed_tags = Loofah::HTML5::WhiteList::ALLOWED_ELEMENTS
+      def attributes
+        @permit_scrubber.attributes
+      end
 
-      self.bad_tags = Set.new %w(script form)
-
-      self.allowed_attributes = Loofah::HTML5::WhiteList::ALLOWED_ATTRIBUTES
-
-      self.allowed_css_properties = Loofah::HTML5::WhiteList::ALLOWED_CSS_PROPERTIES
-
-      self.allowed_css_keywords = Loofah::HTML5::WhiteList::ALLOWED_CSS_KEYWORDS
-
-      self.shorthand_css_properties = Loofah::HTML5::WhiteList::SHORTHAND_CSS_PROPERTIES
-
-      self.allowed_protocols = Loofah::HTML5::WhiteList::ALLOWED_PROTOCOLS
+      def attributes=(attributes)
+        @permit_scrubber.attributes = attributes
+      end
     end
   end
 end
