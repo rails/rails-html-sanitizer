@@ -167,7 +167,8 @@ class SanitizersTest < Minitest::Test
     assert_sanitized raw, %{src="javascript:bang" <img width="5">foo</img>, <span>bar</span>}
   end
 
-  Rails::Html::WhiteListSanitizer.allowed_tags.each do |tag_name|
+  tags = Loofah::HTML5::WhiteList::ALLOWED_ELEMENTS - %w(script form)
+  tags.each do |tag_name|
     define_method "test_should_allow_#{tag_name}_tag" do
       assert_sanitized "start <#{tag_name} title=\"1\" onclick=\"foo\">foo <bad>bar</bad> baz</#{tag_name}> end", %(start <#{tag_name} title="1">foo bar baz</#{tag_name}> end)
     end
@@ -200,6 +201,33 @@ class SanitizersTest < Minitest::Test
   def test_should_handle_blank_text
     assert_sanitized nil
     assert_sanitized ''
+  end
+
+  def test_setting_allowed_tags_affects_sanitization
+    scope_allowed_tags %w(u) do |sanitizer|
+      assert_equal '<u></u>', sanitizer.sanitize('<a><u></u></a>')
+    end
+  end
+
+  def test_setting_allowed_attributes_affects_sanitization
+    scope_allowed_attributes %w(foo) do |sanitizer|
+      input = '<a foo="hello" bar="world"></a>'
+      assert_equal '<a foo="hello"></a>', sanitizer.sanitize(input)
+    end
+  end
+
+  def test_custom_tags_overrides_allowed_tags
+    scope_allowed_tags %(u) do |sanitizer|
+      input = '<a><u></u></a>'
+      assert_equal '<a></a>', sanitizer.sanitize(input, tags: %w(a))
+    end
+  end
+
+  def test_custom_attributes_overrides_allowed_attributes
+    scope_allowed_attributes %(foo) do |sanitizer|
+      input = '<a foo="hello" bar="world"></a>'
+      assert_equal '<a bar="world"></a>', sanitizer.sanitize(input, attributes: %w(bar))
+    end
   end
 
   def test_should_allow_custom_tags
@@ -447,5 +475,21 @@ protected
 
   def sanitize_css(input)
     (@sanitizer ||= Rails::Html::WhiteListSanitizer.new).sanitize_css(input)
+  end
+
+  def scope_allowed_tags(tags)
+    Rails::Html::WhiteListSanitizer.allowed_tags = %w(u)
+    yield Rails::Html::WhiteListSanitizer.new
+
+  ensure
+    Rails::Html::WhiteListSanitizer.allowed_tags = nil
+  end
+
+  def scope_allowed_attributes(attributes)
+    Rails::Html::WhiteListSanitizer.allowed_attributes = attributes
+    yield Rails::Html::WhiteListSanitizer.new
+
+  ensure
+    Rails::Html::WhiteListSanitizer.allowed_attributes = nil
   end
 end
