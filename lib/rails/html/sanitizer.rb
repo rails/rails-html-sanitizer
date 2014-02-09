@@ -79,6 +79,15 @@ module Rails
     # White list via a custom scrubber
     # white_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
     class WhiteListSanitizer < Sanitizer
+      class << self
+        attr_accessor :allowed_tags
+        attr_accessor :allowed_attributes
+      end
+
+      def initialize
+        @permit_scrubber = PermitScrubber.new
+      end
+
       def sanitize(html, options = {})
         return unless html
         return html if html.empty?
@@ -88,10 +97,10 @@ module Rails
         if scrubber = options[:scrubber]
           # No duck typing, Loofah ensures subclass of Loofah::Scrubber
           loofah_fragment.scrub!(scrubber)
-        elsif options[:tags] || options[:attributes]
-          self.class.tags = options[:tags]
-          self.class.attributes = options[:attributes]
-          loofah_fragment.scrub!(permit_scrubber)
+        elsif allowed_tags(options) || allowed_attributes(options)
+          @permit_scrubber.tags = allowed_tags(options)
+          @permit_scrubber.attributes = allowed_attributes(options)
+          loofah_fragment.scrub!(@permit_scrubber)
         else
           remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
           loofah_fragment.scrub!(:strip)
@@ -104,32 +113,15 @@ module Rails
         Loofah::HTML5::Scrub.scrub_css(style_string)
       end
 
-      class << self
-        def tags
-          permit_scrubber.tags
-        end
+      private
 
-        def tags=(tags)
-          permit_scrubber.tags = tags
-        end
-
-        def attributes
-          permit_scrubber.attributes
-        end
-
-        def attributes=(attributes)
-          permit_scrubber.attributes = attributes
-        end
+      def allowed_tags(options)
+        options[:tags] || self.class.allowed_tags
       end
 
-      private
-        def self.permit_scrubber
-          @permit_scrubber ||= PermitScrubber.new
-        end
-
-        def permit_scrubber
-          self.class.permit_scrubber
-        end
+      def allowed_attributes(options)
+        options[:attributes] || self.class.allowed_attributes
+      end
     end
   end
 end
