@@ -98,9 +98,11 @@ module Rails
 
       def scrub_attributes(node)
         if @attributes
-          node.attributes.each do |name, _|
-            node.remove_attribute(name) if scrub_attribute?(name)
+          node.attribute_nodes.each do |attr|
+            attr.remove if scrub_attribute?(attr.name)
           end
+
+          Loofah::HTML5::Scrub.scrub_css_attribute(node)
         else
           Loofah::HTML5::Scrub.scrub_attributes(node)
         end

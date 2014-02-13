@@ -278,8 +278,8 @@ class SanitizersTest < Minitest::Test
 
   def test_scrub_style_if_style_attribute_option_is_passed
     sanitizer = Rails::Html::WhiteListSanitizer.new
-    input = '<p style="background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
-    assert_equal '<p></p>', sanitizer.sanitize(input, attributes: %w(style))
+    input = '<p style="color: #000; background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
+    assert_equal '<p style="color: #000;"></p>', sanitizer.sanitize(input, attributes: %w(style))
   end
 
   def test_should_raise_argument_error_if_tags_is_not_enumerable
