@@ -68,33 +68,55 @@ class SanitizersTest < Minitest::Test
     assert_equal ' hi', sanitizer.sanitize(string)
   end
 
-  def test_strip_tags_pending
-    skip "Pending. These methods don't pass."
+  def test_strip_invalid_html
     sanitizer = Rails::Html::FullSanitizer.new
 
     # Loofah doesn't see any elements in this
     # Actual: ""
     assert_equal("<<<bad html", sanitizer.sanitize("<<<bad html"))
+  end
+
+  def test_strip_nested_tags
+    sanitizer = Rails::Html::FullSanitizer.new
 
     # Actual: "Weia onclick='alert(document.cookie);'/&gt;rdos"
     assert_equal("Weirdos", sanitizer.sanitize("Wei<<a>a onclick='alert(document.cookie);'</a>/>rdos"))
+  end
+
+  def test_strip_tags_multiline
+    sanitizer = Rails::Html::FullSanitizer.new
 
     # Loofah strips newlines.
     # Actual: "This is a test.It no longer contains any HTML."
     assert_equal(
     %{This is a test.\n\n\nIt no longer contains any HTML.\n}, sanitizer.sanitize(
     %{<title>This is <b>a <a href="" target="_blank">test</a></b>.</title>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}))
+  end
+
+  def test_strip_comments
+    sanitizer = Rails::Html::FullSanitizer.new
 
     # Removes comment.
     # Actual: "This is "
     assert_equal "This is <-- not\n a comment here.", sanitizer.sanitize("This is <-- not\n a comment here.")
+  end
+
+  def test_strip_cdata
+    sanitizer = Rails::Html::FullSanitizer.new
 
     # Leaves part of a CDATA section
     # Actual: "This has a ]]&gt; here."
     assert_equal "This has a  here.", sanitizer.sanitize("This has a <![CDATA[<section>]]> here.")
+  end
 
+  def test_strip_unclused_cdata
+    sanitizer = Rails::Html::FullSanitizer.new
     # Actual: "This has an unclosed ]] here..."
     assert_equal "This has an unclosed ", sanitizer.sanitize("This has an unclosed <![CDATA[<section>]] here...")
+  end
+
+  def test_strip_blank_string
+    sanitizer = Rails::Html::FullSanitizer.new
 
     # Fails on the blank string.
     # Actual: ''
