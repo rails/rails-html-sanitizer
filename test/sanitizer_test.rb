@@ -340,11 +340,8 @@ class SanitizersTest < Minitest::Test
     assert_sanitized %(<SCRIPT\nSRC=http://ha.ckers.org/xss.js></SCRIPT>), ""
   end
 
-  def test_should_not_fall_for_xss_image_hack_pending
-    skip "Pending."
-
-    # Actual: "<img>alert(\"XSS\")\"&gt;"
-    assert_sanitized %(<IMG """><SCRIPT>alert("XSS")</SCRIPT>">), "<img>"
+  def test_should_not_fall_for_xss_image_hack_with_uppercase_tags
+    assert_sanitized %(<IMG """><SCRIPT>alert("XSS")</SCRIPT>">), "<img>\"&gt;"
   end
 
   [%(<IMG SRC="javascript:alert('XSS');">),
