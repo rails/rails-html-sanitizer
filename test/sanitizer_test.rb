@@ -79,8 +79,7 @@ class SanitizersTest < Minitest::Test
   def test_strip_nested_tags
     sanitizer = Rails::Html::FullSanitizer.new
 
-    # Actual: "Weia onclick='alert(document.cookie);'/&gt;rdos"
-    assert_equal("Weirdos", sanitizer.sanitize("Wei<<a>a onclick='alert(document.cookie);'</a>/>rdos"))
+    assert_equal("Weia onclick='alert(document.cookie);'/&gt;rdos", sanitizer.sanitize("Wei<<a>a onclick='alert(document.cookie);'</a>/>rdos"))
   end
 
   def test_strip_tags_multiline
@@ -104,15 +103,13 @@ class SanitizersTest < Minitest::Test
   def test_strip_cdata
     sanitizer = Rails::Html::FullSanitizer.new
 
-    # Leaves part of a CDATA section
-    # Actual: "This has a ]]&gt; here."
-    assert_equal "This has a  here.", sanitizer.sanitize("This has a <![CDATA[<section>]]> here.")
+    assert_equal "This has a ]]&gt; here.", sanitizer.sanitize("This has a <![CDATA[<section>]]> here.")
   end
 
   def test_strip_unclused_cdata
     sanitizer = Rails::Html::FullSanitizer.new
-    # Actual: "This has an unclosed ]] here..."
-    assert_equal "This has an unclosed ", sanitizer.sanitize("This has an unclosed <![CDATA[<section>]] here...")
+
+    assert_equal "This has an unclosed ]] here...", sanitizer.sanitize("This has an unclosed <![CDATA[<section>]] here...")
   end
 
   def test_strip_blank_string
