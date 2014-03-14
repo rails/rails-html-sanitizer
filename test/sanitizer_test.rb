@@ -106,7 +106,7 @@ class SanitizersTest < Minitest::Test
     assert_equal "This has a ]]&gt; here.", sanitizer.sanitize("This has a <![CDATA[<section>]]> here.")
   end
 
-  def test_strip_unclused_cdata
+  def test_strip_unclosed_cdata
     sanitizer = Rails::Html::FullSanitizer.new
 
     assert_equal "This has an unclosed ]] here...", sanitizer.sanitize("This has an unclosed <![CDATA[<section>]] here...")
