@@ -134,13 +134,15 @@ class SanitizersTest < Minitest::Test
     assert_equal "This is a frozen string with no tags", sanitizer.sanitize("This is a frozen string with no tags".freeze)
   end
 
-  def test_strip_links_pending
-    skip "Pending. Extracted from test_strip_links."
+  def test_strip_links_with_tags_in_tags
     sanitizer = Rails::Html::LinkSanitizer.new
+    input = "a href='hello'&gt;all <b>day</b> long/a&gt;"
 
-    # Only one of the a-tags are parsed here
-    # Actual: "a href='hello'&gt;all <b>day</b> long/a&gt;"
-    assert_equal "all <b>day</b> long", sanitizer.sanitize("<<a>a href='hello'>all <b>day</b> long<</A>/a>")
+    assert_equal input, sanitizer.sanitize("<<a>a href='hello'>all <b>day</b> long<</A>/a>")
+  end
+
+  def test_strip_links_pending
+    sanitizer = Rails::Html::LinkSanitizer.new
 
     # Loofah reads this as '<a></a>' which the LinkSanitizer removes
     # Actual: ""
