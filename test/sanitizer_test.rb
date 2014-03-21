@@ -5,10 +5,6 @@ require "rails/dom/testing/assertions/dom_assertions"
 class SanitizersTest < Minitest::Test
   include Rails::Dom::Testing::Assertions::DomAssertions
 
-  def setup
-    @sanitizer = nil # used by assert_sanitizer
-  end
-
   def test_sanitizer_sanitize_raises_not_implemented_error
     assert_raises NotImplementedError do
       Rails::Html::Sanitizer.new.sanitize('')
@@ -466,16 +462,15 @@ protected
   end
 
   def assert_sanitized(input, expected = nil)
-    @sanitizer ||= Rails::Html::WhiteListSanitizer.new
     if input
-      assert_dom_equal expected || input, @sanitizer.sanitize(input)
+      assert_dom_equal expected || input, white_list_sanitize(input)
     else
-      assert_nil @sanitizer.sanitize(input)
+      assert_nil white_list_sanitize(input)
     end
   end
 
   def sanitize_css(input)
-    (@sanitizer ||= Rails::Html::WhiteListSanitizer.new).sanitize_css(input)
+    Rails::Html::WhiteListSanitizer.new.sanitize_css(input)
   end
 
   def scope_allowed_tags(tags)
