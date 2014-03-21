@@ -96,16 +96,28 @@ class SanitizersTest < Minitest::Test
     [nil, '', '   '].each { |blank| assert_equal blank, full_sanitize(blank) }
   end
 
-  def test_strip_tags
-    assert_equal("Dont touch me", full_sanitize("Dont touch me"))
-    assert_equal("This is a test.", full_sanitize("<p>This <u>is<u> a <a href='test.html'><strong>test</strong></a>.</p>"))
+  def test_strip_tags_with_plaintext
+    assert_equal "Dont touch me", full_sanitize("Dont touch me")
+  end
 
-    assert_equal("", full_sanitize("<<<bad html>"))
+  def test_strip_tags_with_tags
+    assert_equal "This is a test.", full_sanitize("<p>This <u>is<u> a <a href='test.html'><strong>test</strong></a>.</p>")
+  end
 
-    assert_equal("This is a test.", full_sanitize("This is a test."))
+  def test_strip_tags_with_many_open_quotes
+    assert_equal "", full_sanitize("<<<bad html>")
+  end
 
+  def test_strip_tags_with_sentence
+    assert_equal "This is a test.", full_sanitize("This is a test.")
+  end
+
+  def test_strip_tags_with_comment
     assert_equal "This has a  here.", full_sanitize("This has a <!-- comment --> here.")
-    assert_equal "This is a frozen string with no tags", full_sanitize("This is a frozen string with no tags".freeze)
+  end
+
+  def test_strip_tags_with_frozen_string
+    assert_equal "Frozen string with no tags", full_sanitize("Frozen string with no tags".freeze)
   end
 
   def test_strip_links_with_tags_in_tags
@@ -114,19 +126,34 @@ class SanitizersTest < Minitest::Test
     assert_equal expected, link_sanitize(input)
   end
 
-  def test_strip_links_pending
+  def test_strip_links_with_unclosed_tags
     # Loofah reads this as '<a></a>' which the LinkSanitizer removes
     # Actual: ""
     assert_equal "<a<a", link_sanitize("<a<a")
   end
 
-  def test_strip_links
+  def test_strip_links_with_plaintext
     assert_equal "Dont touch me", link_sanitize("Dont touch me")
+  end
+
+  def test_strip_links_with_line_feed_and_uppercase_tag
     assert_equal "on my mind\nall day long", link_sanitize("<a href='almost'>on my mind</a>\n<A href='almost'>all day long</A>")
-    assert_equal "0wn3d", link_sanitize("<a href='http://www.rubyonrails.com/'><a href='http://www.rubyonrails.com/' onlclick='steal()'>0wn3d</a></a>")
-    assert_equal "Magic", link_sanitize("<a href='http://www.rubyonrails.com/'>Mag<a href='http://www.ruby-lang.org/'>ic")
-    assert_equal "FrrFox", link_sanitize("<href onlclick='steal()'>FrrFox</a></href>")
+  end
+
+  def test_strip_links_leaves_nonlink_tags
     assert_equal "My mind\nall <b>day</b> long", link_sanitize("<a href='almost'>My mind</a>\n<A href='almost'>all <b>day</b> long</A>")
+  end
+
+  def test_strip_links_with_links
+    assert_equal "0wn3d", link_sanitize("<a href='http://www.rubyonrails.com/'><a href='http://www.rubyonrails.com/' onlclick='steal()'>0wn3d</a></a>")
+  end
+
+  def test_strip_links_with_linkception
+    assert_equal "Magic", link_sanitize("<a href='http://www.rubyonrails.com/'>Mag<a href='http://www.ruby-lang.org/'>ic")
+  end
+
+  def test_strip_links_with_a_tag_in_href
+    assert_equal "FrrFox", link_sanitize("<href onlclick='steal()'>FrrFox</a></href>")
   end
 
   def test_sanitize_form
@@ -174,7 +201,7 @@ class SanitizersTest < Minitest::Test
 
   # RFC 3986, sec 4.2
   def test_allow_colons_in_path_component
-    assert_sanitized("<a href=\"./this:that\">foo</a>")
+    assert_sanitized "<a href=\"./this:that\">foo</a>"
   end
 
   %w(src width height alt).each do |img_attr|
@@ -188,8 +215,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_handle_blank_text
-    assert_sanitized nil
-    assert_sanitized ''
+    [nil, '', '   '].each { |blank| assert_sanitized blank }
   end
 
   def test_setting_allowed_tags_affects_sanitization
@@ -434,12 +460,19 @@ class SanitizersTest < Minitest::Test
     assert_sanitized "<span class=\"\\", "<span class=\"\\\">"
   end
 
-  def test_x03a
-    assert_sanitized %(<a href="javascript&#x3a;alert('XSS');">), "<a>"
-    assert_sanitized %(<a href="javascript&#x003a;alert('XSS');">), "<a>"
+  [
+    %(<a href="javascript&#x3a;alert('XSS');">),
+    %(<a href="javascript&#x003a;alert('XSS');">),
+    %(<a href="javascript&#x3A;alert('XSS');">),
+    %(<a href="javascript&#x003A;alert('XSS');">)
+  ].each_with_index do |enc_hack, i|
+    define_method "test_x03a_handling_#{i+1}" do
+      assert_sanitized enc_hack, "<a>"
+    end
+  end
+
+  def test_x03a_legitimate
     assert_sanitized %(<a href="http&#x3a;//legit">), %(<a href="http://legit">)
-    assert_sanitized %(<a href="javascript&#x3A;alert('XSS');">), "<a>"
-    assert_sanitized %(<a href="javascript&#x003A;alert('XSS');">), "<a>"
     assert_sanitized %(<a href="http&#x3A;//legit">), %(<a href="http://legit">)
   end
 
