@@ -346,11 +346,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_tag_broken_up_by_null
-    skip "Pending."
-
-    # Loofah parses this to an <scr> tag and removes it.
-    # So actual is an empty string"
-    assert_sanitized %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>), "alert(\"XSS\")"
+    assert_sanitized %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>), ""
   end
 
   def test_should_sanitize_invalid_script_tag
@@ -358,13 +354,8 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_script_tag_with_multiple_open_brackets
-    skip "Pending."
-
-    # Actual: "alert(\"XSS\");//"
-    assert_sanitized %(<<SCRIPT>alert("XSS");//<</SCRIPT>), "&lt;"
-
-    # Actual: ""
-    assert_sanitized %(<iframe src=http://ha.ckers.org/scriptlet.html\n<a), %(&lt;a)
+    assert_sanitized %(<<SCRIPT>alert("XSS");//<</SCRIPT>), "alert(\"XSS\");//"
+    assert_sanitized %(<iframe src=http://ha.ckers.org/scriptlet.html\n<a), ""
   end
 
   def test_should_sanitize_unclosed_script
@@ -437,11 +428,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_cdata_section
-    skip "Pending."
-
-    # Expected: "&lt;![CDATA[&lt;span&gt;section&lt;/span&gt;]]&gt;"
-    # Actual: "section]]&gt;"
-    assert_sanitized "<![CDATA[<span>section</span>]]>", "&lt;![CDATA[&lt;span>section&lt;/span>]]>"
+    assert_sanitized "<![CDATA[<span>section</span>]]>", "section]]&gt;"
   end
 
   def test_should_sanitize_unterminated_cdata_section
