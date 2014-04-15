@@ -432,11 +432,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_unterminated_cdata_section
-    skip "Pending."
-
-    # Expected: "&lt;![CDATA[&lt;span&gt;neverending...]]&gt;"
-    # Actual: "neverending..."
-    assert_sanitized "<![CDATA[<span>neverending...", "&lt;![CDATA[&lt;span>neverending...]]>"
+    assert_sanitized "<![CDATA[<span>neverending...", "neverending..."
   end
 
   def test_should_not_mangle_urls_with_ampersand
