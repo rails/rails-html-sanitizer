@@ -13,7 +13,8 @@ class SanitizersTest < Minitest::Test
 
   class XpathRemovalTestSanitizer < Rails::Html::Sanitizer
     def sanitize(html, options = {})
-      remove_xpaths(html, options[:xpaths])
+      fragment = Loofah.fragment(html)
+      remove_xpaths(fragment, options[:xpaths]).to_s
     end
   end
 
@@ -39,15 +40,6 @@ class SanitizersTest < Minitest::Test
 
   def test_remove_xpaths_called_with_enumerable_xpaths
     assert_equal '', xpath_sanitize('<a><span></span></a>', xpaths: %w(.//a .//span))
-  end
-
-  def test_remove_xpaths_called_with_string_returns_string
-    assert_equal '<a></a>', xpath_sanitize('<a></a>', xpaths: [])
-  end
-
-  def test_remove_xpaths_called_with_fragment_returns_fragment
-    fragment = xpath_sanitize(Loofah.fragment('<a></a>'), xpaths: [])
-    assert_kind_of Loofah::HTML::DocumentFragment, fragment
   end
 
   def test_strip_tags_with_quote

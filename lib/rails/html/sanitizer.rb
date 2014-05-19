@@ -9,15 +9,9 @@ module Rails
 
       private
 
-      # call +remove_xpaths+ with string and get a string back
-      # call it with a node or nodeset and get back a node/nodeset
-      def remove_xpaths(html, xpaths)
-        if html.respond_to?(:xpath)
-          html.xpath(*xpaths).remove
-          html
-        else
-          remove_xpaths(Loofah.fragment(html), xpaths).to_s
-        end
+      def remove_xpaths(node, xpaths)
+        node.xpath(*xpaths).remove
+        node
       end
     end
 
