@@ -57,10 +57,24 @@ module Rails
     end
 
     # === Rails::Html::WhiteListSanitizer
+    # Sanitizes html and css from an extensive white list (see link further down).
+    #
+    # === Whitespace
+    # We can't make any guarentees about whitespace being kept or stripped.
+    # Loofah uses Nokogiri, which wraps either a C or Java parser for the
+    # respective Ruby implementation.
+    # Those two parsers determine how whitespace is ultimately handled.
+    #
+    # When the stripped markup will be rendered the users browser won't take
+    # whitespace into account anyway. It might be better to suggest your users
+    # wrap their whitespace sensitive content in pre tags or that you do
+    # so automatically.
+    #
+    # === Options
     # Sanitizes both html and css via the white lists found here:
     # https://github.com/flavorjones/loofah/blob/master/lib/loofah/html5/whitelist.rb
     #
-    # However, WhiteListSanitizer also accepts options to configure
+    # WhiteListSanitizer also accepts options to configure
     # the white list used when sanitizing html.
     # There's a class level option:
     # Rails::Html::WhiteListSanitizer.allowed_tags = %w(table tr td)
