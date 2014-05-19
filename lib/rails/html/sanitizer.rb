@@ -62,6 +62,12 @@ module Rails
     #
     # However, WhiteListSanitizer also accepts options to configure
     # the white list used when sanitizing html.
+    # There's a class level option:
+    # Rails::Html::WhiteListSanitizer.allowed_tags = %w(table tr td)
+    # Rails::Html::WhiteListSanitizer.allowed_attributes = %w(id class style)
+    #
+    # Tags and attributes can also be passed to +sanitize+.
+    # Passed options take precedence over the class level options.
     #
     # === Examples
     # white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
