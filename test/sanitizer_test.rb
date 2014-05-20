@@ -48,9 +48,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_invalid_html
-    # Loofah doesn't see any elements in this
-    # Actual: ""
-    assert_equal "<<<bad html", full_sanitize("<<<bad html")
+    assert_equal "", full_sanitize("<<<bad html")
   end
 
   def test_strip_nested_tags
@@ -60,18 +58,14 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_tags_multiline
-    # Loofah strips newlines.
-    # Actual: "This is a test.It no longer contains any HTML."
-    expected = %{This is a test.\n\n\nIt no longer contains any HTML.\n}
+    expected = %{This is a test.\n\n\n\nIt no longer contains any HTML.\n}
     input = %{<title>This is <b>a <a href="" target="_blank">test</a></b>.</title>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}
 
     assert_equal expected, full_sanitize(input)
   end
 
   def test_strip_comments
-    # Removes comment.
-    # Actual: "This is "
-    assert_equal "This is <-- not\n a comment here.", full_sanitize("This is <-- not\n a comment here.")
+    assert_equal "This is ", full_sanitize("This is <-- not\n a comment here.")
   end
 
   def test_strip_cdata
@@ -83,8 +77,6 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_blank_string
-    # Fails on the blank string.
-    # Actual: ''
     [nil, '', '   '].each { |blank| assert_equal blank, full_sanitize(blank) }
   end
 
@@ -119,9 +111,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_links_with_unclosed_tags
-    # Loofah reads this as '<a></a>' which the LinkSanitizer removes
-    # Actual: ""
-    assert_equal "<a<a", link_sanitize("<a<a")
+    assert_equal "", link_sanitize("<a<a")
   end
 
   def test_strip_links_with_plaintext
