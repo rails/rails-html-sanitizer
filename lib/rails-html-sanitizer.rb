@@ -22,3 +22,13 @@ module Rails
     end
   end
 end
+
+module ActionView
+  module Helpers
+    module SanitizeHelper
+      def sanitizer_vendor
+        Rails::Html::Sanitizer
+      end
+    end
+  end
+end
