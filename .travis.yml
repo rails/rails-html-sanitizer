@@ -1,7 +1,8 @@
 rvm:
   - 1.9.3
   - 2.0.0
-  - 2.1.1
+  - 2.1
+  - ruby-head
   - rbx-2
   - jruby
 matrix:
@@ -13,3 +14,8 @@ notifications:
     on_failure: always
     channels:
       - "irc.freenode.org#rails-contrib"
+  campfire:
+    on_success: change
+    on_failure: always
+    rooms:
+      - secure: "VZlPFPKZPJtzHnGpoV/BV2IGbJjplemHgqDciE2jRtwepjZMekqLgaUaH9CWUggQdaVCMQI0XLl0qrU54SMBNjE2tdx3WiAzN83oWVCBg4XYogY1U0N0/92egld6UcVAK7HKYzSGYj6hqxmkCn8c8reih7eUFCFUsn/5D/FPlI4="
