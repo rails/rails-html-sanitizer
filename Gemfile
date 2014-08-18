@@ -4,4 +4,3 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'loofah', github: 'kaspth/loofah', branch: 'single-scrub'
-gem 'rails-dom-testing', github: 'kaspth/rails-dom-testing'
