@@ -102,9 +102,18 @@ module Rails
             attr.remove if scrub_attribute?(attr.name)
           end
 
-          Loofah::HTML5::Scrub.scrub_css_attribute(node)
+          scrub_css_attribute(node)
         else
           Loofah::HTML5::Scrub.scrub_attributes(node)
+        end
+      end
+
+      def scrub_css_attribute(node)
+        if Loofah::HTML5::Scrub.respond_to?(:scrub_css_attribute)
+          Loofah::HTML5::Scrub.scrub_css_attribute(node)
+        else
+          style = node.attributes['style']
+          style.value = Loofah::HTML5::Scrub.scrub_css(style.value) if style
         end
       end
 
