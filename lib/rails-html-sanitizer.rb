@@ -26,12 +26,14 @@ end
 module ActionView
   module Helpers
     module SanitizeHelper
-      if method_defined?(:sanitizer_vendor) || private_method_defined?(:sanitizer_vendor)
-        undef_method(:sanitizer_vendor)
-      end
+      module ClassMethods
+        if method_defined?(:sanitizer_vendor) || private_method_defined?(:sanitizer_vendor)
+          undef_method(:sanitizer_vendor)
+        end
 
-      def sanitizer_vendor
-        Rails::Html::Sanitizer
+        def sanitizer_vendor
+          Rails::Html::Sanitizer
+        end
       end
     end
   end
