@@ -27,16 +27,8 @@ module ActionView
   module Helpers
     module SanitizeHelper
       module ClassMethods
-        if method_defined?(:sanitizer_vendor) || private_method_defined?(:sanitizer_vendor)
-          undef_method(:sanitizer_vendor)
-        end
-
         def sanitizer_vendor
           Rails::Html::Sanitizer
-        end
-
-        if method_defined?(:sanitized_allowed_tags=) || private_method_defined?(:sanitized_allowed_tags=)
-          undef_method(:sanitized_allowed_tags=)
         end
 
         # Replaces the allowed tags for the +sanitize+ helper.
@@ -49,10 +41,6 @@ module ActionView
           sanitizer_vendor.white_list_sanitizer.allowed_tags = tags
         end
 
-        if method_defined?(:sanitized_allowed_attributes=) || private_method_defined?(:sanitized_allowed_attributes=)
-          undef_method(:sanitized_allowed_attributes=)
-        end
-
         # Replaces the allowed HTML attributes for the +sanitize+ helper.
         #
         #   class Application < Rails::Application
@@ -62,6 +50,27 @@ module ActionView
         def sanitized_allowed_attributes=(attributes)
           sanitizer_vendor.white_list_sanitizer.allowed_attributes = attributes
         end
+
+        [:protocol_separator,
+         :uri_attributes,
+         :bad_tags,
+         :allowed_css_properties,
+         :allowed_css_keywords,
+         :shorthand_css_properties,
+         :allowed_protocols].each do |meth|
+          meth_name = "sanitized_#{meth}"
+
+          define_method(meth_name) { deprecate_option(meth_name) }
+          define_method("#{meth_name}=") { |_| deprecate_option("#{meth_name}=") }
+        end
+
+        private
+          def deprecate_option(name)
+            ActiveSupport::Deprecation.warn "The #{name} option is deprecated " \
+              "and has no effect. Until Rails 5 the old behavior can still be " \
+              "installed. To do this add the `rails-deprecated-sanitizer` to " \
+              "your Gemfile. Consult the Rails 4.2 upgrade guide for more information."
+          end
       end
     end
   end
