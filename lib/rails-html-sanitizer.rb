@@ -27,10 +27,6 @@ module ActionView
   module Helpers
     module SanitizeHelper
       module ClassMethods
-        def sanitizer_vendor
-          Rails::Html::Sanitizer
-        end
-
         # Replaces the allowed tags for the +sanitize+ helper.
         #
         #   class Application < Rails::Application
