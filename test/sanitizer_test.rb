@@ -173,7 +173,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_allow_anchors
-    assert_sanitized %(<a href="foo" onclick="bar"><script>baz</script></a>), %(<a href=\"foo\">baz</a>)
+    assert_sanitized %(<a href="foo" onclick="bar"><script>baz</script></a>), %(<a href=\"foo\"></a>)
   end
 
   def test_video_poster_sanitization
