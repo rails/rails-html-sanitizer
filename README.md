@@ -1,9 +1,7 @@
 # Rails Html Sanitizers
 
-In Rails 5 this gem will be responsible for sanitizing HTML fragments in Rails applications,
-i.e. in the `sanitize`, `sanitize_css`, `strip_tags` and `strip_links` methods.
-
-Include it in your Gemfile now to test for any incompatibilities and enjoy a safer and cleaner future.
+In Rails 4.2 and above this gem will be responsible for sanitizing HTML fragments in Rails
+applications, i.e. in the `sanitize`, `sanitize_css`, `strip_tags` and `strip_links` methods.
 
 ## Installation
 
