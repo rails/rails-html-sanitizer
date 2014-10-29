@@ -3,6 +3,8 @@
 In Rails 4.2 and above this gem will be responsible for sanitizing HTML fragments in Rails
 applications, i.e. in the `sanitize`, `sanitize_css`, `strip_tags` and `strip_links` methods.
 
+Rails Html Sanitizer is only intended to be used with Rails applications. If you need similar functionality in non Rails apps consider using [Loofah](https://github.com/flavorjones/loofah) directly (that's what handles sanitization under the hood).
+
 ## Installation
 
 Add this line to your application's Gemfile:
