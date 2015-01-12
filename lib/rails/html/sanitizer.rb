@@ -123,6 +123,7 @@ module Rails
           # No duck typing, Loofah ensures subclass of Loofah::Scrubber
           loofah_fragment.scrub!(scrubber)
         elsif allowed_tags(options) || allowed_attributes(options)
+          remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
           @permit_scrubber.tags = allowed_tags(options)
           @permit_scrubber.attributes = allowed_attributes(options)
           loofah_fragment.scrub!(@permit_scrubber)
