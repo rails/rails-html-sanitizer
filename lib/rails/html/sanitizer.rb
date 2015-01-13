@@ -1,6 +1,9 @@
 module Rails
   module Html
-    XPATHS_TO_REMOVE = %w{.//script .//form comment()}
+    XPATH_COMMENTS = %w{comment()}
+    XPATH_SCRIPT = %w{.//script}
+    XPATH_FORM = %w{.//form}
+    XPATHS_TO_REMOVE = XPATH_COMMENTS + XPATH_SCRIPT + XPATH_FORM
 
     class Sanitizer # :nodoc:
       def sanitize(html, options = {})
@@ -123,7 +126,11 @@ module Rails
           # No duck typing, Loofah ensures subclass of Loofah::Scrubber
           loofah_fragment.scrub!(scrubber)
         elsif allowed_tags(options) || allowed_attributes(options)
-          remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
+          # always strip comments
+          remove_xpath = XPATH_COMMENTS
+          # strip <script> and <form> tags by default if allowed_tags is not set
+          remove_xpath += XPATH_SCRIPT + XPATH_FORM if !allowed_tags(options)
+          remove_xpaths(loofah_fragment, remove_xpath)
           @permit_scrubber.tags = allowed_tags(options)
           @permit_scrubber.attributes = allowed_attributes(options)
           loofah_fragment.scrub!(@permit_scrubber)
