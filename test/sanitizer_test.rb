@@ -472,7 +472,7 @@ protected
   end
 
   def scope_allowed_tags(tags)
-    Rails::Html::WhiteListSanitizer.allowed_tags = %w(u)
+    Rails::Html::WhiteListSanitizer.allowed_tags = tags
     yield Rails::Html::WhiteListSanitizer.new
 
   ensure
