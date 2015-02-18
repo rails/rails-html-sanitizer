@@ -106,7 +106,7 @@ module Rails
         return unless html
         return html if html.empty?
 
-        loofah_fragment = Loofah.fragment(html)
+        loofah_fragment = Loofah.fragment(html, pick_encoding(html))
 
         if scrubber = options[:scrubber]
           # No duck typing, Loofah ensures subclass of Loofah::Scrubber
@@ -135,6 +135,10 @@ module Rails
 
       def allowed_attributes(options)
         options[:attributes] || self.class.allowed_attributes
+      end
+
+      def pick_encoding(html)
+        'UTF-8' if html.encoding == Encoding::ASCII_8BIT # Nokogiri doesn't support ASCII-8BIT
       end
     end
   end
