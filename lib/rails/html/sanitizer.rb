@@ -28,7 +28,7 @@ module Rails
 
         Loofah.fragment(html).tap do |fragment|
           remove_xpaths(fragment, XPATHS_TO_REMOVE)
-        end.text
+        end.text(encode_special_chars: false)
       end
     end
 
