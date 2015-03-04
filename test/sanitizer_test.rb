@@ -104,6 +104,11 @@ class SanitizersTest < Minitest::Test
     assert_equal "Frozen string with no tags", full_sanitize("Frozen string with no tags".freeze)
   end
 
+  def test_full_sanitize_allows_turning_off_encoding_special_chars
+    assert_equal '&amp;', full_sanitize('&')
+    assert_equal '&', full_sanitize('&', encode_special_chars: false)
+  end
+
   def test_strip_links_with_tags_in_tags
     expected = "a href='hello'&gt;all <b>day</b> long/a&gt;"
     input = "<<a>a href='hello'>all <b>day</b> long<</A>/a>"
