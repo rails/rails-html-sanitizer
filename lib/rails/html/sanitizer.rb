@@ -120,7 +120,7 @@ module Rails
           loofah_fragment.scrub!(:strip)
         end
 
-        loofah_fragment.to_s
+        properly_encode(loofah_fragment, encoding: 'UTF-8')
       end
 
       def sanitize_css(style_string)
@@ -135,6 +135,10 @@ module Rails
 
       def allowed_attributes(options)
         options[:attributes] || self.class.allowed_attributes
+      end
+
+      def properly_encode(fragment, options)
+        fragment.xml? ? fragment.to_xml(options) : fragment.to_html(options)
       end
     end
   end
