@@ -446,6 +446,13 @@ class SanitizersTest < Minitest::Test
     assert_sanitized %(<a href="http&#x3A;//legit">), %(<a href="http://legit">)
   end
 
+  def test_sanitize_ascii_8bit_string
+    white_list_sanitize('<a>hello</a>'.encode('ASCII-8BIT')).tap do |sanitized|
+      assert_equal '<a>hello</a>', sanitized
+      assert_equal Encoding::UTF_8, sanitized.encoding
+    end
+  end
+
 protected
 
   def xpath_sanitize(input, options = {})
