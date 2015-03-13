@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["rafaelmfranca@gmail.com", "kaspth@gmail.com"]
   spec.description   = %q{HTML sanitization for Rails applications}
   spec.summary       = %q{This gem is responsible to sanitize HTML fragments in Rails applications.}
-  spec.homepage      = "https://github.com/rafaelfranca/rails-html-sanitizer"
+  spec.homepage      = "https://github.com/rails/rails-html-sanitizer"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*", "README.md", "LICENSE.txt", "CHANGELOG.md"]
