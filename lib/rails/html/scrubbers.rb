@@ -137,11 +137,11 @@ module Rails
     # If set, attributes included will be removed.
     class TargetScrubber < PermitScrubber
       def allowed_node?(node)
-        !@tags.include?(node.name)
+        !super
       end
 
       def scrub_attribute?(name)
-        @attributes.include?(name)
+        !super
       end
     end
   end
