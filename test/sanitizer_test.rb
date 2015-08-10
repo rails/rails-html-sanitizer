@@ -104,9 +104,12 @@ class SanitizersTest < Minitest::Test
     assert_equal "Frozen string with no tags", full_sanitize("Frozen string with no tags".freeze)
   end
 
-  def test_full_sanitize_allows_turning_off_encoding_special_chars
+  def test_full_sanitize_respect_html_escaping_of_the_given_string
+    assert_equal 'test\r\nstring', full_sanitize('test\r\nstring')
     assert_equal '&amp;', full_sanitize('&')
-    assert_equal '&', full_sanitize('&', encode_special_chars: false)
+    assert_equal '&amp;', full_sanitize('&amp;')
+    assert_equal '&amp;amp;', full_sanitize('&amp;amp;')
+    assert_equal 'omg &lt;script&gt;BOM&lt;/script&gt;', full_sanitize('omg &lt;script&gt;BOM&lt;/script&gt;')
   end
 
   def test_strip_links_with_tags_in_tags

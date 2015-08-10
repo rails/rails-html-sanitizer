@@ -143,6 +143,20 @@ class TargetScrubberTest < ScrubberTest
   end
 end
 
+class TextOnlyScrubberTest < ScrubberTest
+  def setup
+    @scrubber = Rails::Html::TextOnlyScrubber.new
+  end
+
+  def test_removes_all_tags_and_keep_the_content
+    assert_scrubbed '<tag>hello</tag>', 'hello'
+  end
+
+  def test_skips_text_nodes
+    assert_node_skipped('some text')
+  end
+end
+
 class ReturningStopFromScrubNodeTest < ScrubberTest
   class ScrubStopper < Rails::Html::PermitScrubber
     def scrub_node(node)

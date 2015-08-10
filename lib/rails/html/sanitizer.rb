@@ -13,6 +13,10 @@ module Rails
         node.xpath(*xpaths).remove
         node
       end
+
+      def properly_encode(fragment, options)
+        fragment.xml? ? fragment.to_xml(options) : fragment.to_html(options)
+      end
     end
 
     # === Rails::Html::FullSanitizer
@@ -26,9 +30,12 @@ module Rails
         return unless html
         return html if html.empty?
 
-        Loofah.fragment(html).tap do |fragment|
-          remove_xpaths(fragment, XPATHS_TO_REMOVE)
-        end.text(options)
+        loofah_fragment = Loofah.fragment(html)
+
+        remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
+        loofah_fragment.scrub!(TextOnlyScrubber.new)
+
+        properly_encode(loofah_fragment, encoding: 'UTF-8')
       end
     end
 
@@ -139,10 +146,6 @@ module Rails
 
       def allowed_attributes(options)
         options[:attributes] || self.class.allowed_attributes
-      end
-
-      def properly_encode(fragment, options)
-        fragment.xml? ? fragment.to_xml(options) : fragment.to_html(options)
       end
     end
   end

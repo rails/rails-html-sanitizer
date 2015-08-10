@@ -169,5 +169,25 @@ module Rails
         !super
       end
     end
+
+    # === Rails::Html::TextOnlyScrubber
+    #
+    # Rails::Html::TextOnlyScrubber allows you to permit text nodes.
+    #
+    # Unallowed elements will be stripped, i.e. element is removed but its subtree kept.
+    class TextOnlyScrubber < Loofah::Scrubber
+      def initialize
+        @direction = :bottom_up
+      end
+
+      def scrub(node)
+        if node.text?
+          CONTINUE
+        else
+          node.before node.children
+          node.remove
+        end
+      end
+    end
   end
 end
