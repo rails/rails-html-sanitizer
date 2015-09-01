@@ -132,10 +132,11 @@ The `node` argument passed to some methods in a custom scrubber is an instance o
 - [`Nokogiri::XML::Node`](http://nokogiri.org/Nokogiri/XML/Node.html)
 - [Nokogiri](http://nokogiri.org)
 
-## Contributing
+## Contributing to Rails Html Sanitizers
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+Rails Html Sanitizers is work of many contributors. You're encouraged to submit pull requests, propose features and discuss issues.
+
+See [CONTRIBUTING](CONTRIBUTING.md).
+
+## License
+Rails Html Sanitizers is released under the [MIT License](MIT-LICENSE).
