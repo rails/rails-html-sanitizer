@@ -11,6 +11,16 @@ class SanitizersTest < Minitest::Test
     end
   end
 
+  def test_sanitize_nested_script
+    sanitizer = Rails::Html::WhiteListSanitizer.new
+    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', sanitizer.sanitize('<script><script></script>alert("XSS");<script><</script>/</script><script>script></script>', tags: %w(em))
+  end
+
+  def test_sanitize_nested_script_in_style
+    sanitizer = Rails::Html::WhiteListSanitizer.new
+    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', sanitizer.sanitize('<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>', tags: %w(em))
+  end
+
   class XpathRemovalTestSanitizer < Rails::Html::Sanitizer
     def sanitize(html, options = {})
       fragment = Loofah.fragment(html)

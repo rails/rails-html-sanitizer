@@ -60,6 +60,11 @@ module Rails
       end
 
       def scrub(node)
+        if node.cdata?
+          text = node.document.create_text_node node.text
+          node.replace text
+          return CONTINUE
+        end
         return CONTINUE if skip_node?(node)
 
         unless keep_node?(node)
@@ -76,7 +81,7 @@ module Rails
       end
 
       def skip_node?(node)
-        node.text? || node.cdata?
+        node.text?
       end
 
       def scrub_attribute?(name)
