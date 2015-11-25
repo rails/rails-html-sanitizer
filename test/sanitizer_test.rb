@@ -326,8 +326,8 @@ class SanitizersTest < Minitest::Test
    %(<IMG SRC="jav&#x0D;ascript:alert('XSS');">),
    %(<IMG SRC=" &#14;  javascript:alert('XSS');">),
    %(<IMG SRC="javascript&#x3a;alert('XSS');">),
-   %(<IMG SRC=`javascript:alert("RSnake says, 'XSS'")`>)].each_with_index do |img_hack, i|
-    define_method "test_should_not_fall_for_xss_image_hack_#{i+1}" do
+   %(<IMG SRC=`javascript:alert("RSnake says, 'XSS'")`>)].each do |img_hack|
+    define_method "test_should_not_fall_for_xss_image_hack_#{img_hack}" do
       assert_sanitized img_hack, "<img>"
     end
   end
