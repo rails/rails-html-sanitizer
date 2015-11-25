@@ -152,7 +152,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_script
-    assert_sanitized "a b c<script language=\"Javascript\">blah blah blah</script>d e f", "a b cd e f"
+    assert_sanitized "a b c<script language=\"Javascript\">blah blah blah</script>d e f", "a b cblah blah blahd e f"
   end
 
   def test_sanitize_js_handlers
@@ -173,17 +173,23 @@ class SanitizersTest < Minitest::Test
   tags = Loofah::HTML5::WhiteList::ALLOWED_ELEMENTS - %w(script form)
   tags.each do |tag_name|
     define_method "test_should_allow_#{tag_name}_tag" do
-      assert_sanitized "start <#{tag_name} title=\"1\" onclick=\"foo\">foo <bad>bar</bad> baz</#{tag_name}> end", %(start <#{tag_name} title="1">foo bar baz</#{tag_name}> end)
+      scope_allowed_tags(tags) do
+        assert_sanitized "start <#{tag_name} title=\"1\" onclick=\"foo\">foo <bad>bar</bad> baz</#{tag_name}> end", %(start <#{tag_name} title="1">foo bar baz</#{tag_name}> end)
+      end
     end
   end
 
   def test_should_allow_anchors
-    assert_sanitized %(<a href="foo" onclick="bar"><script>baz</script></a>), %(<a href=\"foo\"></a>)
+    assert_sanitized %(<a href="foo" onclick="bar"><script>baz</script></a>), %(<a href=\"foo\">baz</a>)
   end
 
   def test_video_poster_sanitization
-    assert_sanitized %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>), %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
-    assert_sanitized %(<video src="videofile.ogg" poster=javascript:alert(1)></video>), %(<video src="videofile.ogg"></video>)
+    scope_allowed_tags(%w(video)) do
+      scope_allowed_attributes %w(src poster) do
+        assert_sanitized %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>), %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
+        assert_sanitized %(<video src="videofile.ogg" poster=javascript:alert(1)></video>), %(<video src="videofile.ogg"></video>)
+      end
+    end
   end
 
   # RFC 3986, sec 4.2
@@ -309,7 +315,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_not_fall_for_xss_image_hack_with_uppercase_tags
-    assert_sanitized %(<IMG """><SCRIPT>alert("XSS")</SCRIPT>">), "<img>\"&gt;"
+    assert_sanitized %(<IMG """><SCRIPT>alert("XSS")</SCRIPT>">), %(<img>alert("XSS")"&gt;)
   end
 
   [%(<IMG SRC="javascript:alert('XSS');">),
@@ -453,6 +459,16 @@ class SanitizersTest < Minitest::Test
     end
   end
 
+  def test_sanitize_data_attributes
+    assert_sanitized %(<a href="/blah" data-method="post">foo</a>), %(<a href="/blah">foo</a>)
+    assert_sanitized %(<a data-remote="true" data-type="script" data-method="get" data-cross-domain="true" href="attack.js">Launch the missiles</a>), %(<a href="attack.js">Launch the missiles</a>)
+  end
+
+  def test_allow_data_attribute_if_requested
+    text = %(<a data-foo="foo">foo</a>)
+    assert_equal %(<a data-foo="foo">foo</a>), white_list_sanitize(text, attributes: ['data-foo'])
+  end
+
 protected
 
   def xpath_sanitize(input, options = {})
@@ -484,18 +500,18 @@ protected
   end
 
   def scope_allowed_tags(tags)
+    old_tags = Rails::Html::WhiteListSanitizer.allowed_tags
     Rails::Html::WhiteListSanitizer.allowed_tags = tags
     yield Rails::Html::WhiteListSanitizer.new
-
   ensure
-    Rails::Html::WhiteListSanitizer.allowed_tags = nil
+    Rails::Html::WhiteListSanitizer.allowed_tags = old_tags
   end
 
   def scope_allowed_attributes(attributes)
+    old_attributes = Rails::Html::WhiteListSanitizer.allowed_attributes
     Rails::Html::WhiteListSanitizer.allowed_attributes = attributes
     yield Rails::Html::WhiteListSanitizer.new
-
   ensure
-    Rails::Html::WhiteListSanitizer.allowed_attributes = nil
+    Rails::Html::WhiteListSanitizer.allowed_attributes = old_attributes
   end
 end
