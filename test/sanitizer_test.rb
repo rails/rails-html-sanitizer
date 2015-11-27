@@ -353,6 +353,13 @@ class SanitizersTest < Minitest::Test
     assert_sanitized %(<IMG SRC="javascript:alert('XSS')"), "<img>"
   end
 
+  def test_should_sanitize_iframe_xss_with_custom_allowed_tags
+    scope_allowed_tags ['a'] do |sanitizer|
+      html = sanitizer.sanitize(%(<script><iframe src=""//srcdoc='<svg onload=alert(document.domain)>'>))
+      assert_equal "", html
+    end
+  end
+
   def test_should_not_fall_for_ridiculous_hack
     img_hack = %(<IMG\nSRC\n=\n"\nj\na\nv\na\ns\nc\nr\ni\np\nt\n:\na\nl\ne\nr\nt\n(\n'\nX\nS\nS\n'\n)\n"\n>)
     assert_sanitized img_hack, "<img>"
