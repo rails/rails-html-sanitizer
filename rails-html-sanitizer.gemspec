@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/rails/rails-html-sanitizer"
   spec.license       = "MIT"
 
-  spec.files         = Dir["lib/**/*", "README.md", "LICENSE.txt", "CHANGELOG.md"]
+  spec.files         = Dir["lib/**/*", "README.md", "MIT-LICENSE", "CHANGELOG.md"]
   spec.test_files    = Dir["test/**/*"]
   spec.require_paths = ["lib"]
 
