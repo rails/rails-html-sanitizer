@@ -28,8 +28,9 @@ module Rails
     # If not, attributes are removed based on Loofahs +HTML5::Scrub.scrub_attributes+.
     #
     # class CommentScrubber < Html::PermitScrubber
-    #   def allowed_node?(node)
-    #     !%w(form script comment blockquote).include?(node.name)
+    #   def initialize
+    #     super
+    #     self.tags = %w(form script comment blockquote)
     #   end
     #
     #   def skip_node?(node)
