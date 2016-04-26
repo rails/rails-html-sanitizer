@@ -99,6 +99,12 @@ You can also create custom scrubbers in your application if you want to.
 
 ```ruby
 class CommentScrubber < Rails::Html::PermitScrubber
+  def initialize
+    super
+    self.tags = %w(form script comment blockquote) #should be set otherwise overriding allowed_node? won't be called, instead elements are stripped based on Loofahs HTML5::Scrub.allowed_element?.
+    self.attributes = %w(style) #should be set otherwise overriding scrub_attribute? won't be called, instead attributes are removed based on Loofahs HTML5::Scrub.scrub_attributes.
+  end
+  
   def allowed_node?(node)
     !%w(form script comment blockquote).include?(node.name)
   end
