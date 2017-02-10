@@ -61,7 +61,7 @@ module Rails
     # Sanitizes html and css from an extensive white list (see link further down).
     #
     # === Whitespace
-    # We can't make any guarentees about whitespace being kept or stripped.
+    # We can't make any guarantees about whitespace being kept or stripped.
     # Loofah uses Nokogiri, which wraps either a C or Java parser for the
     # respective Ruby implementation.
     # Those two parsers determine how whitespace is ultimately handled.

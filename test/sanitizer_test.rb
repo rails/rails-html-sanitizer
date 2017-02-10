@@ -33,7 +33,7 @@ class SanitizersTest < Minitest::Test
     assert_equal %(<h1>hello </h1>), xpath_sanitize(html, xpaths: %w(.//script))
   end
 
-  def test_remove_xpaths_removes_all_occurences_of_xpath
+  def test_remove_xpaths_removes_all_occurrences_of_xpath
     html = %(<section><header><script>code!</script></header><p>hello <script>code!</script></p></section>)
     assert_equal %(<section><header></header><p>hello </p></section>), xpath_sanitize(html, xpaths: %w(.//script))
   end
