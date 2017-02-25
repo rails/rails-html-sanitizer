@@ -271,6 +271,11 @@ class SanitizersTest < Minitest::Test
     assert_equal text, white_list_sanitize(text, attributes: ['foo'])
   end
 
+  def test_should_allow_ascii_8bit_string
+    text = '1.0'.force_encoding('ASCII-8BIT')
+    assert_equal '1.0', white_list_sanitize(text)
+  end
+
   def test_scrub_style_if_style_attribute_option_is_passed
     input = '<p style="color: #000; background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
     assert_equal '<p style="color: #000;"></p>', white_list_sanitize(input, attributes: %w(style))
