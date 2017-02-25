@@ -258,17 +258,68 @@ class SanitizersTest < Minitest::Test
 
   def test_should_allow_only_custom_tags
     text = "<u>foo</u> with <i>bar</i>"
-    assert_equal "<u>foo</u> with bar", white_list_sanitize(text, tags: %w(u))
+    text_sanitized = "<u>foo</u> with bar"
+    assert_equal text_sanitized, white_list_sanitize(text, tags: %w(u))
   end
 
   def test_should_allow_custom_tags_with_attributes
-    text = %(<blockquote cite="http://example.com/">foo</blockquote>)
-    assert_equal text, white_list_sanitize(text)
+    text = %(<blockquote cite="http://example.com/">foo</blockquote> with <i>bar</i>)
+    text_sanitized = %(<blockquote cite="http://example.com/">foo</blockquote> with bar)
+    assert_equal text_sanitized, white_list_sanitize(text, tags: %w(blockquote))
   end
 
   def test_should_allow_custom_tags_with_custom_attributes
-    text = %(<blockquote foo="bar">Lorem ipsum</blockquote>)
-    assert_equal text, white_list_sanitize(text, attributes: ['foo'])
+    text = %(<blockquote foo="bar" fim="baz">Lorem ipsum</blockquote> with <i>Ipsum Lorem</i>)
+    text_sanitized = %(<blockquote foo="bar">Lorem ipsum</blockquote> with Ipsum Lorem)
+    assert_equal text_sanitized, white_list_sanitize(text, tags: %w(blockquote), attributes: %w(foo))
+  end
+
+  def test_should_allow_custom_attributes
+    text = %(<a onclick="foo">bar</a>)
+    text_sanitized = %(<a onclick="foo">bar</a>)
+    assert_equal text_sanitized, white_list_sanitize(text, attributes: %w(onclick))
+  end
+
+  def test_should_allow_only_custom_attributes
+    text = %(<a onclick="foo" onfocus="baz">bar</a>)
+    text_sanitized = %(<a onclick="foo">bar</a>)
+    assert_equal text_sanitized, white_list_sanitize(text, attributes: %w(onclick))
+  end
+
+  def test_should_strip_script_tags_when_custom_attributes_is_set
+    text = %(<script>pwned</script><a onclick="foo" onfocus="baz">bar</a>)
+    text_sanitized = %(<a onclick="foo">bar</a>)
+    assert_equal text_sanitized, white_list_sanitize(text, attributes: %w(onclick))
+  end
+
+  def test_should_strip_form_tags_when_custom_attributes_is_set
+    text = %(<form>pwned</form><a onclick="foo" onfocus="baz">bar</a>)
+    text_sanitized = %(<a onclick="foo">bar</a>)
+    assert_equal text_sanitized, white_list_sanitize(text, attributes: %w(onclick))
+  end
+
+  def test_should_not_strip_script_tags_when_script_in_custom_tags_and_custom_attributes_is_set
+    text = %(<script id="link" class="bar">foo</script><a>baz</a>)
+    text_sanitized = %(<script id="link">foo</script>baz)
+    assert_equal text_sanitized, white_list_sanitize(text, tags: %w(script), attributes: %w(id))
+  end
+
+  def test_should_strip_script_tags_when_not_in_custom_tags_and_custom_attributes_is_set
+    text = %(<script>foo</script> <a id="link" class="bar">baz</a>)
+    text_sanitized = %(foo <a id="link">baz</a>)
+    assert_equal text_sanitized, white_list_sanitize(text, tags: %w(a), attributes: %w(id))
+  end
+
+  def test_should_not_strip_form_tags_when_form_in_custom_tags_and_custom_attributes_is_set
+    text = %(<form id="link" class="bar">foo</form><a>baz</a>)
+    text_sanitized = %(<form id="link">foo</form>baz)
+    assert_equal text_sanitized, white_list_sanitize(text, tags: %w(form), attributes: %w(id))
+  end
+
+  def test_should_strip_form_tags_when_not_in_custom_tags_and_custom_attributes_is_set
+    text = %(<form>foo</form> <a id="link" class="bar">baz</a>)
+    text_sanitized = %(foo <a id="link">baz</a>)
+    assert_equal text_sanitized, white_list_sanitize(text, tags: %w(a), attributes: %w(id))
   end
 
   def test_scrub_style_if_style_attribute_option_is_passed
