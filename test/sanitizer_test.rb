@@ -87,7 +87,9 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_blank_string
-    [nil, '', '   '].each { |blank| assert_equal blank, full_sanitize(blank) }
+    assert_nil full_sanitize(nil)
+    assert_equal "", full_sanitize("")
+    assert_equal "   ", full_sanitize("   ")
   end
 
   def test_strip_tags_with_plaintext
