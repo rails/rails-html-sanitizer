@@ -74,7 +74,7 @@ class SanitizersTest < Minitest::Test
     assert_equal expected, full_sanitize(input)
   end
 
-  def test_strip_comments
+  def test_remove_unclosed_tags
     assert_equal "This is ", full_sanitize("This is <-- not\n a comment here.")
   end
 
