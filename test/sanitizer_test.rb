@@ -58,11 +58,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_invalid_html
-    assert_equal "", full_sanitize("<<<bad html")
+    assert_equal "&lt;&lt;", full_sanitize("<<<bad html")
   end
 
   def test_strip_nested_tags
-    expected = "Weia onclick='alert(document.cookie);'/&gt;rdos"
+    expected = "Wei&lt;a onclick='alert(document.cookie);'/&gt;rdos"
     input = "Wei<<a>a onclick='alert(document.cookie);'</a>/>rdos"
     assert_equal expected, full_sanitize(input)
   end
@@ -74,7 +74,7 @@ class SanitizersTest < Minitest::Test
     assert_equal expected, full_sanitize(input)
   end
 
-  def test_strip_comments
+  def test_remove_unclosed_tags
     assert_equal "This is ", full_sanitize("This is <-- not\n a comment here.")
   end
 
@@ -87,7 +87,9 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_blank_string
-    [nil, '', '   '].each { |blank| assert_equal blank, full_sanitize(blank) }
+    assert_nil full_sanitize(nil)
+    assert_equal "", full_sanitize("")
+    assert_equal "   ", full_sanitize("   ")
   end
 
   def test_strip_tags_with_plaintext
@@ -98,8 +100,8 @@ class SanitizersTest < Minitest::Test
     assert_equal "This is a test.", full_sanitize("<p>This <u>is<u> a <a href='test.html'><strong>test</strong></a>.</p>")
   end
 
-  def test_strip_tags_with_many_open_quotes
-    assert_equal "", full_sanitize("<<<bad html>")
+  def test_escape_tags_with_many_open_quotes
+    assert_equal "&lt;&lt;", full_sanitize("<<<bad html>")
   end
 
   def test_strip_tags_with_sentence
@@ -123,7 +125,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_links_with_tags_in_tags
-    expected = "a href='hello'&gt;all <b>day</b> long/a&gt;"
+    expected = "&lt;a href='hello'&gt;all <b>day</b> long&lt;/a&gt;"
     input = "<<a>a href='hello'>all <b>day</b> long<</A>/a>"
     assert_equal expected, link_sanitize(input)
   end
@@ -360,7 +362,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_script_tag_with_multiple_open_brackets
-    assert_sanitized %(<<SCRIPT>alert("XSS");//<</SCRIPT>), "alert(\"XSS\");//"
+    assert_sanitized %(<<SCRIPT>alert("XSS");//<</SCRIPT>), "&lt;alert(\"XSS\");//&lt;"
     assert_sanitized %(<iframe src=http://ha.ckers.org/scriptlet.html\n<a), ""
   end
 
