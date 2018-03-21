@@ -385,13 +385,13 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_illegal_style_properties
     raw      = %(display:block; position:absolute; left:0; top:0; width:100%; height:100%; z-index:1; background-color:black; background-image:url(http://www.ragingplatypus.com/i/cam-full.jpg); background-x:center; background-y:center; background-repeat:repeat;)
-    expected = %(display: block; width: 100%; height: 100%; background-color: black; background-x: center; background-y: center;)
+    expected = %(display:block;width:100%;height:100%;background-color:black;background-x:center;background-y:center;)
     assert_equal expected, sanitize_css(raw)
   end
 
   def test_should_sanitize_with_trailing_space
     raw = "display:block; "
-    expected = "display: block;"
+    expected = "display:block;"
     assert_equal expected, sanitize_css(raw)
   end
 
@@ -482,6 +482,38 @@ class SanitizersTest < Minitest::Test
   def test_allow_data_attribute_if_requested
     text = %(<a data-foo="foo">foo</a>)
     assert_equal %(<a data-foo="foo">foo</a>), white_list_sanitize(text, attributes: ['data-foo'])
+  end
+
+  def test_uri_escaping_of_href_attr_in_a_tag_in_white_list_sanitizer
+    html = %{<a href='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
+
+    text = white_list_sanitize(html)
+
+    assert_equal %{<a href="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
+  end
+
+  def test_uri_escaping_of_src_attr_in_a_tag_in_white_list_sanitizer
+    html = %{<a src='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
+
+    text = white_list_sanitize(html)
+
+    assert_equal %{<a src="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
+  end
+
+  def test_uri_escaping_of_name_attr_in_a_tag_in_white_list_sanitizer
+    html = %{<a name='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
+
+    text = white_list_sanitize(html)
+
+    assert_equal %{<a name="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
+  end
+
+  def test_uri_escaping_of_name_action_in_a_tag_in_white_list_sanitizer
+    html = %{<a action='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
+
+    text = white_list_sanitize(html, attributes: ['action'])
+
+    assert_equal %{<a action="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
   end
 
 protected

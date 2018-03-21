@@ -153,6 +153,8 @@ module Rails
         end
 
         node.remove_attribute(attr_node.name) if attr_name == 'src' && attr_node.value !~ /[^[:space:]]/
+
+        Loofah::HTML5::Scrub.force_correct_attribute_escaping! node
       end
     end
 
