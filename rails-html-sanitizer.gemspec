@@ -17,6 +17,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = Dir["test/**/*"]
   spec.require_paths = ["lib"]
 
+  # NOTE: There's no need to update this dependency for Loofah CVEs
+  # in minor releases when users can simply run `bundle update loofah`.
   spec.add_dependency "loofah", "~> 2.2", ">= 2.2.2"
 
   spec.add_development_dependency "bundler", "~> 1.3"
