@@ -43,7 +43,7 @@ module Rails
     # end
     #
     # See the documentation for Nokogiri::XML::Node to understand what's possible
-    # with nodes: http://nokogiri.org/Nokogiri/XML/Node.html
+    # with nodes: https://nokogiri.org/rdoc/Nokogiri/XML/Node.html
     class PermitScrubber < Loofah::Scrubber
       attr_reader :tags, :attributes
 
