@@ -127,7 +127,7 @@ Loofah is what underlies the sanitizers and scrubbers of rails-html-sanitizer.
 - [Loofah and Loofah Scrubbers](https://github.com/flavorjones/loofah)
 
 The `node` argument passed to some methods in a custom scrubber is an instance of `Nokogiri::XML::Node`.
-- [`Nokogiri::XML::Node`](http://nokogiri.org/Nokogiri/XML/Node.html)
+- [`Nokogiri::XML::Node`](https://nokogiri.org/rdoc/Nokogiri/XML/Node.html)
 - [Nokogiri](http://nokogiri.org)
 
 ## Contributing to Rails Html Sanitizers
