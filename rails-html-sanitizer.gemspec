@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   # in minor releases when users can simply run `bundle update loofah`.
   spec.add_dependency "loofah", "~> 2.2", ">= 2.2.2"
 
-  spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "bundler", ">= 1.3"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "rails-dom-testing"
