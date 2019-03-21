@@ -15,8 +15,14 @@ module Rails
           Html::LinkSanitizer
         end
 
+        def safe_list_sanitizer
+          Html::SafeListSanitizer
+        end
+
         def white_list_sanitizer
-          Html::WhiteListSanitizer
+          ActiveSupport::Deprecation.warn "warning: white_list_sanitizer is" \
+          "deprecated, please use safe_list_sanitizer instead."
+          safe_list_sanitizer
         end
       end
     end
@@ -34,7 +40,7 @@ module ActionView
         #   end
         #
         def sanitized_allowed_tags=(tags)
-          sanitizer_vendor.white_list_sanitizer.allowed_tags = tags
+          sanitizer_vendor.safe_list_sanitizer.allowed_tags = tags
         end
 
         # Replaces the allowed HTML attributes for the +sanitize+ helper.
@@ -44,7 +50,7 @@ module ActionView
         #   end
         #
         def sanitized_allowed_attributes=(attributes)
-          sanitizer_vendor.white_list_sanitizer.allowed_attributes = attributes
+          sanitizer_vendor.safe_list_sanitizer.allowed_attributes = attributes
         end
 
         [:protocol_separator,
