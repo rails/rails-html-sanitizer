@@ -485,35 +485,43 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_uri_escaping_of_href_attr_in_a_tag_in_white_list_sanitizer
+    skip if RUBY_VERSION < "2.3"
+
     html = %{<a href='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
     text = white_list_sanitize(html)
 
-    assert_equal %{<a href="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
+    assert_equal %{<a href=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
   def test_uri_escaping_of_src_attr_in_a_tag_in_white_list_sanitizer
+    skip if RUBY_VERSION < "2.3"
+
     html = %{<a src='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
     text = white_list_sanitize(html)
 
-    assert_equal %{<a src="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
+    assert_equal %{<a src=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
   def test_uri_escaping_of_name_attr_in_a_tag_in_white_list_sanitizer
+    skip if RUBY_VERSION < "2.3"
+
     html = %{<a name='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
     text = white_list_sanitize(html)
 
-    assert_equal %{<a name="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
+    assert_equal %{<a name=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
   def test_uri_escaping_of_name_action_in_a_tag_in_white_list_sanitizer
+    skip if RUBY_VERSION < "2.3"
+
     html = %{<a action='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
     text = white_list_sanitize(html, attributes: ['action'])
 
-    assert_equal %{<a action="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>}, text
+    assert_equal %{<a action=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
 protected
