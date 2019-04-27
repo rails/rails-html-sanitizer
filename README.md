@@ -41,22 +41,22 @@ link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.<
 # => Only the link text will be kept.
 ```
 
-#### WhiteListSanitizer
+#### SafeListSanitizer
 
 ```ruby
-white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
+safe_list_sanitizer = Rails::Html::SafeListSanitizer.new
 
-# sanitize via an extensive white list of allowed elements
-white_list_sanitizer.sanitize(@article.body)
+# sanitize via an extensive safe list of allowed elements
+safe_list_sanitizer.sanitize(@article.body)
 
-# white list only the supplied tags and attributes
-white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
+# safe list only the supplied tags and attributes
+safe_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
 
-# white list via a custom scrubber
-white_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
+# safe list via a custom scrubber
+safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
 
-# white list sanitizer can also sanitize css
-white_list_sanitizer.sanitize_css('background-color: #000;')
+# safe list sanitizer can also sanitize css
+safe_list_sanitizer.sanitize_css('background-color: #000;')
 ```
 
 ### Scrubbers

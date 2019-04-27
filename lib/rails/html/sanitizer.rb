@@ -57,8 +57,8 @@ module Rails
       end
     end
 
-    # === Rails::Html::WhiteListSanitizer
-    # Sanitizes html and css from an extensive white list (see link further down).
+    # === Rails::Html::SafeListSanitizer
+    # Sanitizes html and css from an extensive safe list (see link further down).
     #
     # === Whitespace
     # We can't make any guarantees about whitespace being kept or stripped.
@@ -72,34 +72,34 @@ module Rails
     # so automatically.
     #
     # === Options
-    # Sanitizes both html and css via the white lists found here:
+    # Sanitizes both html and css via the safe lists found here:
     # https://github.com/flavorjones/loofah/blob/master/lib/loofah/html5/whitelist.rb
     #
-    # WhiteListSanitizer also accepts options to configure
-    # the white list used when sanitizing html.
+    # SafeListSanitizer also accepts options to configure
+    # the safe list used when sanitizing html.
     # There's a class level option:
-    # Rails::Html::WhiteListSanitizer.allowed_tags = %w(table tr td)
-    # Rails::Html::WhiteListSanitizer.allowed_attributes = %w(id class style)
+    # Rails::Html::SafeListSanitizer.allowed_tags = %w(table tr td)
+    # Rails::Html::SafeListSanitizer.allowed_attributes = %w(id class style)
     #
     # Tags and attributes can also be passed to +sanitize+.
     # Passed options take precedence over the class level options.
     #
     # === Examples
-    # white_list_sanitizer = Rails::Html::WhiteListSanitizer.new
+    # safe_list_sanitizer = Rails::Html::SafeListSanitizer.new
     #
     # Sanitize css doesn't take options
-    # white_list_sanitizer.sanitize_css('background-color: #000;')
+    # safe_list_sanitizer.sanitize_css('background-color: #000;')
     #
-    # Default: sanitize via a extensive white list of allowed elements
-    # white_list_sanitizer.sanitize(@article.body)
+    # Default: sanitize via a extensive safe list of allowed elements
+    # safe_list_sanitizer.sanitize(@article.body)
     #
-    # White list via the supplied tags and attributes
-    # white_list_sanitizer.sanitize(@article.body, tags: %w(table tr td),
+    # Safe list via the supplied tags and attributes
+    # safe_list_sanitizer.sanitize(@article.body, tags: %w(table tr td),
     # attributes: %w(id class style))
     #
-    # White list via a custom scrubber
-    # white_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
-    class WhiteListSanitizer < Sanitizer
+    # Safe list via a custom scrubber
+    # safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
+    class SafeListSanitizer < Sanitizer
       class << self
         attr_accessor :allowed_tags
         attr_accessor :allowed_attributes
@@ -146,7 +146,12 @@ module Rails
 
       def allowed_attributes(options)
         options[:attributes] || self.class.allowed_attributes
-      end
+      end      
+    end
+
+    WhiteListSanitizer = SafeListSanitizer
+    if Object.respond_to?(:deprecate_constant)
+      deprecate_constant :WhiteListSanitizer
     end
   end
 end

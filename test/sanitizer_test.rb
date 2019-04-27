@@ -12,12 +12,12 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_nested_script
-    sanitizer = Rails::Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::SafeListSanitizer.new
     assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', sanitizer.sanitize('<script><script></script>alert("XSS");<script><</script>/</script><script>script></script>', tags: %w(em))
   end
 
   def test_sanitize_nested_script_in_style
-    sanitizer = Rails::Html::WhiteListSanitizer.new
+    sanitizer = Rails::Html::SafeListSanitizer.new
     assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', sanitizer.sanitize('<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>', tags: %w(em))
   end
 
@@ -255,38 +255,38 @@ class SanitizersTest < Minitest::Test
 
   def test_should_allow_custom_tags
     text = "<u>foo</u>"
-    assert_equal text, white_list_sanitize(text, tags: %w(u))
+    assert_equal text, safe_list_sanitize(text, tags: %w(u))
   end
 
   def test_should_allow_only_custom_tags
     text = "<u>foo</u> with <i>bar</i>"
-    assert_equal "<u>foo</u> with bar", white_list_sanitize(text, tags: %w(u))
+    assert_equal "<u>foo</u> with bar", safe_list_sanitize(text, tags: %w(u))
   end
 
   def test_should_allow_custom_tags_with_attributes
     text = %(<blockquote cite="http://example.com/">foo</blockquote>)
-    assert_equal text, white_list_sanitize(text)
+    assert_equal text, safe_list_sanitize(text)
   end
 
   def test_should_allow_custom_tags_with_custom_attributes
     text = %(<blockquote foo="bar">Lorem ipsum</blockquote>)
-    assert_equal text, white_list_sanitize(text, attributes: ['foo'])
+    assert_equal text, safe_list_sanitize(text, attributes: ['foo'])
   end
 
   def test_scrub_style_if_style_attribute_option_is_passed
     input = '<p style="color: #000; background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
-    assert_equal '<p style="color: #000;"></p>', white_list_sanitize(input, attributes: %w(style))
+    assert_equal '<p style="color: #000;"></p>', safe_list_sanitize(input, attributes: %w(style))
   end
 
   def test_should_raise_argument_error_if_tags_is_not_enumerable
     assert_raises ArgumentError do
-      white_list_sanitize('<a>some html</a>', tags: 'foo')
+      safe_list_sanitize('<a>some html</a>', tags: 'foo')
     end
   end
 
   def test_should_raise_argument_error_if_attributes_is_not_enumerable
     assert_raises ArgumentError do
-      white_list_sanitize('<a>some html</a>', attributes: 'foo')
+      safe_list_sanitize('<a>some html</a>', attributes: 'foo')
     end
   end
 
@@ -295,7 +295,7 @@ class SanitizersTest < Minitest::Test
     def scrubber.scrub(node); node.name = 'h1'; end
 
     assert_raises Loofah::ScrubberNotFound do
-      white_list_sanitize('<a>some html</a>', scrubber: scrubber)
+      safe_list_sanitize('<a>some html</a>', scrubber: scrubber)
     end
   end
 
@@ -304,19 +304,19 @@ class SanitizersTest < Minitest::Test
     def scrubber.scrub(node); node.name = 'h1'; end
 
     html = "<script>hello!</script>"
-    assert_equal "<h1>hello!</h1>", white_list_sanitize(html, scrubber: scrubber)
+    assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_should_accept_loofah_scrubber_that_wraps_a_block
     scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
     html = "<script>hello!</script>"
-    assert_equal "<h1>hello!</h1>", white_list_sanitize(html, scrubber: scrubber)
+    assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_custom_scrubber_takes_precedence_over_other_options
     scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
     html = "<script>hello!</script>"
-    assert_equal "<h1>hello!</h1>", white_list_sanitize(html, scrubber: scrubber, tags: ['foo'])
+    assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber, tags: ['foo'])
   end
 
   [%w(img src), %w(a href)].each do |(tag, attr)|
@@ -468,7 +468,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_ascii_8bit_string
-    white_list_sanitize('<a>hello</a>'.encode('ASCII-8BIT')).tap do |sanitized|
+    safe_list_sanitize('<a>hello</a>'.encode('ASCII-8BIT')).tap do |sanitized|
       assert_equal '<a>hello</a>', sanitized
       assert_equal Encoding::UTF_8, sanitized.encoding
     end
@@ -481,45 +481,45 @@ class SanitizersTest < Minitest::Test
 
   def test_allow_data_attribute_if_requested
     text = %(<a data-foo="foo">foo</a>)
-    assert_equal %(<a data-foo="foo">foo</a>), white_list_sanitize(text, attributes: ['data-foo'])
+    assert_equal %(<a data-foo="foo">foo</a>), safe_list_sanitize(text, attributes: ['data-foo'])
   end
 
-  def test_uri_escaping_of_href_attr_in_a_tag_in_white_list_sanitizer
+  def test_uri_escaping_of_href_attr_in_a_tag_in_safe_list_sanitizer
     skip if RUBY_VERSION < "2.3"
 
     html = %{<a href='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
-    text = white_list_sanitize(html)
+    text = safe_list_sanitize(html)
 
     assert_equal %{<a href=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
-  def test_uri_escaping_of_src_attr_in_a_tag_in_white_list_sanitizer
+  def test_uri_escaping_of_src_attr_in_a_tag_in_safe_list_sanitizer
     skip if RUBY_VERSION < "2.3"
 
     html = %{<a src='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
-    text = white_list_sanitize(html)
+    text = safe_list_sanitize(html)
 
     assert_equal %{<a src=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
-  def test_uri_escaping_of_name_attr_in_a_tag_in_white_list_sanitizer
+  def test_uri_escaping_of_name_attr_in_a_tag_in_safe_list_sanitizer
     skip if RUBY_VERSION < "2.3"
 
     html = %{<a name='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
-    text = white_list_sanitize(html)
+    text = safe_list_sanitize(html)
 
     assert_equal %{<a name=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
-  def test_uri_escaping_of_name_action_in_a_tag_in_white_list_sanitizer
+  def test_uri_escaping_of_name_action_in_a_tag_in_safe_list_sanitizer
     skip if RUBY_VERSION < "2.3"
 
     html = %{<a action='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
-    text = white_list_sanitize(html, attributes: ['action'])
+    text = safe_list_sanitize(html, attributes: ['action'])
 
     assert_equal %{<a action=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
@@ -538,35 +538,35 @@ protected
     Rails::Html::LinkSanitizer.new.sanitize(input, options)
   end
 
-  def white_list_sanitize(input, options = {})
-    Rails::Html::WhiteListSanitizer.new.sanitize(input, options)
+  def safe_list_sanitize(input, options = {})
+    Rails::Html::SafeListSanitizer.new.sanitize(input, options)
   end
 
   def assert_sanitized(input, expected = nil)
     if input
-      assert_dom_equal expected || input, white_list_sanitize(input)
+      assert_dom_equal expected || input, safe_list_sanitize(input)
     else
-      assert_nil white_list_sanitize(input)
+      assert_nil safe_list_sanitize(input)
     end
   end
 
   def sanitize_css(input)
-    Rails::Html::WhiteListSanitizer.new.sanitize_css(input)
+    Rails::Html::SafeListSanitizer.new.sanitize_css(input)
   end
 
   def scope_allowed_tags(tags)
-    old_tags = Rails::Html::WhiteListSanitizer.allowed_tags
-    Rails::Html::WhiteListSanitizer.allowed_tags = tags
-    yield Rails::Html::WhiteListSanitizer.new
+    old_tags = Rails::Html::SafeListSanitizer.allowed_tags
+    Rails::Html::SafeListSanitizer.allowed_tags = tags
+    yield Rails::Html::SafeListSanitizer.new
   ensure
-    Rails::Html::WhiteListSanitizer.allowed_tags = old_tags
+    Rails::Html::SafeListSanitizer.allowed_tags = old_tags
   end
 
   def scope_allowed_attributes(attributes)
-    old_attributes = Rails::Html::WhiteListSanitizer.allowed_attributes
-    Rails::Html::WhiteListSanitizer.allowed_attributes = attributes
-    yield Rails::Html::WhiteListSanitizer.new
+    old_attributes = Rails::Html::SafeListSanitizer.allowed_attributes
+    Rails::Html::SafeListSanitizer.allowed_attributes = attributes
+    yield Rails::Html::SafeListSanitizer.new
   ensure
-    Rails::Html::WhiteListSanitizer.allowed_attributes = old_attributes
+    Rails::Html::SafeListSanitizer.allowed_attributes = old_attributes
   end
 end
