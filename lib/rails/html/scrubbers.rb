@@ -2,9 +2,9 @@ module Rails
   module Html
     # === Rails::Html::PermitScrubber
     #
-    # Rails::Html::PermitScrubber allows you to permit only your own tags and/or attributes.
+    # +Rails::Html::PermitScrubber+ allows you to permit only your own tags and/or attributes.
     #
-    # Rails::Html::PermitScrubber can be subclassed to determine:
+    # +Rails::Html::PermitScrubber+ can be subclassed to determine:
     # - When a node should be skipped via +skip_node?+.
     # - When a node is allowed via +allowed_node?+.
     # - When an attribute should be scrubbed via +scrub_attribute?+.
@@ -27,22 +27,22 @@ module Rails
     # If set, attributes excluded will be removed.
     # If not, attributes are removed based on Loofahs +HTML5::Scrub.scrub_attributes+.
     #
-    # class CommentScrubber < Html::PermitScrubber
-    #   def initialize
-    #     super
-    #     self.tags = %w(form script comment blockquote)
-    #   end
+    #  class CommentScrubber < Html::PermitScrubber
+    #    def initialize
+    #      super
+    #      self.tags = %w(form script comment blockquote)
+    #    end
     #
-    #   def skip_node?(node)
-    #     node.text?
-    #   end
+    #    def skip_node?(node)
+    #      node.text?
+    #    end
     #
-    #   def scrub_attribute?(name)
-    #     name == "style"
-    #   end
-    # end
+    #    def scrub_attribute?(name)
+    #      name == "style"
+    #    end
+    #  end
     #
-    # See the documentation for Nokogiri::XML::Node to understand what's possible
+    # See the documentation for +Nokogiri::XML::Node+ to understand what's possible
     # with nodes: https://nokogiri.org/rdoc/Nokogiri/XML/Node.html
     class PermitScrubber < Loofah::Scrubber
       attr_reader :tags, :attributes
@@ -160,8 +160,8 @@ module Rails
 
     # === Rails::Html::TargetScrubber
     #
-    # Where Rails::Html::PermitScrubber picks out tags and attributes to permit in
-    # sanitization, Rails::Html::TargetScrubber targets them for removal.
+    # Where +Rails::Html::PermitScrubber+ picks out tags and attributes to permit in
+    # sanitization, +Rails::Html::TargetScrubber+ targets them for removal.
     #
     # +tags=+
     # If set, elements included will be stripped.
@@ -180,7 +180,7 @@ module Rails
 
     # === Rails::Html::TextOnlyScrubber
     #
-    # Rails::Html::TextOnlyScrubber allows you to permit text nodes.
+    # +Rails::Html::TextOnlyScrubber+ allows you to permit text nodes.
     #
     # Unallowed elements will be stripped, i.e. element is removed but its subtree kept.
     class TextOnlyScrubber < Loofah::Scrubber
