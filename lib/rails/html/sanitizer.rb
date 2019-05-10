@@ -40,11 +40,12 @@ module Rails
     end
 
     # === Rails::Html::LinkSanitizer
-    # Removes a tags and href attributes leaving only the link text
+    # Removes +a+ tags and +href+ attributes leaving only the link text.
     #
-    # link_sanitizer = Rails::Html::LinkSanitizer.new
-    # link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
-    # # => Only the link text will be kept.
+    #  link_sanitizer = Rails::Html::LinkSanitizer.new
+    #  link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+    #
+    #  => 'Only the link text will be kept.'
     class LinkSanitizer < Sanitizer
       def initialize
         @link_scrubber = TargetScrubber.new
