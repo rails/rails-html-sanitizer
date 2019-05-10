@@ -48,7 +48,7 @@ module Rails
     class LinkSanitizer < Sanitizer
       def initialize
         @link_scrubber = TargetScrubber.new
-        @link_scrubber.tags = %w(a href)
+        @link_scrubber.tags = %w(a)
         @link_scrubber.attributes = %w(href)
       end
 
@@ -146,7 +146,7 @@ module Rails
 
       def allowed_attributes(options)
         options[:attributes] || self.class.allowed_attributes
-      end      
+      end
     end
 
     WhiteListSanitizer = SafeListSanitizer

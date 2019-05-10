@@ -154,10 +154,6 @@ class SanitizersTest < Minitest::Test
     assert_equal "Magic", link_sanitize("<a href='http://www.rubyonrails.com/'>Mag<a href='http://www.ruby-lang.org/'>ic")
   end
 
-  def test_strip_links_with_a_tag_in_href
-    assert_equal "FrrFox", link_sanitize("<href onlclick='steal()'>FrrFox</a></href>")
-  end
-
   def test_sanitize_form
     assert_sanitized "<form action=\"/foo/bar\" method=\"post\"><input></form>", ''
   end
