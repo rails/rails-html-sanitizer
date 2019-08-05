@@ -21,7 +21,7 @@ module Rails
 
         def white_list_sanitizer
           ActiveSupport::Deprecation.warn "warning: white_list_sanitizer is" \
-          "deprecated, please use safe_list_sanitizer instead."
+          " deprecated, please use safe_list_sanitizer instead."
           safe_list_sanitizer
         end
       end
