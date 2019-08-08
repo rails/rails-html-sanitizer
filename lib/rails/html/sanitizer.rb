@@ -151,8 +151,5 @@ module Rails
     end
 
     WhiteListSanitizer = SafeListSanitizer
-    if Object.respond_to?(:deprecate_constant)
-      deprecate_constant :WhiteListSanitizer
-    end
   end
 end
