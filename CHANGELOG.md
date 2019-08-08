@@ -1,3 +1,17 @@
+## 1.2.0
+
+* Remove needless `white_list_sanitizer` deprecation.
+
+  By deprecating this, we were forcing Rails 5.2 to be updated or spew
+  deprecations that users could do nothing about.
+
+  That's pointless and I'm sorry for adding that!
+
+  Now there's no deprecation warning and Rails 5.2 works out of the box, while
+  Rails 6 can use the updated naming.
+
+  *Kasper Timm Hansen*
+
 ## 1.1.0
 
 * Add `safe_list_sanitizer` and deprecate `white_list_sanitizer` to be removed
