@@ -74,7 +74,7 @@ module Rails
     #
     # === Options
     # Sanitizes both html and css via the safe lists found here:
-    # https://github.com/flavorjones/loofah/blob/master/lib/loofah/html5/whitelist.rb
+    # https://github.com/flavorjones/loofah/blob/master/lib/loofah/html5/safelist.rb
     #
     # SafeListSanitizer also accepts options to configure
     # the safe list used when sanitizing html.

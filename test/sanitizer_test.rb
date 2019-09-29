@@ -181,7 +181,7 @@ class SanitizersTest < Minitest::Test
     assert_sanitized raw, %{src="javascript:bang" <img width="5">foo</img>, <span>bar</span>}
   end
 
-  tags = Loofah::HTML5::WhiteList::ALLOWED_ELEMENTS - %w(script form)
+  tags = Loofah::HTML5::SafeList::ALLOWED_ELEMENTS - %w(script form)
   tags.each do |tag_name|
     define_method "test_should_allow_#{tag_name}_tag" do
       scope_allowed_tags(tags) do
