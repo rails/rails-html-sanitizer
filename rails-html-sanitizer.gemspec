@@ -13,6 +13,13 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/rails/rails-html-sanitizer"
   spec.license       = "MIT"
 
+  spec.metadata      = {
+    "bug_tracker_uri"   => "https://github.com/rails/rails-html-sanitizer/issues",
+    "changelog_uri"     => "https://github.com/rails/rails-html-sanitizer/blob/v#{spec.version}/CHANGELOG.md",
+    "documentation_uri" => "https://www.rubydoc.info/gems/rails-html-sanitizer/#{spec.version}",
+    "source_code_uri"   => "https://github.com/rails/rails-html-sanitizer/tree/v#{spec.version}",
+  }
+
   spec.files         = Dir["lib/**/*", "README.md", "MIT-LICENSE", "CHANGELOG.md"]
   spec.test_files    = Dir["test/**/*"]
   spec.require_paths = ["lib"]
