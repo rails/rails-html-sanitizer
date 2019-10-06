@@ -1,3 +1,9 @@
+## 1.3.0
+
+* Address deprecations in Loofah 2.3.0.
+
+  *Josh Goodall*
+
 ## 1.2.0
 
 * Remove needless `white_list_sanitizer` deprecation.
