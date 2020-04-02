@@ -195,12 +195,14 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_video_poster_sanitization
-    scope_allowed_tags(%w(video)) do
-      scope_allowed_attributes %w(src poster) do
-        assert_sanitized %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>), %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
-        assert_sanitized %(<video src="videofile.ogg" poster=javascript:alert(1)></video>), %(<video src="videofile.ogg"></video>)
-      end
+    scope_allowed_attributes %w(src poster) do
+      assert_sanitized %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>), %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
+      assert_sanitized %(<video src="videofile.ogg" poster=javascript:alert(1)></video>), %(<video src="videofile.ogg"></video>)
     end
+  end
+
+  def test_should_allow_video
+    assert_sanitized %(<video src="videofile.ogg" controls></video>), %(<video src="videofile.ogg" controls></video>)
   end
 
   # RFC 3986, sec 4.2
