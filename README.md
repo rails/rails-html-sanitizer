@@ -83,7 +83,7 @@ html_fragment.to_s # => "<a></a>"
 Where `PermitScrubber` picks out tags and attributes to permit in sanitization,
 `Rails::Html::TargetScrubber` targets them for removal.
 
-**Note:** by default, it will scrub anything that is not part of the whitelisted tags from
+**Note:** by default, it will scrub anything that is not part of the permitted tags from
 loofah `HTML5::Scrub.allowed_element?`.
 
 ```ruby
