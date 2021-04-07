@@ -274,6 +274,16 @@ class SanitizersTest < Minitest::Test
     assert_equal '<p style="color:#000;"></p>', safe_list_sanitize(input, attributes: %w(style))
   end
 
+  def test_should_allow_safe_css_functions_when_style_attribute_option_is_passed
+    input = '<p style="background: linear-gradient(transparent 50%, #ffff66 50%)"></p>'
+    assert_equal '<p style="background:linear-gradient(transparent 50%, #ffff66 50%);"></p>', safe_list_sanitize(input, attributes: %w(style))
+  end
+
+  def test_should_not_allow_unsafe_css_functions_when_style_attribute_option_is_passed
+    input = '<p style="background: this-isnt-a-safe-css-function(transparent 50%, #ffff66 50%); color: #000;"></p>'
+    assert_equal '<p style="color:#000;"></p>', safe_list_sanitize(input, attributes: %w(style))
+  end
+
   def test_should_raise_argument_error_if_tags_is_not_enumerable
     assert_raises ArgumentError do
       safe_list_sanitize('<a>some html</a>', tags: 'foo')
