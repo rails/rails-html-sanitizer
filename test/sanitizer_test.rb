@@ -271,7 +271,8 @@ class SanitizersTest < Minitest::Test
 
   def test_scrub_style_if_style_attribute_option_is_passed
     input = '<p style="color: #000; background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
-    assert_equal '<p style="color: #000;"></p>', safe_list_sanitize(input, attributes: %w(style))
+    actual = safe_list_sanitize(input, attributes: %w(style))
+    assert_includes(['<p style="color: #000;"></p>', '<p style="color:#000;"></p>'], actual)
   end
 
   def test_should_raise_argument_error_if_tags_is_not_enumerable
