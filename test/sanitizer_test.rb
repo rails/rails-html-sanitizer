@@ -93,7 +93,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_tags_with_plaintext
-    assert_equal "Dont touch me", full_sanitize("Dont touch me")
+    assert_equal "Don't touch me", full_sanitize("Don't touch me")
   end
 
   def test_strip_tags_with_tags
@@ -135,7 +135,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_links_with_plaintext
-    assert_equal "Dont touch me", link_sanitize("Dont touch me")
+    assert_equal "Don't touch me", link_sanitize("Don't touch me")
   end
 
   def test_strip_links_with_line_feed_and_uppercase_tag
