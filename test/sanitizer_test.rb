@@ -271,7 +271,8 @@ class SanitizersTest < Minitest::Test
 
   def test_scrub_style_if_style_attribute_option_is_passed
     input = '<p style="color: #000; background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
-    assert_equal '<p style="color: #000;"></p>', safe_list_sanitize(input, attributes: %w(style))
+    actual = safe_list_sanitize(input, attributes: %w(style))
+    assert_includes(['<p style="color: #000;"></p>', '<p style="color:#000;"></p>'], actual)
   end
 
   def test_should_raise_argument_error_if_tags_is_not_enumerable
@@ -413,7 +414,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_div_background_image_unicode_encoded
-    raw = %(background-image:\0075\0072\006C\0028'\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028.1027\0058.1053\0053\0027\0029'\0029)
+    raw = %(background-image:\u0075\u0072\u006C\u0028\u0027\u006a\u0061\u0076\u0061\u0073\u0063\u0072\u0069\u0070\u0074\u003a\u0061\u006c\u0065\u0072\u0074\u0028\u0031\u0032\u0033\u0034\u0029\u0027\u0029)
     assert_equal '', sanitize_css(raw)
   end
 
