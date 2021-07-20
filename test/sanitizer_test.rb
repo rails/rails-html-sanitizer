@@ -521,6 +521,14 @@ class SanitizersTest < Minitest::Test
     assert_equal %{<a action=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
   end
 
+  def test_exclude_node_type_processing_instructions
+    assert_equal("<div>text</div><b>text</b>", safe_list_sanitize("<div>text</div><?div content><b>text</b>"))
+  end
+
+  def test_exclude_node_type_comment
+    assert_equal("<div>text</div><b>text</b>", safe_list_sanitize("<div>text</div><!-- comment --><b>text</b>"))
+  end
+
 protected
 
   def xpath_sanitize(input, options = {})

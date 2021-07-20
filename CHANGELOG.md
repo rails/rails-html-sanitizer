@@ -1,3 +1,15 @@
+## next / unreleased
+
+* Processing Instructions are no longer allowed by Rails::Html::PermitScrubber
+
+  Previously, a PI with a name (or "target") matching an allowed tag name was not scrubbed. There
+  are no known security issues associated with these PIs, but similar to comments it's preferred to
+  omit these nodes when possible from sanitized output.
+
+  Fixes #115.
+
+  *Mike Dalessio*
+
 ## 1.3.0
 
 * Address deprecations in Loofah 2.3.0.
