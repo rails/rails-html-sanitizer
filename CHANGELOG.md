@@ -1,4 +1,4 @@
-## next / unreleased
+## 1.4.0 / 2021-08-18
 
 * Processing Instructions are no longer allowed by Rails::Html::PermitScrubber
 
