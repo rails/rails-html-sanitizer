@@ -112,6 +112,50 @@ class PermitScrubberTest < ScrubberTest
   end
 end
 
+class PermitScrubberSubclassTest < ScrubberTest
+  def setup
+    @scrubber = Class.new(::Rails::Html::PermitScrubber) do
+      attr :nodes_seen
+
+      def initialize
+        super()
+        @nodes_seen = []
+      end
+
+      def keep_node?(node)
+        @nodes_seen << node.name
+        super(node)
+      end
+    end.new
+  end
+
+  def test_elements_are_checked
+    html = %Q("<div></div><a></a><tr></tr>")
+    Loofah.scrub_fragment(html, @scrubber)
+    assert_includes(@scrubber.nodes_seen, "div")
+    assert_includes(@scrubber.nodes_seen, "a")
+    assert_includes(@scrubber.nodes_seen, "tr")
+  end
+
+  def test_comments_are_checked
+    # this passes in v1.3.0 but fails in v1.4.0
+    html = %Q("<div></div><!-- ohai --><tr></tr>")
+    Loofah.scrub_fragment(html, @scrubber)
+    assert_includes(@scrubber.nodes_seen, "div")
+    assert_includes(@scrubber.nodes_seen, "comment")
+    assert_includes(@scrubber.nodes_seen, "tr")
+  end
+
+  def test_craftily_named_processing_instructions_are_not_checked
+    # this fails in v1.3.0 but passes in v1.4.0
+    html = %Q("<div></div><?a content><tr></tr>")
+    Loofah.scrub_fragment(html, @scrubber)
+    assert_includes(@scrubber.nodes_seen, "div")
+    refute_includes(@scrubber.nodes_seen, "a")
+    assert_includes(@scrubber.nodes_seen, "tr")
+  end
+end
+
 class TargetScrubberTest < ScrubberTest
   def setup
     @scrubber = Rails::Html::TargetScrubber.new

@@ -1,3 +1,15 @@
+## next / unreleased
+
+* Fix regression in v1.4.0 that did not pass comment nodes to the scrubber.
+
+  Some scrubbers will want to override the default behavior and allow comments, but v1.4.0 only
+  passed through elements to the scrubber's `keep_node?` method.
+
+  This change once again allows the scrubber to make the decision on comment nodes, but still skips
+  other non-elements like processing instructions (see #115).
+
+  *Mike Dalessio*
+
 ## 1.4.0 / 2021-08-18
 
 * Processing Instructions are no longer allowed by Rails::Html::PermitScrubber
