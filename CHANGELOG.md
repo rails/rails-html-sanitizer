@@ -1,4 +1,4 @@
-## next / unreleased
+## 1.4.1 / 2021-08-18
 
 * Fix regression in v1.4.0 that did not pass comment nodes to the scrubber.
 
