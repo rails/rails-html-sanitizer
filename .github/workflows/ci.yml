@@ -1,0 +1,46 @@
+name: ci
+concurrency:
+  group: "${{github.workflow}}-${{github.ref}}"
+  cancel-in-progress: true
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - v*.*.x
+    tags:
+      - v*.*.*
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - '*'
+
+jobs:
+  cruby:
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "3.0", "ruby-head"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{matrix.ruby}}
+          bundler-cache: true
+      - run: bundle exec rake
+
+  jruby:
+    continue-on-error: true # nokogiri on jruby has different behavior
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["jruby-9.2", "jruby-head"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{matrix.ruby}}
+          bundler-cache: true
+      - run: bundle exec rake
