@@ -1,7 +1,7 @@
 Contributing to Rails Html Sanitizers
 =====================
 
-[![Build Status](https://travis-ci.org/rails/rails-html-sanitizer.svg?branch=master)](https://travis-ci.org/rails/rails-html-sanitizer)
+[![Build Status](https://github.com/rails/rails-html-sanitizer/actions/workflows/ci.yml/badge.svg)](https://github.com/rails/rails-html-sanitizer/actions/workflows/ci.yml)
 
 Rails Html Sanitizers is work of [many contributors](https://github.com/rails/rails-html-sanitizer/graphs/contributors). You're encouraged to submit [pull requests](https://github.com/rails/rails-html-sanitizer/pulls), [propose features and discuss issues](https://github.com/rails/rails-html-sanitizer/issues).
 
@@ -88,7 +88,7 @@ git push origin my-feature-branch -f
 
 #### Check on Your Pull Request
 
-Go back to your pull request after a few minutes and see whether it passed muster with Travis-CI. Everything should look green, otherwise fix issues and amend your commit as described above.
+Go back to your pull request after a few minutes and see whether it passed muster with CI. Everything should look green, otherwise fix issues and amend your commit as described above.
 
 #### Be Patient
 
