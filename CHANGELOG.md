@@ -1,3 +1,11 @@
+## next / unreleased
+
+* Slightly improve performance.
+
+  Assuming elements are more common than comments, make one less method call per node.
+
+  *Mike Dalessio*
+
 ## 1.4.1 / 2021-08-18
 
 * Fix regression in v1.4.0 that did not pass comment nodes to the scrubber.
