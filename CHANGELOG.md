@@ -1,4 +1,4 @@
-## next / unreleased
+## 1.4.2 / 2021-08-23
 
 * Slightly improve performance.
 
