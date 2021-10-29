@@ -414,8 +414,25 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_div_background_image_unicode_encoded
-    raw = %(background-image:\u0075\u0072\u006C\u0028\u0027\u006a\u0061\u0076\u0061\u0073\u0063\u0072\u0069\u0070\u0074\u003a\u0061\u006c\u0065\u0072\u0074\u0028\u0031\u0032\u0033\u0034\u0029\u0027\u0029)
-    assert_equal '', sanitize_css(raw)
+    [
+      convert_to_css_hex("url(javascript:alert(1))", false),
+      convert_to_css_hex("url(javascript:alert(1))", true),
+      convert_to_css_hex("url(https://example.com)", false),
+      convert_to_css_hex("url(https://example.com)", true),
+    ].each do |propval|
+      raw = "background-image:" + propval
+      assert_empty(sanitize_css(raw))
+    end
+  end
+
+  def test_should_allow_div_background_image_unicode_encoded_safe_functions
+    [
+      convert_to_css_hex("rgb(255,0,0)", false),
+      convert_to_css_hex("rgb(255,0,0)", true),
+    ].each do |propval|
+      raw = "background-image:" + propval
+      assert_includes(sanitize_css(raw), "background-image")
+    end
   end
 
   def test_should_sanitize_div_style_expression
@@ -573,5 +590,16 @@ protected
     yield Rails::Html::SafeListSanitizer.new
   ensure
     Rails::Html::SafeListSanitizer.allowed_attributes = old_attributes
+  end
+
+  # note that this is used for testing CSS hex encoding: \\[0-9a-f]{1,6}
+  def convert_to_css_hex(string, escape_parens=false)
+    string.chars.map do |c|
+      if !escape_parens && (c == "(" || c == ")")
+        c
+      else
+        format('\00%02X', c.ord)
+      end
+    end.join
   end
 end
