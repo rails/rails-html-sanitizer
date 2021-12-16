@@ -21,6 +21,35 @@ Or install it yourself as:
 
 ## Usage
 
+### A note on HTML entities
+
+__Rails::HTML sanitizers are intended to be used by the view layer, at page-render time. They are *not* intended to sanitize persisted strings that will sanitized *again* at page-render time.__
+
+Proper HTML sanitization will replace some characters with HTML entities. For example, `<` will be replaced with `&lt;` to ensure that the markup is well-formed.
+
+This is important to keep in mind because __HTML entities will render improperly if they are sanitized twice.__
+
+
+#### A concrete example showing the problem that can arise
+
+Imagine the user is asked to enter their employer's name, which will appear on their public profile page. Then imagine they enter `JPMorgan Chase & Co.`.
+
+If you sanitize this before persisting it in the database, the stored string will be `JPMorgan Chase &amp; Co.`
+
+When the page is rendered, if this string is sanitized a second time by the view layer, the HTML will contain `JPMorgan Chase &amp;amp; Co.` which will render as "JPMorgan Chase &amp;amp; Co.".
+
+Another problem that can arise is rendering the sanitized string in a non-HTML context (for example, if it ends up being part of an SMS message). In this case, it may contain inappropriate HTML entities.
+
+
+#### Suggested alternatives
+
+You might simply choose to persist the untrusted string as-is (the raw input), and then ensure that the string will be properly sanitized by the view layer.
+
+That raw string, if rendered in an non-HTML context (like SMS), must also be sanitized by a method appropriate for that context. You may wish to look into using [Loofah](https://github.com/flavorjones/loofah) or [Sanitize](https://github.com/rgrove/sanitize) to customize how this sanitization works, including omitting HTML entities in the final string.
+
+If you really want to sanitize the string that's stored in your database, you may wish to look into  [Loofah::ActiveRecord](https://github.com/flavorjones/loofah-activerecord) rather than use the Rails::HTML sanitizers.
+
+
 ### Sanitizers
 
 All sanitizers respond to `sanitize`.
