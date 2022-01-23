@@ -505,7 +505,13 @@ class SanitizersTest < Minitest::Test
 
     text = safe_list_sanitize(html)
 
-    assert_equal %{<a href=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
+    acceptable_results = [
+      # nokogiri w/vendored+patched libxml2
+      %{<a href="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
+      # nokogiri w/ system libxml2
+      %{<a href="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+    ]
+    assert_includes(acceptable_results, text)
   end
 
   def test_uri_escaping_of_src_attr_in_a_tag_in_safe_list_sanitizer
@@ -515,7 +521,13 @@ class SanitizersTest < Minitest::Test
 
     text = safe_list_sanitize(html)
 
-    assert_equal %{<a src=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
+    acceptable_results = [
+      # nokogiri w/vendored+patched libxml2
+      %{<a src="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
+      # nokogiri w/system libxml2
+      %{<a src="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+    ]
+    assert_includes(acceptable_results, text)
   end
 
   def test_uri_escaping_of_name_attr_in_a_tag_in_safe_list_sanitizer
@@ -525,7 +537,13 @@ class SanitizersTest < Minitest::Test
 
     text = safe_list_sanitize(html)
 
-    assert_equal %{<a name=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
+    acceptable_results = [
+      # nokogiri w/vendored+patched libxml2
+      %{<a name="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
+      # nokogiri w/system libxml2
+      %{<a name="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+    ]
+    assert_includes(acceptable_results, text)
   end
 
   def test_uri_escaping_of_name_action_in_a_tag_in_safe_list_sanitizer
@@ -535,7 +553,13 @@ class SanitizersTest < Minitest::Test
 
     text = safe_list_sanitize(html, attributes: ['action'])
 
-    assert_equal %{<a action=\"examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com\">test</a>}, text
+    acceptable_results = [
+      # nokogiri w/vendored+patched libxml2
+      %{<a action="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
+      # nokogiri w/system libxml2
+      %{<a action="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+    ]
+    assert_includes(acceptable_results, text)
   end
 
   def test_exclude_node_type_processing_instructions
