@@ -30,6 +30,22 @@ jobs:
           bundler-cache: true
       - run: bundle exec rake
 
+  cruby-nokogiri-system-libraries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1"
+      - name: Install nokogiri with system libraries
+        run: |
+          sudo apt install pkg-config libxml2-dev libxslt-dev
+          bundle config set force_ruby_platform true
+          bundle config build.nokogiri --enable-system-libraries
+          bundle install
+          bundle exec nokogiri -v
+      - run: bundle exec rake
+
   jruby:
     continue-on-error: true # nokogiri on jruby has different behavior
     strategy:
