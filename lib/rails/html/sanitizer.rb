@@ -110,8 +110,8 @@ module Rails
         acronym a img blockquote del ins))
       self.allowed_attributes = Set.new(%w(href src width height alt cite datetime title class name xml:lang abbr))
 
-      def initialize
-        @permit_scrubber = PermitScrubber.new
+      def initialize(prune: false)
+        @permit_scrubber = PermitScrubber.new(prune: prune)
       end
 
       def sanitize(html, options = {})
