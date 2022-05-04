@@ -2,6 +2,8 @@ require "minitest/autorun"
 require "rails-html-sanitizer"
 require "rails/dom/testing/assertions/dom_assertions"
 
+puts Nokogiri::VERSION_INFO
+
 class SanitizersTest < Minitest::Test
   include Rails::Dom::Testing::Assertions::DomAssertions
 
@@ -54,7 +56,8 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_tags_with_quote
     input = '<" <img src="trollface.gif" onload="alert(1)"> hi'
-    assert_equal ' hi', full_sanitize(input)
+    expected = libxml_2_9_14_recovery? ? %{&lt;"  hi} : %{ hi}
+    assert_equal(expected, full_sanitize(input))
   end
 
   def test_strip_invalid_html
@@ -75,15 +78,21 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_remove_unclosed_tags
-    assert_equal "This is ", full_sanitize("This is <-- not\n a comment here.")
+    input = "This is <-- not\n a comment here."
+    expected = libxml_2_9_14_recovery? ? %{This is &lt;-- not\n a comment here.} : %{This is }
+    assert_equal(expected, full_sanitize(input))
   end
 
   def test_strip_cdata
-    assert_equal "This has a ]]&gt; here.", full_sanitize("This has a <![CDATA[<section>]]> here.")
+    input = "This has a <![CDATA[<section>]]> here."
+    expected = libxml_2_9_14_recovery? ? %{This has a &lt;![CDATA[]]&gt; here.} : %{This has a ]]&gt; here.}
+    assert_equal(expected, full_sanitize(input))
   end
 
   def test_strip_unclosed_cdata
-    assert_equal "This has an unclosed ]] here...", full_sanitize("This has an unclosed <![CDATA[<section>]] here...")
+    input = "This has an unclosed <![CDATA[<section>]] here..."
+    expected = libxml_2_9_14_recovery? ? %{This has an unclosed &lt;![CDATA[]] here...} : %{This has an unclosed ]] here...}
+    assert_equal(expected, full_sanitize(input))
   end
 
   def test_strip_blank_string
@@ -450,11 +459,15 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_cdata_section
-    assert_sanitized "<![CDATA[<span>section</span>]]>", "section]]&gt;"
+    input = "<![CDATA[<span>section</span>]]>"
+    expected = libxml_2_9_14_recovery? ? %{&lt;![CDATA[<span>section</span>]]&gt;} : %{section]]&gt;}
+    assert_sanitized(input, expected)
   end
 
   def test_should_sanitize_unterminated_cdata_section
-    assert_sanitized "<![CDATA[<span>neverending...", "neverending..."
+    input = "<![CDATA[<span>neverending..."
+    expected = libxml_2_9_14_recovery? ? %{&lt;![CDATA[<span>neverending...</span>} : %{neverending...}
+    assert_sanitized(input, expected)
   end
 
   def test_should_not_mangle_urls_with_ampersand
@@ -625,5 +638,9 @@ protected
         format('\00%02X', c.ord)
       end
     end.join
+  end
+
+  def libxml_2_9_14_recovery?
+    Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?(">= 2.9.14")
   end
 end
