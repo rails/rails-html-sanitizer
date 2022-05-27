@@ -14,13 +14,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_nested_script
-    sanitizer = Rails::Html::SafeListSanitizer.new
-    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', sanitizer.sanitize('<script><script></script>alert("XSS");<script><</script>/</script><script>script></script>', tags: %w(em))
+    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', safe_list_sanitize('<script><script></script>alert("XSS");<script><</script>/</script><script>script></script>', tags: %w(em))
   end
 
   def test_sanitize_nested_script_in_style
-    sanitizer = Rails::Html::SafeListSanitizer.new
-    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', sanitizer.sanitize('<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>', tags: %w(em))
+    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', safe_list_sanitize('<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>', tags: %w(em))
   end
 
   class XpathRemovalTestSanitizer < Rails::Html::Sanitizer
