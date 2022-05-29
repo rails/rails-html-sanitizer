@@ -1,3 +1,12 @@
+## next / unreleased
+
+* `SafeListSanitizer`, `PermitScrubber`, and `TargetScrubber` now all support pruning of unsafe tags.
+
+  By default, unsafe tags are still stripped, but this behavior can be changed to prune the element
+  and its children from the document by passing `prune: true` to any of these classes' constructors.
+
+  *seyrian*
+
 ## 1.4.2 / 2021-08-23
 
 * Slightly improve performance.

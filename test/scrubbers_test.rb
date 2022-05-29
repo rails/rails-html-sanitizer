@@ -66,6 +66,13 @@ class PermitScrubberTest < ScrubberTest
     assert_scrubbed html, '<tag>leave me now</tag>'
   end
 
+  def test_prunes_tags
+    @scrubber = Rails::Html::PermitScrubber.new(prune: true)
+    @scrubber.tags = %w(tag)
+    html = '<tag>leave me <span>now</span></tag>'
+    assert_scrubbed html, '<tag>leave me </tag>'
+  end
+
   def test_leaves_comments_when_supplied_as_tag
     @scrubber.tags = %w(div comment)
     assert_scrubbed('<div>one</div><!-- two --><span>three</span>',
@@ -156,6 +163,13 @@ class TargetScrubberTest < ScrubberTest
     @scrubber.attributes = %w(remove)
     html = '<tag remove="" other=""></tag><a remove="" other=""></a>'
     assert_scrubbed html, '<a other=""></a>'
+  end
+
+  def test_prunes_tags
+    @scrubber = Rails::Html::TargetScrubber.new(prune: true)
+    @scrubber.tags = %w(span)
+    html = '<tag>leave me <span>now</span></tag>'
+    assert_scrubbed html, '<tag>leave me </tag>'
   end
 end
 

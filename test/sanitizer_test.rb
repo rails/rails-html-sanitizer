@@ -258,6 +258,12 @@ class SanitizersTest < Minitest::Test
     end
   end
 
+  def test_should_allow_prune
+    sanitizer = Rails::Html::SafeListSanitizer.new(prune: true)
+    text = '<u>leave me <b>now</b></u>'
+    assert_equal "<u>leave me </u>", sanitizer.sanitize(text, tags: %w(u))
+  end
+
   def test_should_allow_custom_tags
     text = "<u>foo</u>"
     assert_equal text, safe_list_sanitize(text, tags: %w(u))

@@ -45,10 +45,11 @@ module Rails
     # See the documentation for +Nokogiri::XML::Node+ to understand what's possible
     # with nodes: https://nokogiri.org/rdoc/Nokogiri/XML/Node.html
     class PermitScrubber < Loofah::Scrubber
-      attr_reader :tags, :attributes
+      attr_reader :tags, :attributes, :prune
 
-      def initialize
-        @direction = :bottom_up
+      def initialize(prune: false)
+        @prune = prune
+        @direction = @prune ? :top_down : :bottom_up
         @tags, @attributes = nil, nil
       end
 
@@ -98,7 +99,7 @@ module Rails
       end
 
       def scrub_node(node)
-        node.before(node.children) # strip
+        node.before(node.children) unless prune # strip
         node.remove
       end
 

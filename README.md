@@ -86,6 +86,9 @@ safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
 
 # safe list sanitizer can also sanitize css
 safe_list_sanitizer.sanitize_css('background-color: #000;')
+
+# fully prune nodes from the tree instead of stripping tags and leaving inner content
+safe_list_sanitizer = Rails::Html::SafeListSanitizer.new(prune: true)
 ```
 
 ### Scrubbers
@@ -107,6 +110,24 @@ html_fragment.scrub!(scrubber)
 html_fragment.to_s # => "<a></a>"
 ```
 
+By default, inner content is left, but it can be removed as well.
+
+```ruby
+scrubber = Rails::Html::PermitScrubber.new
+scrubber.tags = ['a']
+
+html_fragment = Loofah.fragment('<a><span>text</span></a>')
+html_fragment.scrub!(scrubber)
+html_fragment.to_s # => "<a>text</a>"
+
+scrubber = Rails::Html::PermitScrubber.new(prune: true)
+scrubber.tags = ['a']
+
+html_fragment = Loofah.fragment('<a><span>text</span></a>')
+html_fragment.scrub!(scrubber)
+html_fragment.to_s # => "<a></a>"
+```
+
 #### `Rails::Html::TargetScrubber`
 
 Where `PermitScrubber` picks out tags and attributes to permit in sanitization,
@@ -124,6 +145,23 @@ html_fragment.scrub!(scrubber)
 html_fragment.to_s # => "<a></a>"
 ```
 
+Similarly to `PermitScrubber`, nodes can be fully pruned.
+
+```ruby
+scrubber = Rails::Html::TargetScrubber.new
+scrubber.tags = ['span']
+
+html_fragment = Loofah.fragment('<a><span>text</span></a>')
+html_fragment.scrub!(scrubber)
+html_fragment.to_s # => "<a>text</a>"
+
+scrubber = Rails::Html::TargetScrubber.new(prune: true)
+scrubber.tags = ['span']
+
+html_fragment = Loofah.fragment('<a><span>text</span></a>')
+html_fragment.scrub!(scrubber)
+html_fragment.to_s # => "<a></a>"
+```
 #### Custom Scrubbers
 
 You can also create custom scrubbers in your application if you want to.
