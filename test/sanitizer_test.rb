@@ -2,7 +2,12 @@ require "minitest/autorun"
 require "rails-html-sanitizer"
 require "rails/dom/testing/assertions/dom_assertions"
 
-puts Nokogiri::VERSION_INFO
+puts "=> #{::Nokogiri::VERSION_INFO}"
+if ::Loofah.respond_to?(:parser_module)
+  puts "=> Loofah is using #{::Loofah.parser_module}"
+else
+  puts "=> Loofah is legacy"
+end
 
 class SanitizersTest < Minitest::Test
   include Rails::Dom::Testing::Assertions::DomAssertions
@@ -69,10 +74,14 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_tags_multiline
-    expected = %{This is a test.\n\n\n\nIt no longer contains any HTML.\n}
+    expected = if html5_mode?
+      %{This is &lt;b&gt;a &lt;a href="" target="_blank"&gt;test&lt;/a&gt;&lt;/b&gt;.\n\n\n\nIt no longer contains any HTML.\n}
+    else
+      %{This is a test.\n\n\n\nIt no longer contains any HTML.\n}
+    end
     input = %{<title>This is <b>a <a href="" target="_blank">test</a></b>.</title>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}
 
-    assert_equal expected, full_sanitize(input)
+    assert_equal(expected, full_sanitize(input))
   end
 
   def test_remove_unclosed_tags
@@ -83,13 +92,21 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_cdata
     input = "This has a <![CDATA[<section>]]> here."
-    expected = libxml_2_9_14_recovery? ? %{This has a &lt;![CDATA[]]&gt; here.} : %{This has a ]]&gt; here.}
+    expected = if !html5_mode? && libxml_2_9_14_recovery?
+      %{This has a &lt;![CDATA[]]&gt; here.}
+    else
+      %{This has a ]]&gt; here.}
+    end
     assert_equal(expected, full_sanitize(input))
   end
 
   def test_strip_unclosed_cdata
     input = "This has an unclosed <![CDATA[<section>]] here..."
-    expected = libxml_2_9_14_recovery? ? %{This has an unclosed &lt;![CDATA[]] here...} : %{This has an unclosed ]] here...}
+    expected = if !html5_mode? && libxml_2_9_14_recovery?
+      %{This has an unclosed &lt;![CDATA[]] here...}
+    else
+      %{This has an unclosed ]] here...}
+    end
     assert_equal(expected, full_sanitize(input))
   end
 
@@ -165,8 +182,13 @@ class SanitizersTest < Minitest::Test
     assert_sanitized "<form action=\"/foo/bar\" method=\"post\"><input></form>", ''
   end
 
-  def test_sanitize_plaintext
-    assert_sanitized "<plaintext><span>foo</span></plaintext>", "<span>foo</span>"
+  def test_sanitize_plaintext_element
+    if html5_mode?
+      # obsolete, https://html.spec.whatwg.org/multipage/obsolete.html#plaintext
+      assert_sanitized "<plaintext><span>foo</span></plaintext>", "&lt;span&gt;foo&lt;/span&gt;&lt;/plaintext&gt;"
+    else
+      assert_sanitized "<plaintext><span>foo</span></plaintext>", "<span>foo</span>"
+    end
   end
 
   def test_sanitize_script
@@ -188,11 +210,65 @@ class SanitizersTest < Minitest::Test
     assert_sanitized raw, %{src="javascript:bang" <img width="5">foo</img>, <span>bar</span>}
   end
 
+  ALLOWED_ELEMENTS_PARENT = {
+    "caption" => "table",
+    "col" => "table",
+    "colgroup" => "table",
+    "li" => "ul",
+    "tbody" => "table",
+    "td" => "table",
+    "tfoot" => "table",
+    "th" => "table",
+    "thead" => "table",
+    "tr" => "table",
+  }
   tags = Loofah::HTML5::SafeList::ALLOWED_ELEMENTS - %w(script form)
   tags.each do |tag_name|
     define_method "test_should_allow_#{tag_name}_tag" do
+      parent = ALLOWED_ELEMENTS_PARENT[tag_name]
+      if parent
+        input = "<#{parent}><#{tag_name} title='1'>foo</#{tag_name}></#{parent}>"
+        naive_output = "<#{parent}><#{tag_name.downcase} title='1'>foo</#{tag_name.downcase}></#{parent}>"
+      else
+        input = "<#{tag_name} title='1'>foo</#{tag_name}>"
+        naive_output = "<#{tag_name.downcase} title='1'>foo</#{tag_name.downcase}>"
+      end
+
+      if html5_mode?
+        # libgumbo
+        case tag_name
+        when "col"
+          expected = "foo<table><colgroup><col title='1'></colgroup></table>" # libgumbo
+        when "table"
+          expected = "foo<table title='1'></table>" # libgumbo
+        when "tr"
+          expected = "foo<table><tbody><tr title='1'></tr></tbody></table>" # libgumbo
+        when "th", "td"
+          expected = "<table><tbody><tr><#{tag_name} title='1'>foo</#{tag_name}></tr></tbody></table>" # libgumbo
+        when "colgroup", "tbody", "tfoot", "thead"
+          expected = "foo<table><#{tag_name} title='1'></#{tag_name}></table>" # libgumbo
+        when "br"
+          expected = "<br title='1'>foo<br>"
+        end
+      else
+        # libxml
+        case tag_name
+        when "col"
+          expected = "<table>\n<col title='1'>foo</table>" # libxml
+        end
+      end
+
+      if expected.nil?
+        # common
+        if Loofah::HTML5::SafeList::VOID_ELEMENTS.include?(tag_name)
+          expected = "<#{tag_name} title='1'>foo"
+        else
+          expected = naive_output
+        end
+      end
+
       scope_allowed_tags(tags) do
-        assert_sanitized "start <#{tag_name} title=\"1\" onclick=\"foo\">foo <bad>bar</bad> baz</#{tag_name}> end", %(start <#{tag_name} title="1">foo bar baz</#{tag_name}> end)
+        assert_sanitized(input, expected)
       end
     end
   end
@@ -364,7 +440,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_tag_broken_up_by_null
-    assert_sanitized %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>), ""
+    if html5_mode?
+      assert_sanitized %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>), %{alert("XSS")}
+    else
+      assert_sanitized %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>), ""
+    end
   end
 
   def test_should_sanitize_invalid_script_tag
@@ -381,7 +461,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_half_open_scripts
-    assert_sanitized %(<IMG SRC="javascript:alert('XSS')"), "<img>"
+    if html5_mode?
+      assert_sanitized %(<IMG SRC="javascript:alert('XSS')"), ""
+    else
+      assert_sanitized %(<IMG SRC="javascript:alert('XSS')"), "<img>"
+    end
   end
 
   def test_should_not_fall_for_ridiculous_hack
@@ -419,7 +503,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_invalid_tag_names_in_single_tags
-    assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', "<img />")
+    if html5_mode?
+      assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', %{<img src="http://ha.ckers.org/xss.js">})
+    else
+      assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', "<img />")
+    end
   end
 
   def test_should_sanitize_img_dynsrc_lowsrc
@@ -464,13 +552,21 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_cdata_section
     input = "<![CDATA[<span>section</span>]]>"
-    expected = libxml_2_9_14_recovery? ? %{&lt;![CDATA[<span>section</span>]]&gt;} : %{section]]&gt;}
+    expected = if !html5_mode? && libxml_2_9_14_recovery?
+      %{&lt;![CDATA[<span>section</span>]]&gt;}
+    else
+      %{section]]&gt;}
+    end
     assert_sanitized(input, expected)
   end
 
   def test_should_sanitize_unterminated_cdata_section
     input = "<![CDATA[<span>neverending..."
-    expected = libxml_2_9_14_recovery? ? %{&lt;![CDATA[<span>neverending...</span>} : %{neverending...}
+    expected = if !html5_mode? && libxml_2_9_14_recovery?
+      %{&lt;![CDATA[<span>neverending...</span>}
+    else
+      %{neverending...}
+    end
     assert_sanitized(input, expected)
   end
 
@@ -479,7 +575,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_neverending_attribute
-    assert_sanitized "<span class=\"\\", "<span class=\"\\\">"
+    if html5_mode?
+      assert_sanitized "<span class=\"\\", ""
+    else
+      assert_sanitized "<span class=\"\\", "<span class=\"\\\">"
+    end
   end
 
   [
@@ -646,5 +746,9 @@ protected
 
   def libxml_2_9_14_recovery?
     Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?(">= 2.9.14")
+  end
+
+  def html5_mode?
+    ::Loofah.respond_to?(:html5_mode?) && ::Loofah.html5_mode?
   end
 end
