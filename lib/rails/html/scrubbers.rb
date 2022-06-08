@@ -144,6 +144,13 @@ module Rails
           val_unescaped = CGI.unescapeHTML(attr_node.value).gsub(Loofah::HTML5::Scrub::CONTROL_CHARACTERS,'').downcase
           if val_unescaped =~ /^[a-z0-9][-+.a-z0-9]*:/ && ! Loofah::HTML5::SafeList::ALLOWED_PROTOCOLS.include?(val_unescaped.split(Loofah::HTML5::SafeList::PROTOCOL_SEPARATOR)[0])
             attr_node.remove
+          elsif val_unescaped.split(Loofah::HTML5::SafeList::PROTOCOL_SEPARATOR)[0] == "data"
+            # permit only allowed data mediatypes
+            mediatype = val_unescaped.split(Loofah::HTML5::SafeList::PROTOCOL_SEPARATOR)[1]
+            mediatype, _ = mediatype.split(";")[0..1] if mediatype
+            if mediatype && !Loofah::HTML5::SafeList::ALLOWED_URI_DATA_MEDIATYPES.include?(mediatype)
+              attr_node.remove
+            end
           end
         end
         if Loofah::HTML5::SafeList::SVG_ATTR_VAL_ALLOWS_REF.include?(attr_name)
