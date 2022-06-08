@@ -515,6 +515,16 @@ class SanitizersTest < Minitest::Test
     assert_equal %(<a data-foo="foo">foo</a>), safe_list_sanitize(text, attributes: ['data-foo'])
   end
 
+  def test_sanitize_data_protocol
+    text = "- XSS\"><iframe src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=\">- XSS\"><iframe src=\"data:application/vnd.wap.xhtml+xml;base64,PHg6c2NyaXB0IHhtbG5zOng9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWwiPmFsZXJ0KGRvY3VtZW50LmRvbWFpbik8L3g6c2NyaXB0Pg==\">"
+
+    scope_allowed_tags %w(iframe) do
+      scope_allowed_attributes %w(src) do
+        assert_equal %(- XSS\"&gt;<iframe>- XSS\"&gt;<iframe></iframe></iframe>), safe_list_sanitize(text)
+      end
+    end
+  end
+
   def test_uri_escaping_of_href_attr_in_a_tag_in_safe_list_sanitizer
     skip if RUBY_VERSION < "2.3"
 
