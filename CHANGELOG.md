@@ -1,3 +1,14 @@
+## 1.4.3 / 2022-06-09
+
+* Address a possible XSS vulnerability with certain configurations of Rails::Html::Sanitizer.
+
+  Prevent the combination of `select` and `style` as allowed tags in SafeListSanitizer.
+
+  Fixes CVE-2022-32209
+
+  *Mike Dalessio*
+
+
 ## 1.4.2 / 2021-08-23
 
 * Slightly improve performance.
