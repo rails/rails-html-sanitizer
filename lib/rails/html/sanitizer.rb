@@ -141,8 +141,25 @@ module Rails
 
       private
 
+      def loofah_using_html5?
+        # future-proofing, see https://github.com/flavorjones/loofah/pull/239
+        Loofah.respond_to?(:html5_mode?) && Loofah.html5_mode?
+      end
+
+      def remove_safelist_tag_combinations(tags)
+        if !loofah_using_html5? && tags.include?("select") && tags.include?("style")
+          warn("WARNING: #{self.class}: removing 'style' from safelist, should not be combined with 'select'")
+          tags.delete("style")
+        end
+        tags
+      end
+
       def allowed_tags(options)
-        options[:tags] || self.class.allowed_tags
+        if options[:tags]
+          remove_safelist_tag_combinations(options[:tags])
+        else
+          self.class.allowed_tags
+        end
       end
 
       def allowed_attributes(options)
