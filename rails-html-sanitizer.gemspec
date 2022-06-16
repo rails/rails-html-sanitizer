@@ -12,6 +12,8 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{This gem is responsible to sanitize HTML fragments in Rails applications.}
   spec.homepage      = "https://github.com/rails/rails-html-sanitizer"
   spec.license       = "MIT"
+  
+  spec.required_ruby_version = '>= 2.6'
 
   spec.metadata      = {
     "bug_tracker_uri"   => "https://github.com/rails/rails-html-sanitizer/issues",
