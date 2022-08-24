@@ -587,25 +587,6 @@ class SanitizersTest < Minitest::Test
     assert_equal("<div>text</div><b>text</b>", safe_list_sanitize("<div>text</div><!-- comment --><b>text</b>"))
   end
 
-  def test_disallow_the_dangerous_safelist_combination_of_select_and_style
-    input = "<select><style><script>alert(1)</script></style></select>"
-    tags = ["select", "style"]
-    warning = /WARNING: Rails::Html::SafeListSanitizer: removing 'style' from safelist/
-    sanitized = nil
-    invocation = Proc.new { sanitized = safe_list_sanitize(input, tags: tags) }
-
-    if html5_mode?
-      # if Loofah is using an HTML5 parser,
-      #   then "style" should be removed by the parser as an invalid child of "select"
-      assert_silent(&invocation)
-    else
-      # if Loofah is using an HTML4 parser,
-      #   then SafeListSanitizer should remove "style" from the safelist
-      assert_output(nil, warning, &invocation)
-    end
-    refute_includes(sanitized, "style")
-  end
-
   %w[text/plain text/css image/png image/gif image/jpeg].each do |mediatype|
     define_method "test_mediatype_#{mediatype}_allowed" do
       input = %Q(<img src="data:#{mediatype};base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
@@ -732,9 +713,5 @@ protected
     # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
     # then reverted in 2.10.0, see https://gitlab.gnome.org/GNOME/libxml2/-/issues/380
     Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?("= 2.9.14")
-  end
-
-  def html5_mode?
-    ::Loofah.respond_to?(:html5_mode?) && ::Loofah.html5_mode?
   end
 end
