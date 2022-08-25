@@ -641,6 +641,66 @@ class SanitizersTest < Minitest::Test
     assert_equal(expected, actual)
   end
 
+  def test_style_with_css_payload
+    input, tags = "<style>div > span { background: \"red\"; }</style>", ["style"]
+    expected = "<style>div &gt; span { background: \"red\"; }</style>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_select_and_style_with_css_payload
+    input, tags = "<select><style>div > span { background: \"red\"; }</style></select>", ["select", "style"]
+    expected = "<select><style>div &gt; span { background: \"red\"; }</style></select>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_select_and_style_with_script_payload
+    input, tags = "<select><style><script>alert(1)</script></style></select>", ["select", "style"]
+    expected = "<select><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></select>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_svg_and_style_with_script_payload
+    input, tags = "<svg><style><script>alert(1)</script></style></svg>", ["svg", "style"]
+    expected = "<svg><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></svg>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_math_and_style_with_img_payload
+    input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style"]
+    expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+
+    input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style", "img"]
+    expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_svg_and_style_with_img_payload
+    input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style"]
+    expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+
+    input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style", "img"]
+    expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
 protected
 
   def xpath_sanitize(input, options = {})
