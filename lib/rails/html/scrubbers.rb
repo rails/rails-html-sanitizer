@@ -62,9 +62,9 @@ module Rails
       end
 
       def scrub(node)
-        if node.cdata?
-          text = node.document.create_text_node node.text
-          node.replace text
+        if Loofah::HTML5::Scrub.cdata_needs_escaping?(node)
+          replacement = Loofah::HTML5::Scrub.cdata_escape(node)
+          node.replace(replacement)
           return CONTINUE
         end
         return CONTINUE if skip_node?(node)
