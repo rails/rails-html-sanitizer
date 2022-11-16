@@ -54,7 +54,7 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_tags_with_quote
     input = '<" <img src="trollface.gif" onload="alert(1)"> hi'
-    expected = libxml_2_9_14_recovery? ? %{&lt;"  hi} : %{ hi}
+    expected = libxml_2_9_14_recovery_lt? ? %{&lt;"  hi} : %{ hi}
     assert_equal(expected, full_sanitize(input))
   end
 
@@ -77,19 +77,19 @@ class SanitizersTest < Minitest::Test
 
   def test_remove_unclosed_tags
     input = "This is <-- not\n a comment here."
-    expected = libxml_2_9_14_recovery? ? %{This is &lt;-- not\n a comment here.} : %{This is }
+    expected = libxml_2_9_14_recovery_lt? ? %{This is &lt;-- not\n a comment here.} : %{This is }
     assert_equal(expected, full_sanitize(input))
   end
 
   def test_strip_cdata
     input = "This has a <![CDATA[<section>]]> here."
-    expected = libxml_2_9_14_recovery? ? %{This has a &lt;![CDATA[]]&gt; here.} : %{This has a ]]&gt; here.}
+    expected = libxml_2_9_14_recovery_lt_bang? ? %{This has a &lt;![CDATA[]]&gt; here.} : %{This has a ]]&gt; here.}
     assert_equal(expected, full_sanitize(input))
   end
 
   def test_strip_unclosed_cdata
     input = "This has an unclosed <![CDATA[<section>]] here..."
-    expected = libxml_2_9_14_recovery? ? %{This has an unclosed &lt;![CDATA[]] here...} : %{This has an unclosed ]] here...}
+    expected = libxml_2_9_14_recovery_lt_bang? ? %{This has an unclosed &lt;![CDATA[]] here...} : %{This has an unclosed ]] here...}
     assert_equal(expected, full_sanitize(input))
   end
 
@@ -458,13 +458,13 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_cdata_section
     input = "<![CDATA[<span>section</span>]]>"
-    expected = libxml_2_9_14_recovery? ? %{&lt;![CDATA[<span>section</span>]]&gt;} : %{section]]&gt;}
+    expected = libxml_2_9_14_recovery_lt_bang? ? %{&lt;![CDATA[<span>section</span>]]&gt;} : %{section]]&gt;}
     assert_sanitized(input, expected)
   end
 
   def test_should_sanitize_unterminated_cdata_section
     input = "<![CDATA[<span>neverending..."
-    expected = libxml_2_9_14_recovery? ? %{&lt;![CDATA[<span>neverending...</span>} : %{neverending...}
+    expected = libxml_2_9_14_recovery_lt_bang? ? %{&lt;![CDATA[<span>neverending...</span>} : %{neverending...}
     assert_sanitized(input, expected)
   end
 
@@ -657,8 +657,15 @@ protected
     end.join
   end
 
-  def libxml_2_9_14_recovery?
+  def libxml_2_9_14_recovery_lt?
+    # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
     Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?(">= 2.9.14")
+  end
+
+  def libxml_2_9_14_recovery_lt_bang?
+    # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
+    # then reverted in 2.10.0, see https://gitlab.gnome.org/GNOME/libxml2/-/issues/380
+    Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?("= 2.9.14")
   end
 
   def html5_mode?
