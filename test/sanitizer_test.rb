@@ -600,6 +600,56 @@ class SanitizersTest < Minitest::Test
     refute_includes(sanitized, "style")
   end
 
+  %w[text/plain text/css image/png image/gif image/jpeg].each do |mediatype|
+    define_method "test_mediatype_#{mediatype}_allowed" do
+      input = %Q(<img src="data:#{mediatype};base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+      expected = input
+      actual = safe_list_sanitize(input)
+      assert_equal(expected, actual)
+
+      input = %Q(<img src="DATA:#{mediatype};base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+      expected = input
+      actual = safe_list_sanitize(input)
+      assert_equal(expected, actual)
+    end
+  end
+
+  def test_mediatype_text_html_disallowed
+    input = %q(<img src="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+
+    input = %q(<img src="DATA:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+  end
+
+  def test_mediatype_image_svg_xml_disallowed
+    input = %q(<img src="data:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+
+    input = %q(<img src="DATA:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+  end
+
+  def test_mediatype_other_disallowed
+    input = %q(<a href="data:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>)
+    expected = %q(<a>foo</a>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+
+    input = %q(<a href="DATA:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>)
+    expected = %q(<a>foo</a>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+  end
+
   def test_scrubbing_svg_attr_values_that_allow_ref
     input = %Q(<div fill="yellow url(http://bad.com/) #fff">hey</div>)
     expected = %Q(<div fill="yellow #fff">hey</div>)

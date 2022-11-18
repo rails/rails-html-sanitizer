@@ -139,11 +139,7 @@ module Rails
                     end
 
         if Loofah::HTML5::SafeList::ATTR_VAL_IS_URI.include?(attr_name)
-          # this block lifted nearly verbatim from HTML5 sanitization
-          val_unescaped = CGI.unescapeHTML(attr_node.value).gsub(Loofah::HTML5::Scrub::CONTROL_CHARACTERS,'').downcase
-          if val_unescaped =~ /^[a-z0-9][-+.a-z0-9]*:/ && ! Loofah::HTML5::SafeList::ALLOWED_PROTOCOLS.include?(val_unescaped.split(Loofah::HTML5::SafeList::PROTOCOL_SEPARATOR)[0])
-            attr_node.remove
-          end
+          return if Loofah::HTML5::Scrub.scrub_uri_attribute(attr_node)
         end
 
         if Loofah::HTML5::SafeList::SVG_ATTR_VAL_ALLOWS_REF.include?(attr_name)
