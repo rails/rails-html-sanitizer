@@ -205,5 +205,11 @@ Rails Html Sanitizers is work of many contributors. You're encouraged to submit 
 
 See [CONTRIBUTING](CONTRIBUTING.md).
 
+### Security reports
+
+Trying to report a possible security vulnerability in this project? Please
+check out our [security policy](https://rubyonrails.org/security) for
+guidelines about how to proceed.
+
 ## License
 Rails Html Sanitizers is released under the [MIT License](MIT-LICENSE).
