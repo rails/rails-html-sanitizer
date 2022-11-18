@@ -600,6 +600,16 @@ class SanitizersTest < Minitest::Test
     refute_includes(sanitized, "style")
   end
 
+  def test_scrubbing_svg_attr_values_that_allow_ref
+    input = %Q(<div fill="yellow url(http://bad.com/) #fff">hey</div>)
+    expected = %Q(<div fill="yellow #fff">hey</div>)
+    actual = scope_allowed_attributes %w(fill) do
+      safe_list_sanitize(input)
+    end
+
+    assert_equal(expected, actual)
+  end
+
 protected
 
   def xpath_sanitize(input, options = {})
