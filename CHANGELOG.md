@@ -1,3 +1,38 @@
+## 1.4.4 / 2022-12-13
+
+* Address inefficient regular expression complexity with certain configurations of Rails::Html::Sanitizer.
+
+  Fixes CVE-2022-23517. See
+  [GHSA-5x79-w82f-gw8w](https://github.com/rails/rails-html-sanitizer/security/advisories/GHSA-5x79-w82f-gw8w)
+  for more information.
+
+  *Mike Dalessio*
+
+* Address improper sanitization of data URIs.
+
+  Fixes CVE-2022-23518 and #135. See
+  [GHSA-mcvf-2q2m-x72m](https://github.com/rails/rails-html-sanitizer/security/advisories/GHSA-mcvf-2q2m-x72m)
+  for more information.
+
+  *Mike Dalessio*
+
+* Address possible XSS vulnerability with certain configurations of Rails::Html::Sanitizer.
+
+  Fixes CVE-2022-23520. See
+  [GHSA-rrfc-7g8p-99q8](https://github.com/rails/rails-html-sanitizer/security/advisories/GHSA-rrfc-7g8p-99q8)
+  for more information.
+
+  *Mike Dalessio*
+
+* Address possible XSS vulnerability with certain configurations of Rails::Html::Sanitizer.
+
+  Fixes CVE-2022-23519. See
+  [GHSA-9h9g-93gc-623h](https://github.com/rails/rails-html-sanitizer/security/advisories/GHSA-9h9g-93gc-623h)
+  for more information.
+
+  *Mike Dalessio*
+
+
 ## 1.4.3 / 2022-06-09
 
 * Address a possible XSS vulnerability with certain configurations of Rails::Html::Sanitizer.
