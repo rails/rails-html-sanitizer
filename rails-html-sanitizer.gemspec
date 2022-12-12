@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
 
   # NOTE: There's no need to update this dependency for Loofah CVEs
   # in minor releases when users can simply run `bundle update loofah`.
-  spec.add_dependency "loofah", "~> 2.3"
+  spec.add_dependency "loofah", "~> 2.19", ">= 2.19.1"
 
   spec.add_development_dependency "bundler", ">= 1.3"
   spec.add_development_dependency "rake"
