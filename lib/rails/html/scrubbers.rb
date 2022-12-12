@@ -86,10 +86,6 @@ module Rails
         node.text?
       end
 
-      def scrub_attribute?(name)
-        !@attributes.include?(name)
-      end
-
       def keep_node?(node)
         if @tags
           allowed_node?(node)
@@ -105,23 +101,9 @@ module Rails
 
       def scrub_attributes(node)
         if @attributes
-          node.attribute_nodes.each do |attr|
-            attr.remove if scrub_attribute?(attr.name)
-            scrub_attribute(node, attr)
-          end
-
-          scrub_css_attribute(node)
+          Loofah::HTML5::Scrub.scrub_attributes(node, allowed_attribute_names: @attributes)
         else
           Loofah::HTML5::Scrub.scrub_attributes(node)
-        end
-      end
-
-      def scrub_css_attribute(node)
-        if Loofah::HTML5::Scrub.respond_to?(:scrub_css_attribute)
-          Loofah::HTML5::Scrub.scrub_css_attribute(node)
-        else
-          style = node.attributes['style']
-          style.value = Loofah::HTML5::Scrub.scrub_css(style.value) if style
         end
       end
 
@@ -130,32 +112,6 @@ module Rails
           raise ArgumentError, "You should pass :#{name} as an Enumerable"
         end
         var
-      end
-
-      def scrub_attribute(node, attr_node)
-        attr_name = if attr_node.namespace
-                      "#{attr_node.namespace.prefix}:#{attr_node.node_name}"
-                    else
-                      attr_node.node_name
-                    end
-
-        if Loofah::HTML5::SafeList::ATTR_VAL_IS_URI.include?(attr_name)
-          # this block lifted nearly verbatim from HTML5 sanitization
-          val_unescaped = CGI.unescapeHTML(attr_node.value).gsub(Loofah::HTML5::Scrub::CONTROL_CHARACTERS,'').downcase
-          if val_unescaped =~ /^[a-z0-9][-+.a-z0-9]*:/ && ! Loofah::HTML5::SafeList::ALLOWED_PROTOCOLS.include?(val_unescaped.split(Loofah::HTML5::SafeList::PROTOCOL_SEPARATOR)[0])
-            attr_node.remove
-          end
-        end
-        if Loofah::HTML5::SafeList::SVG_ATTR_VAL_ALLOWS_REF.include?(attr_name)
-          attr_node.value = attr_node.value.gsub(/url\s*\(\s*[^#\s][^)]+?\)/m, ' ') if attr_node.value
-        end
-        if Loofah::HTML5::SafeList::SVG_ALLOW_LOCAL_HREF.include?(node.name) && attr_name == 'xlink:href' && attr_node.value =~ /^\s*[^#\s].*/m
-          attr_node.remove
-        end
-
-        node.remove_attribute(attr_node.name) if attr_name == 'src' && attr_node.value !~ /[^[:space:]]/
-
-        Loofah::HTML5::Scrub.force_correct_attribute_escaping! node
       end
     end
 

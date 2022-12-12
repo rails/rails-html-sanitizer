@@ -5,3 +5,4 @@ gemspec
 
 gem "nokogiri", RUBY_VERSION < "2.1" ? "~> 1.6.0" : ">= 1.7"
 gem "activesupport", RUBY_VERSION < "2.2.2" ? "~> 4.2.0" : ">= 5"
+gem "loofah", git: "https://github.com/flavorjones/loofah", branch: "flavorjones-scrub-accepts-allowed-attribute-names"
