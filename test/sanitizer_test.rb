@@ -587,23 +587,124 @@ class SanitizersTest < Minitest::Test
     assert_equal("<div>text</div><b>text</b>", safe_list_sanitize("<div>text</div><!-- comment --><b>text</b>"))
   end
 
-  def test_disallow_the_dangerous_safelist_combination_of_select_and_style
-    input = "<select><style><script>alert(1)</script></style></select>"
-    tags = ["select", "style"]
-    warning = /WARNING: Rails::Html::SafeListSanitizer: removing 'style' from safelist/
-    sanitized = nil
-    invocation = Proc.new { sanitized = safe_list_sanitize(input, tags: tags) }
+  %w[text/plain text/css image/png image/gif image/jpeg].each do |mediatype|
+    define_method "test_mediatype_#{mediatype}_allowed" do
+      input = %Q(<img src="data:#{mediatype};base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+      expected = input
+      actual = safe_list_sanitize(input)
+      assert_equal(expected, actual)
 
-    if html5_mode?
-      # if Loofah is using an HTML5 parser,
-      #   then "style" should be removed by the parser as an invalid child of "select"
-      assert_silent(&invocation)
-    else
-      # if Loofah is using an HTML4 parser,
-      #   then SafeListSanitizer should remove "style" from the safelist
-      assert_output(nil, warning, &invocation)
+      input = %Q(<img src="DATA:#{mediatype};base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+      expected = input
+      actual = safe_list_sanitize(input)
+      assert_equal(expected, actual)
     end
-    refute_includes(sanitized, "style")
+  end
+
+  def test_mediatype_text_html_disallowed
+    input = %q(<img src="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+
+    input = %q(<img src="DATA:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+  end
+
+  def test_mediatype_image_svg_xml_disallowed
+    input = %q(<img src="data:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+
+    input = %q(<img src="DATA:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
+    expected = %q(<img>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+  end
+
+  def test_mediatype_other_disallowed
+    input = %q(<a href="data:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>)
+    expected = %q(<a>foo</a>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+
+    input = %q(<a href="DATA:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>)
+    expected = %q(<a>foo</a>)
+    actual = safe_list_sanitize(input)
+    assert_equal(expected, actual)
+  end
+
+  def test_scrubbing_svg_attr_values_that_allow_ref
+    input = %Q(<div fill="yellow url(http://bad.com/) #fff">hey</div>)
+    expected = %Q(<div fill="yellow #fff">hey</div>)
+    actual = scope_allowed_attributes %w(fill) do
+      safe_list_sanitize(input)
+    end
+
+    assert_equal(expected, actual)
+  end
+
+  def test_style_with_css_payload
+    input, tags = "<style>div > span { background: \"red\"; }</style>", ["style"]
+    expected = "<style>div &gt; span { background: \"red\"; }</style>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_select_and_style_with_css_payload
+    input, tags = "<select><style>div > span { background: \"red\"; }</style></select>", ["select", "style"]
+    expected = "<select><style>div &gt; span { background: \"red\"; }</style></select>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_select_and_style_with_script_payload
+    input, tags = "<select><style><script>alert(1)</script></style></select>", ["select", "style"]
+    expected = "<select><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></select>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_svg_and_style_with_script_payload
+    input, tags = "<svg><style><script>alert(1)</script></style></svg>", ["svg", "style"]
+    expected = "<svg><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></svg>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_math_and_style_with_img_payload
+    input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style"]
+    expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+
+    input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style", "img"]
+    expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+  end
+
+  def test_combination_of_svg_and_style_with_img_payload
+    input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style"]
+    expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
+
+    input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style", "img"]
+    expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
+    actual = safe_list_sanitize(input, tags: tags)
+
+    assert_equal(expected, actual)
   end
 
 protected
@@ -672,9 +773,5 @@ protected
     # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
     # then reverted in 2.10.0, see https://gitlab.gnome.org/GNOME/libxml2/-/issues/380
     Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?("= 2.9.14")
-  end
-
-  def html5_mode?
-    ::Loofah.respond_to?(:html5_mode?) && ::Loofah.html5_mode?
   end
 end

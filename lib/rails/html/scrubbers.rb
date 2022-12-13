@@ -62,9 +62,9 @@ module Rails
       end
 
       def scrub(node)
-        if node.cdata?
-          text = node.document.create_text_node node.text
-          node.replace text
+        if Loofah::HTML5::Scrub.cdata_needs_escaping?(node)
+          replacement = Loofah::HTML5::Scrub.cdata_escape(node)
+          node.replace(replacement)
           return CONTINUE
         end
         return CONTINUE if skip_node?(node)
@@ -140,15 +140,13 @@ module Rails
                     end
 
         if Loofah::HTML5::SafeList::ATTR_VAL_IS_URI.include?(attr_name)
-          # this block lifted nearly verbatim from HTML5 sanitization
-          val_unescaped = CGI.unescapeHTML(attr_node.value).gsub(Loofah::HTML5::Scrub::CONTROL_CHARACTERS,'').downcase
-          if val_unescaped =~ /^[a-z0-9][-+.a-z0-9]*:/ && ! Loofah::HTML5::SafeList::ALLOWED_PROTOCOLS.include?(val_unescaped.split(Loofah::HTML5::SafeList::PROTOCOL_SEPARATOR)[0])
-            attr_node.remove
-          end
+          return if Loofah::HTML5::Scrub.scrub_uri_attribute(attr_node)
         end
+
         if Loofah::HTML5::SafeList::SVG_ATTR_VAL_ALLOWS_REF.include?(attr_name)
-          attr_node.value = attr_node.value.gsub(/url\s*\(\s*[^#\s][^)]+?\)/m, ' ') if attr_node.value
+          Loofah::HTML5::Scrub.scrub_attribute_that_allows_local_ref(attr_node)
         end
+
         if Loofah::HTML5::SafeList::SVG_ALLOW_LOCAL_HREF.include?(node.name) && attr_name == 'xlink:href' && attr_node.value =~ /^\s*[^#\s].*/m
           attr_node.remove
         end
