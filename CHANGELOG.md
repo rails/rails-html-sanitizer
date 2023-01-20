@@ -1,4 +1,4 @@
-## next / unreleased
+## 1.5.0 / 2023-01-20
 
 * `SafeListSanitizer`, `PermitScrubber`, and `TargetScrubber` now all support pruning of unsafe tags.
 
