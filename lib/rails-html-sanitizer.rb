@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rails/html/sanitizer/version"
 require "loofah"
 require "rails/html/scrubbers"
