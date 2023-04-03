@@ -13,6 +13,8 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/rails/rails-html-sanitizer"
   spec.license       = "MIT"
 
+  spec.required_ruby_version = ">= 2.5.0"
+
   spec.metadata      = {
     "bug_tracker_uri"   => "https://github.com/rails/rails-html-sanitizer/issues",
     "changelog_uri"     => "https://github.com/rails/rails-html-sanitizer/blob/v#{spec.version}/CHANGELOG.md",
