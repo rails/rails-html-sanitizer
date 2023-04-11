@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Rails
   module Html
     XPATHS_TO_REMOVE = %w{.//script .//form comment()}
@@ -8,15 +10,14 @@ module Rails
       end
 
       private
+        def remove_xpaths(node, xpaths)
+          node.xpath(*xpaths).remove
+          node
+        end
 
-      def remove_xpaths(node, xpaths)
-        node.xpath(*xpaths).remove
-        node
-      end
-
-      def properly_encode(fragment, options)
-        fragment.xml? ? fragment.to_xml(options) : fragment.to_html(options)
-      end
+        def properly_encode(fragment, options)
+          fragment.xml? ? fragment.to_xml(options) : fragment.to_html(options)
+        end
     end
 
     # === Rails::Html::FullSanitizer
@@ -35,7 +36,7 @@ module Rails
         remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
         loofah_fragment.scrub!(TextOnlyScrubber.new)
 
-        properly_encode(loofah_fragment, encoding: 'UTF-8')
+        properly_encode(loofah_fragment, encoding: "UTF-8")
       end
     end
 
@@ -132,7 +133,7 @@ module Rails
           loofah_fragment.scrub!(:strip)
         end
 
-        properly_encode(loofah_fragment, encoding: 'UTF-8')
+        properly_encode(loofah_fragment, encoding: "UTF-8")
       end
 
       def sanitize_css(style_string)
@@ -140,14 +141,13 @@ module Rails
       end
 
       private
+        def allowed_tags(options)
+          options[:tags] || self.class.allowed_tags
+        end
 
-      def allowed_tags(options)
-        options[:tags] || self.class.allowed_tags
-      end
-
-      def allowed_attributes(options)
-        options[:attributes] || self.class.allowed_attributes
-      end
+        def allowed_attributes(options)
+          options[:attributes] || self.class.allowed_attributes
+        end
     end
 
     WhiteListSanitizer = SafeListSanitizer

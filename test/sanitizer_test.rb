@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "minitest/autorun"
 require "rails-html-sanitizer"
 require "rails/dom/testing/assertions/dom_assertions"
@@ -9,7 +11,7 @@ class SanitizersTest < Minitest::Test
 
   def test_sanitizer_sanitize_raises_not_implemented_error
     assert_raises NotImplementedError do
-      Rails::Html::Sanitizer.new.sanitize('')
+      Rails::Html::Sanitizer.new.sanitize("")
     end
   end
 
@@ -40,16 +42,16 @@ class SanitizersTest < Minitest::Test
 
   def test_remove_xpaths_called_with_faulty_xpath
     assert_raises Nokogiri::XML::XPath::SyntaxError do
-      xpath_sanitize('<h1>hello<h1>', xpaths: %w(..faulty_xpath))
+      xpath_sanitize("<h1>hello<h1>", xpaths: %w(..faulty_xpath))
     end
   end
 
   def test_remove_xpaths_called_with_xpath_string
-    assert_equal '', xpath_sanitize('<a></a>', xpaths: './/a')
+    assert_equal "", xpath_sanitize("<a></a>", xpaths: ".//a")
   end
 
   def test_remove_xpaths_called_with_enumerable_xpaths
-    assert_equal '', xpath_sanitize('<a><span></span></a>', xpaths: %w(.//a .//span))
+    assert_equal "", xpath_sanitize("<a><span></span></a>", xpaths: %w(.//a .//span))
   end
 
   def test_strip_tags_with_quote
@@ -120,15 +122,15 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_strip_tags_with_frozen_string
-    assert_equal "Frozen string with no tags", full_sanitize("Frozen string with no tags".freeze)
+    assert_equal "Frozen string with no tags", full_sanitize("Frozen string with no tags")
   end
 
   def test_full_sanitize_respect_html_escaping_of_the_given_string
     assert_equal 'test\r\nstring', full_sanitize('test\r\nstring')
-    assert_equal '&amp;', full_sanitize('&')
-    assert_equal '&amp;', full_sanitize('&amp;')
-    assert_equal '&amp;amp;', full_sanitize('&amp;amp;')
-    assert_equal 'omg &lt;script&gt;BOM&lt;/script&gt;', full_sanitize('omg &lt;script&gt;BOM&lt;/script&gt;')
+    assert_equal "&amp;", full_sanitize("&")
+    assert_equal "&amp;", full_sanitize("&amp;")
+    assert_equal "&amp;amp;", full_sanitize("&amp;amp;")
+    assert_equal "omg &lt;script&gt;BOM&lt;/script&gt;", full_sanitize("omg &lt;script&gt;BOM&lt;/script&gt;")
   end
 
   def test_strip_links_with_tags_in_tags
@@ -162,7 +164,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_form
-    assert_sanitized "<form action=\"/foo/bar\" method=\"post\"><input></form>", ''
+    assert_sanitized "<form action=\"/foo/bar\" method=\"post\"><input></form>", ""
   end
 
   def test_sanitize_plaintext
@@ -222,16 +224,16 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_handle_non_html
-    assert_sanitized 'abc'
+    assert_sanitized "abc"
   end
 
   def test_should_handle_blank_text
-    [nil, '', '   '].each { |blank| assert_sanitized blank }
+    [nil, "", "   "].each { |blank| assert_sanitized blank }
   end
 
   def test_setting_allowed_tags_affects_sanitization
     scope_allowed_tags %w(u) do |sanitizer|
-      assert_equal '<u></u>', sanitizer.sanitize('<a><u></u></a>')
+      assert_equal "<u></u>", sanitizer.sanitize("<a><u></u></a>")
     end
   end
 
@@ -244,8 +246,8 @@ class SanitizersTest < Minitest::Test
 
   def test_custom_tags_overrides_allowed_tags
     scope_allowed_tags %(u) do |sanitizer|
-      input = '<a><u></u></a>'
-      assert_equal '<a></a>', sanitizer.sanitize(input, tags: %w(a))
+      input = "<a><u></u></a>"
+      assert_equal "<a></a>", sanitizer.sanitize(input, tags: %w(a))
     end
   end
 
@@ -258,7 +260,7 @@ class SanitizersTest < Minitest::Test
 
   def test_should_allow_prune
     sanitizer = Rails::Html::SafeListSanitizer.new(prune: true)
-    text = '<u>leave me <b>now</b></u>'
+    text = "<u>leave me <b>now</b></u>"
     assert_equal "<u>leave me </u>", sanitizer.sanitize(text, tags: %w(u))
   end
 
@@ -279,7 +281,7 @@ class SanitizersTest < Minitest::Test
 
   def test_should_allow_custom_tags_with_custom_attributes
     text = %(<blockquote foo="bar">Lorem ipsum</blockquote>)
-    assert_equal text, safe_list_sanitize(text, attributes: ['foo'])
+    assert_equal text, safe_list_sanitize(text, attributes: ["foo"])
   end
 
   def test_scrub_style_if_style_attribute_option_is_passed
@@ -290,43 +292,43 @@ class SanitizersTest < Minitest::Test
 
   def test_should_raise_argument_error_if_tags_is_not_enumerable
     assert_raises ArgumentError do
-      safe_list_sanitize('<a>some html</a>', tags: 'foo')
+      safe_list_sanitize("<a>some html</a>", tags: "foo")
     end
   end
 
   def test_should_raise_argument_error_if_attributes_is_not_enumerable
     assert_raises ArgumentError do
-      safe_list_sanitize('<a>some html</a>', attributes: 'foo')
+      safe_list_sanitize("<a>some html</a>", attributes: "foo")
     end
   end
 
   def test_should_not_accept_non_loofah_inheriting_scrubber
     scrubber = Object.new
-    def scrubber.scrub(node); node.name = 'h1'; end
+    def scrubber.scrub(node); node.name = "h1"; end
 
     assert_raises Loofah::ScrubberNotFound do
-      safe_list_sanitize('<a>some html</a>', scrubber: scrubber)
+      safe_list_sanitize("<a>some html</a>", scrubber: scrubber)
     end
   end
 
   def test_should_accept_loofah_inheriting_scrubber
     scrubber = Loofah::Scrubber.new
-    def scrubber.scrub(node); node.name = 'h1'; end
+    def scrubber.scrub(node); node.name = "h1"; end
 
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_should_accept_loofah_scrubber_that_wraps_a_block
-    scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
+    scrubber = Loofah::Scrubber.new { |node| node.name = "h1" }
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_custom_scrubber_takes_precedence_over_other_options
-    scrubber = Loofah::Scrubber.new { |node| node.name = 'h1' }
+    scrubber = Loofah::Scrubber.new { |node| node.name = "h1" }
     html = "<script>hello!</script>"
-    assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber, tags: ['foo'])
+    assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber, tags: ["foo"])
   end
 
   [%w(img src), %w(a href)].each do |(tag, attr)|
@@ -407,7 +409,7 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_xul_style_attributes
     raw = %(-moz-binding:url('http://ha.ckers.org/xssmoz.xml#xss'))
-    assert_equal '', sanitize_css(raw)
+    assert_equal "", sanitize_css(raw)
   end
 
   def test_should_sanitize_invalid_tag_names
@@ -450,16 +452,16 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_div_style_expression
     raw = %(width: expression(alert('XSS'));)
-    assert_equal '', sanitize_css(raw)
+    assert_equal "", sanitize_css(raw)
   end
 
   def test_should_sanitize_across_newlines
     raw = %(\nwidth:\nexpression(alert('XSS'));\n)
-    assert_equal '', sanitize_css(raw)
+    assert_equal "", sanitize_css(raw)
   end
 
   def test_should_sanitize_img_vbscript
-    assert_sanitized %(<img src='vbscript:msgbox("XSS")' />), '<img />'
+    assert_sanitized %(<img src='vbscript:msgbox("XSS")' />), "<img />"
   end
 
   def test_should_sanitize_cdata_section
@@ -475,7 +477,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_not_mangle_urls_with_ampersand
-     assert_sanitized %{<a href=\"http://www.domain.com?var1=1&amp;var2=2\">my link</a>}
+    assert_sanitized %{<a href=\"http://www.domain.com?var1=1&amp;var2=2\">my link</a>}
   end
 
   def test_should_sanitize_neverending_attribute
@@ -488,7 +490,7 @@ class SanitizersTest < Minitest::Test
     %(<a href="javascript&#x3A;alert('XSS');">),
     %(<a href="javascript&#x003A;alert('XSS');">)
   ].each_with_index do |enc_hack, i|
-    define_method "test_x03a_handling_#{i+1}" do
+    define_method "test_x03a_handling_#{i + 1}" do
       assert_sanitized enc_hack, "<a>"
     end
   end
@@ -499,8 +501,8 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_ascii_8bit_string
-    safe_list_sanitize('<a>hello</a>'.encode('ASCII-8BIT')).tap do |sanitized|
-      assert_equal '<a>hello</a>', sanitized
+    safe_list_sanitize("<a>hello</a>".encode("ASCII-8BIT")).tap do |sanitized|
+      assert_equal "<a>hello</a>", sanitized
       assert_equal Encoding::UTF_8, sanitized.encoding
     end
   end
@@ -512,7 +514,7 @@ class SanitizersTest < Minitest::Test
 
   def test_allow_data_attribute_if_requested
     text = %(<a data-foo="foo">foo</a>)
-    assert_equal %(<a data-foo="foo">foo</a>), safe_list_sanitize(text, attributes: ['data-foo'])
+    assert_equal %(<a data-foo="foo">foo</a>), safe_list_sanitize(text, attributes: ["data-foo"])
   end
 
   def test_uri_escaping_of_href_attr_in_a_tag_in_safe_list_sanitizer
@@ -568,7 +570,7 @@ class SanitizersTest < Minitest::Test
 
     html = %{<a action='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
-    text = safe_list_sanitize(html, attributes: ['action'])
+    text = safe_list_sanitize(html, attributes: ["action"])
 
     acceptable_results = [
       # nokogiri w/vendored+patched libxml2
@@ -602,44 +604,44 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_mediatype_text_html_disallowed
-    input = %q(<img src="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
-    expected = %q(<img>)
+    input = '<img src="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">'
+    expected = "<img>"
     actual = safe_list_sanitize(input)
     assert_equal(expected, actual)
 
-    input = %q(<img src="DATA:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
-    expected = %q(<img>)
+    input = '<img src="DATA:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">'
+    expected = "<img>"
     actual = safe_list_sanitize(input)
     assert_equal(expected, actual)
   end
 
   def test_mediatype_image_svg_xml_disallowed
-    input = %q(<img src="data:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
-    expected = %q(<img>)
+    input = '<img src="data:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">'
+    expected = "<img>"
     actual = safe_list_sanitize(input)
     assert_equal(expected, actual)
 
-    input = %q(<img src="DATA:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">)
-    expected = %q(<img>)
+    input = '<img src="DATA:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">'
+    expected = "<img>"
     actual = safe_list_sanitize(input)
     assert_equal(expected, actual)
   end
 
   def test_mediatype_other_disallowed
-    input = %q(<a href="data:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>)
-    expected = %q(<a>foo</a>)
+    input = '<a href="data:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+    expected = "<a>foo</a>"
     actual = safe_list_sanitize(input)
     assert_equal(expected, actual)
 
-    input = %q(<a href="DATA:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>)
-    expected = %q(<a>foo</a>)
+    input = '<a href="DATA:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+    expected = "<a>foo</a>"
     actual = safe_list_sanitize(input)
     assert_equal(expected, actual)
   end
 
   def test_scrubbing_svg_attr_values_that_allow_ref
-    input = %Q(<div fill="yellow url(http://bad.com/) #fff">hey</div>)
-    expected = %Q(<div fill="yellow #fff">hey</div>)
+    input = '<div fill="yellow url(http://bad.com/) #fff">hey</div>'
+    expected = '<div fill="yellow #fff">hey</div>'
     actual = scope_allowed_attributes %w(fill) do
       safe_list_sanitize(input)
     end
@@ -708,7 +710,6 @@ class SanitizersTest < Minitest::Test
   end
 
 protected
-
   def xpath_sanitize(input, options = {})
     XpathRemovalTestSanitizer.new.sanitize(input, options)
   end
@@ -754,7 +755,7 @@ protected
   end
 
   # note that this is used for testing CSS hex encoding: \\[0-9a-f]{1,6}
-  def convert_to_css_hex(string, escape_parens=false)
+  def convert_to_css_hex(string, escape_parens = false)
     string.chars.map do |c|
       if !escape_parens && (c == "(" || c == ")")
         c
