@@ -3,6 +3,24 @@
 module Rails
   module Html
     class Sanitizer # :nodoc:
+      class << self
+        def full_sanitizer
+          Rails::Html::FullSanitizer
+        end
+
+        def link_sanitizer
+          Rails::Html::LinkSanitizer
+        end
+
+        def safe_list_sanitizer
+          Rails::Html::SafeListSanitizer
+        end
+
+        def white_list_sanitizer # :nodoc:
+          safe_list_sanitizer
+        end
+      end
+
       def sanitize(html, options = {})
         raise NotImplementedError, "subclasses must implement sanitize method."
       end
