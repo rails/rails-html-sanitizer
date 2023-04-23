@@ -70,7 +70,7 @@ module Rails
       end
 
       def sanitize(html, options = {})
-        Loofah.scrub_fragment(html, @link_scrubber).to_s
+        Loofah.fragment(html).scrub!(@link_scrubber).to_s
       end
     end
 
