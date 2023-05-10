@@ -1,3 +1,10 @@
+## next / unreleased
+
+* `SafeListSanitizer` allows `time` tag and `lang` attribute by default.
+
+  *Mike Dalessio*
+
+
 ## 1.5.0 / 2023-01-20
 
 * `SafeListSanitizer`, `PermitScrubber`, and `TargetScrubber` now all support pruning of unsafe tags.

@@ -223,6 +223,21 @@ class SanitizersTest < Minitest::Test
     end
   end
 
+  def test_lang_and_xml_lang
+    # https://html.spec.whatwg.org/multipage/dom.html#the-lang-and-xml:lang-attributes
+    #
+    # 3.2.6.2 The lang and xml:lang attributes
+    #
+    # ... Authors must not use the lang attribute in the XML namespace on HTML elements in HTML
+    # documents. To ease migration to and from XML, authors may specify an attribute in no namespace
+    # with no prefix and with the literal localname "xml:lang" on HTML elements in HTML documents,
+    # but such attributes must only be specified if a lang attribute in no namespace is also
+    # specified, and both attributes must have the same value when compared in an ASCII
+    # case-insensitive manner.
+    input = expected = "<div lang=\"en\" xml:lang=\"en\">foo</div>"
+    assert_sanitized(input, expected)
+  end
+
   def test_should_handle_non_html
     assert_sanitized "abc"
   end
@@ -515,6 +530,31 @@ class SanitizersTest < Minitest::Test
   def test_allow_data_attribute_if_requested
     text = %(<a data-foo="foo">foo</a>)
     assert_equal %(<a data-foo="foo">foo</a>), safe_list_sanitize(text, attributes: ["data-foo"])
+  end
+
+  # https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+  VOID_ELEMENTS = %w[area base br col embed hr img input keygen link meta param source track wbr]
+
+  %w(strong em b i p code pre tt samp kbd var sub
+     sup dfn cite big small address hr br div span h1 h2 h3 h4 h5 h6 ul ol li dl dt dd abbr
+     acronym a img blockquote del ins time).each do |tag_name|
+    define_method "test_default_safelist_should_allow_#{tag_name}" do
+      if VOID_ELEMENTS.include?(tag_name)
+        assert_sanitized("<#{tag_name}>")
+      else
+        assert_sanitized("<#{tag_name}>foo</#{tag_name}>")
+      end
+    end
+  end
+
+  def test_datetime_attribute
+    assert_sanitized("<time datetime=\"2023-01-01\">")
+  end
+
+  def test_abbr_attribute
+    scope_allowed_tags(%w(table tr th td)) do
+      assert_sanitized(%(<table><tr><td abbr="UK">United Kingdom</td></tr></table>))
+    end
   end
 
   def test_uri_escaping_of_href_attr_in_a_tag_in_safe_list_sanitizer
