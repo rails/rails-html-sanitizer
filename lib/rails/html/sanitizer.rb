@@ -43,15 +43,23 @@ module Rails
     # full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
     # # => Bold no more!  See more here...
     class FullSanitizer < Sanitizer
+      def parse_fragment(html)
+        Loofah.fragment(html)
+      end
+
+      def scrub(fragment)
+        fragment.scrub!(TextOnlyScrubber.new)
+      end
+
+      def serialize(fragment)
+        properly_encode(fragment, encoding: "UTF-8")
+      end
+
       def sanitize(html, options = {})
         return unless html
         return html if html.empty?
 
-        loofah_fragment = Loofah.fragment(html)
-
-        loofah_fragment.scrub!(TextOnlyScrubber.new)
-
-        properly_encode(loofah_fragment, encoding: "UTF-8")
+        serialize(scrub(parse_fragment(html)))
       end
     end
 
@@ -69,8 +77,23 @@ module Rails
         @link_scrubber.attributes = %w(href)
       end
 
+      def parse_fragment(html)
+        Loofah.fragment(html)
+      end
+
+      def scrub(fragment)
+        fragment.scrub!(@link_scrubber)
+      end
+
+      def serialize(fragment)
+        fragment.to_s
+      end
+
       def sanitize(html, options = {})
-        Loofah.fragment(html).scrub!(@link_scrubber).to_s
+        return unless html
+        return html if html.empty?
+
+        serialize(scrub(parse_fragment(html)))
       end
     end
 
@@ -185,24 +208,32 @@ module Rails
         @permit_scrubber = PermitScrubber.new(prune: prune)
       end
 
+      def parse_fragment(html)
+        Loofah.fragment(html)
+      end
+
+      def scrub(fragment, options = {})
+        if scrubber = options[:scrubber]
+          # No duck typing, Loofah ensures subclass of Loofah::Scrubber
+          fragment.scrub!(scrubber)
+        elsif allowed_tags(options) || allowed_attributes(options)
+          @permit_scrubber.tags = allowed_tags(options)
+          @permit_scrubber.attributes = allowed_attributes(options)
+          fragment.scrub!(@permit_scrubber)
+        else
+          fragment.scrub!(:strip)
+        end
+      end
+
+      def serialize(fragment)
+        properly_encode(fragment, encoding: "UTF-8")
+      end
+
       def sanitize(html, options = {})
         return unless html
         return html if html.empty?
 
-        loofah_fragment = Loofah.fragment(html)
-
-        if scrubber = options[:scrubber]
-          # No duck typing, Loofah ensures subclass of Loofah::Scrubber
-          loofah_fragment.scrub!(scrubber)
-        elsif allowed_tags(options) || allowed_attributes(options)
-          @permit_scrubber.tags = allowed_tags(options)
-          @permit_scrubber.attributes = allowed_attributes(options)
-          loofah_fragment.scrub!(@permit_scrubber)
-        else
-          loofah_fragment.scrub!(:strip)
-        end
-
-        properly_encode(loofah_fragment, encoding: "UTF-8")
+        serialize(scrub(parse_fragment(html), options))
       end
 
       def sanitize_css(style_string)
