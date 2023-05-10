@@ -4,6 +4,11 @@
 
   *Mike Dalessio*
 
+* `Rails::Html::XPATHS_TO_REMOVE` has been removed. It's not necessary with the existing sanitizers,
+  and should have been a private constant all along anyway.
+
+  *Mike Dalessio*
+
 
 ## 1.5.0 / 2023-01-20
 

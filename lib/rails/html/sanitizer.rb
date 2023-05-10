@@ -2,8 +2,6 @@
 
 module Rails
   module Html
-    XPATHS_TO_REMOVE = [".//script", ".//form", "comment()"]
-
     class Sanitizer # :nodoc:
       def sanitize(html, options = {})
         raise NotImplementedError, "subclasses must implement sanitize method."
@@ -33,7 +31,6 @@ module Rails
 
         loofah_fragment = Loofah.fragment(html)
 
-        remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
         loofah_fragment.scrub!(TextOnlyScrubber.new)
 
         properly_encode(loofah_fragment, encoding: "UTF-8")
@@ -184,7 +181,6 @@ module Rails
           @permit_scrubber.attributes = allowed_attributes(options)
           loofah_fragment.scrub!(@permit_scrubber)
         else
-          remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
           loofah_fragment.scrub!(:strip)
         end
 
