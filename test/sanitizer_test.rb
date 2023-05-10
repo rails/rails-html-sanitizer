@@ -328,20 +328,20 @@ class SanitizersTest < Minitest::Test
 
   def test_should_accept_loofah_inheriting_scrubber
     scrubber = Loofah::Scrubber.new
-    def scrubber.scrub(node); node.name = "h1"; end
+    def scrubber.scrub(node); node.replace("<h1>#{node.inner_html}</h1>"); end
 
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_should_accept_loofah_scrubber_that_wraps_a_block
-    scrubber = Loofah::Scrubber.new { |node| node.name = "h1" }
+    scrubber = Loofah::Scrubber.new { |node| node.replace("<h1>#{node.inner_html}</h1>") }
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_custom_scrubber_takes_precedence_over_other_options
-    scrubber = Loofah::Scrubber.new { |node| node.name = "h1" }
+    scrubber = Loofah::Scrubber.new { |node| node.replace("<h1>#{node.inner_html}</h1>") }
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber, tags: ["foo"])
   end
