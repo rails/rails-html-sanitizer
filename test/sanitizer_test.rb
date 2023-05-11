@@ -23,7 +23,7 @@ puts Nokogiri::VERSION_INFO
 class SanitizersTest < Minitest::Test
   def test_sanitizer_sanitize_raises_not_implemented_error
     assert_raises NotImplementedError do
-      Rails::Html::Sanitizer.new.sanitize("")
+      Rails::Html::Sanitizer.new.sanitize("asdf")
     end
   end
 
