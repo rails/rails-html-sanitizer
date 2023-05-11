@@ -5,8 +5,12 @@ require "rails-html-sanitizer"
 
 class ScrubberTest < Minitest::Test
   protected
+    def scrub_fragment(html)
+      Loofah.scrub_fragment(html, @scrubber).to_s
+    end
+
     def assert_scrubbed(html, expected = html)
-      output = Loofah.scrub_fragment(html, @scrubber).to_s
+      output = scrub_fragment(html)
       assert_equal expected, output
     end
 
@@ -47,8 +51,17 @@ class PermitScrubberTest < ScrubberTest
   end
 
   def test_default_scrub_removes_processing_instructions
-    assert_scrubbed("<div>one</div><?div two><span>three</span>",
-                    "<div>one</div><span>three</span>")
+    input = "<div>one</div><?div two><span>three</span>"
+    result = scrub_fragment(input)
+
+    acceptable_results = [
+      # jruby cyberneko (nokogiri < 1.14.0)
+      "<div>one</div>",
+      # everything else
+      "<div>one</div><span>three</span>",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_default_attributes_removal_behavior

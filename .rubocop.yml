@@ -343,3 +343,6 @@ Minitest/SkipEnsure:
 
 Minitest/UnreachableAssertion:
   Enabled: true
+
+Minitest/NoAssertions:
+  Enabled: true

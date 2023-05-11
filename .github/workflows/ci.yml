@@ -47,7 +47,6 @@ jobs:
       - run: bundle exec rake
 
   jruby:
-    continue-on-error: true # nokogiri on jruby has different behavior
     strategy:
       fail-fast: false
       matrix:

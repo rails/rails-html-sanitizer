@@ -2,8 +2,6 @@
 
 module Rails
   module Html
-    XPATHS_TO_REMOVE = %w{.//script .//form comment()}
-
     class Sanitizer # :nodoc:
       def sanitize(html, options = {})
         raise NotImplementedError, "subclasses must implement sanitize method."
@@ -33,7 +31,6 @@ module Rails
 
         loofah_fragment = Loofah.fragment(html)
 
-        remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
         loofah_fragment.scrub!(TextOnlyScrubber.new)
 
         properly_encode(loofah_fragment, encoding: "UTF-8")
@@ -106,10 +103,65 @@ module Rails
         attr_accessor :allowed_tags
         attr_accessor :allowed_attributes
       end
-      self.allowed_tags = Set.new(%w(strong em b i p code pre tt samp kbd var sub
-        sup dfn cite big small address hr br div span h1 h2 h3 h4 h5 h6 ul ol li dl dt dd abbr
-        acronym a img blockquote del ins))
-      self.allowed_attributes = Set.new(%w(href src width height alt cite datetime title class name xml:lang abbr))
+      self.allowed_tags = Set.new([
+        "a",
+        "abbr",
+        "acronym",
+        "address",
+        "b",
+        "big",
+        "blockquote",
+        "br",
+        "cite",
+        "code",
+        "dd",
+        "del",
+        "dfn",
+        "div",
+        "dl",
+        "dt",
+        "em",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "hr",
+        "i",
+        "img",
+        "ins",
+        "kbd",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "samp",
+        "small",
+        "span",
+        "strong",
+        "sub",
+        "sup",
+        "time",
+        "tt",
+        "ul",
+        "var",
+      ])
+      self.allowed_attributes = Set.new([
+        "abbr",
+        "alt",
+        "cite",
+        "class",
+        "datetime",
+        "height",
+        "href",
+        "lang",
+        "name",
+        "src",
+        "title",
+        "width",
+        "xml:lang",
+      ])
 
       def initialize(prune: false)
         @permit_scrubber = PermitScrubber.new(prune: prune)
@@ -129,7 +181,6 @@ module Rails
           @permit_scrubber.attributes = allowed_attributes(options)
           loofah_fragment.scrub!(@permit_scrubber)
         else
-          remove_xpaths(loofah_fragment, XPATHS_TO_REMOVE)
           loofah_fragment.scrub!(:strip)
         end
 

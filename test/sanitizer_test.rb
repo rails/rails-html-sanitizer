@@ -6,9 +6,22 @@ require "rails/dom/testing/assertions/dom_assertions"
 
 puts Nokogiri::VERSION_INFO
 
+#
+#  NOTE that many of these tests contain multiple acceptable results.
+#
+#  In some cases, this is because of how the HTML4 parser's recovery behavior changed in libxml2
+#  2.9.14 and 2.10.0. For more details, see:
+#
+#  - https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
+#  - https://gitlab.gnome.org/GNOME/libxml2/-/issues/380
+#
+#  In other cases, multiple acceptable results are provided because Nokogiri's vendored libxml2 is
+#  patched to entity-escape server-side includes (aks "SSI", aka `<!-- #directive param=value -->`).
+#
+#  In many other cases, it's because the parser used by Nokogiri on JRuby (xerces+nekohtml) parses
+#  slightly differently than libxml2 in edge cases.
+#
 class SanitizersTest < Minitest::Test
-  include Rails::Dom::Testing::Assertions::DomAssertions
-
   def test_sanitizer_sanitize_raises_not_implemented_error
     assert_raises NotImplementedError do
       Rails::Html::Sanitizer.new.sanitize("")
@@ -20,7 +33,16 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_nested_script_in_style
-    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', safe_list_sanitize('<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>', tags: %w(em))
+    input = '<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>'
+    result = safe_list_sanitize(input, tags: %w(em))
+    acceptable_results = [
+      # libxml2
+      %{&lt;script&gt;alert("XSS");&lt;/script&gt;},
+      # xerces+neko. unavoidable double-escaping, see loofah/docs/2022-10-decision-on-cdata-nodes.md
+      %{&amp;lt;script&amp;gt;alert(\"XSS\");&amp;lt;&amp;lt;/style&amp;gt;/script&amp;gt;},
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   class XpathRemovalTestSanitizer < Rails::Html::Sanitizer
@@ -56,8 +78,15 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_tags_with_quote
     input = '<" <img src="trollface.gif" onload="alert(1)"> hi'
-    expected = libxml_2_9_14_recovery_lt? ? %{&lt;"  hi} : %{ hi}
-    assert_equal(expected, full_sanitize(input))
+    result = full_sanitize(input)
+    acceptable_results = [
+      # libxml2 >= 2.9.14 and xerces+neko
+      %{&lt;"  hi},
+      # other libxml2
+      %{ hi},
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_invalid_html
@@ -72,27 +101,54 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_tags_multiline
     expected = %{This is a test.\n\n\n\nIt no longer contains any HTML.\n}
-    input = %{<title>This is <b>a <a href="" target="_blank">test</a></b>.</title>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}
+    input = %{<h1>This is <b>a <a href="" target="_blank">test</a></b>.</h1>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}
 
     assert_equal expected, full_sanitize(input)
   end
 
   def test_remove_unclosed_tags
     input = "This is <-- not\n a comment here."
-    expected = libxml_2_9_14_recovery_lt? ? %{This is &lt;-- not\n a comment here.} : %{This is }
-    assert_equal(expected, full_sanitize(input))
+    result = full_sanitize(input)
+    acceptable_results = [
+      # libxml2 >= 2.9.14 and xerces+neko
+      %{This is &lt;-- not\n a comment here.},
+      # other libxml2
+      %{This is },
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_cdata
     input = "This has a <![CDATA[<section>]]> here."
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{This has a &lt;![CDATA[]]&gt; here.} : %{This has a ]]&gt; here.}
-    assert_equal(expected, full_sanitize(input))
+    result = full_sanitize(input)
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{This has a &lt;![CDATA[]]&gt; here.},
+      # other libxml2
+      %{This has a ]]&gt; here.},
+      # xerces+neko
+      %{This has a  here.},
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_unclosed_cdata
     input = "This has an unclosed <![CDATA[<section>]] here..."
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{This has an unclosed &lt;![CDATA[]] here...} : %{This has an unclosed ]] here...}
-    assert_equal(expected, full_sanitize(input))
+
+    result = safe_list_sanitize(input)
+
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{This has an unclosed &lt;![CDATA[]] here...},
+      # other libxml2
+      %{This has an unclosed ]] here...},
+      # xerces+neko
+      %{This has an unclosed }
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_blank_string
@@ -168,7 +224,20 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_plaintext
-    assert_sanitized "<plaintext><span>foo</span></plaintext>", "<span>foo</span>"
+    # note that the `plaintext` tag has been deprecated since HTML 2
+    # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/plaintext
+    input = "<plaintext><span>foo</span></plaintext>"
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2
+      "<span>foo</span>",
+      # xerces+nekohtml-unit
+      "&lt;span&gt;foo&lt;/span&gt;&lt;/plaintext&gt;",
+      # xerces+cyberneko
+      "&lt;span&gt;foo&lt;/span&gt;"
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_sanitize_script
@@ -187,16 +256,7 @@ class SanitizersTest < Minitest::Test
 
   def test_sanitize_image_src
     raw = %{src="javascript:bang" <img src="javascript:bang" width="5">foo</img>, <span src="javascript:bang">bar</span>}
-    assert_sanitized raw, %{src="javascript:bang" <img width="5">foo</img>, <span>bar</span>}
-  end
-
-  tags = Loofah::HTML5::SafeList::ALLOWED_ELEMENTS - %w(script form)
-  tags.each do |tag_name|
-    define_method "test_should_allow_#{tag_name}_tag" do
-      scope_allowed_tags(tags) do
-        assert_sanitized "start <#{tag_name} title=\"1\" onclick=\"foo\">foo <bad>bar</bad> baz</#{tag_name}> end", %(start <#{tag_name} title="1">foo bar baz</#{tag_name}> end)
-      end
-    end
+    assert_sanitized raw, %{src="javascript:bang" <img width="5">foo, <span>bar</span>}
   end
 
   def test_should_allow_anchors
@@ -206,8 +266,20 @@ class SanitizersTest < Minitest::Test
   def test_video_poster_sanitization
     scope_allowed_tags(%w(video)) do
       scope_allowed_attributes %w(src poster) do
-        assert_sanitized %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>), %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
-        assert_sanitized %(<video src="videofile.ogg" poster=javascript:alert(1)></video>), %(<video src="videofile.ogg"></video>)
+        expected = if RUBY_PLATFORM == "java"
+          # xerces+nekohtml alphabetizes the attributes! FML.
+          %(<video poster="posterimage.jpg" src="videofile.ogg"></video>)
+        else
+          %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
+        end
+        assert_sanitized(
+          %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>),
+          expected,
+        )
+        assert_sanitized(
+          %(<video src="videofile.ogg" poster=javascript:alert(1)></video>),
+          %(<video src="videofile.ogg"></video>),
+        )
       end
     end
   end
@@ -219,8 +291,23 @@ class SanitizersTest < Minitest::Test
 
   %w(src width height alt).each do |img_attr|
     define_method "test_should_allow_image_#{img_attr}_attribute" do
-      assert_sanitized %(<img #{img_attr}="foo" onclick="bar" />), %(<img #{img_attr}="foo" />)
+      assert_sanitized %(<img #{img_attr}="foo" onclick="bar" />), %(<img #{img_attr}="foo">)
     end
+  end
+
+  def test_lang_and_xml_lang
+    # https://html.spec.whatwg.org/multipage/dom.html#the-lang-and-xml:lang-attributes
+    #
+    # 3.2.6.2 The lang and xml:lang attributes
+    #
+    # ... Authors must not use the lang attribute in the XML namespace on HTML elements in HTML
+    # documents. To ease migration to and from XML, authors may specify an attribute in no namespace
+    # with no prefix and with the literal localname "xml:lang" on HTML elements in HTML documents,
+    # but such attributes must only be specified if a lang attribute in no namespace is also
+    # specified, and both attributes must have the same value when compared in an ASCII
+    # case-insensitive manner.
+    input = expected = "<div lang=\"en\" xml:lang=\"en\">foo</div>"
+    assert_sanitized(input, expected)
   end
 
   def test_should_handle_non_html
@@ -228,7 +315,9 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_handle_blank_text
-    [nil, "", "   "].each { |blank| assert_sanitized blank }
+    assert_nil(safe_list_sanitize(nil))
+    assert_equal("", safe_list_sanitize(""))
+    assert_equal("   ", safe_list_sanitize("   "))
   end
 
   def test_setting_allowed_tags_affects_sanitization
@@ -287,6 +376,7 @@ class SanitizersTest < Minitest::Test
   def test_scrub_style_if_style_attribute_option_is_passed
     input = '<p style="color: #000; background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
     actual = safe_list_sanitize(input, attributes: %w(style))
+
     assert_includes(['<p style="color: #000;"></p>', '<p style="color:#000;"></p>'], actual)
   end
 
@@ -313,28 +403,30 @@ class SanitizersTest < Minitest::Test
 
   def test_should_accept_loofah_inheriting_scrubber
     scrubber = Loofah::Scrubber.new
-    def scrubber.scrub(node); node.name = "h1"; end
+    def scrubber.scrub(node); node.replace("<h1>#{node.inner_html}</h1>"); end
 
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_should_accept_loofah_scrubber_that_wraps_a_block
-    scrubber = Loofah::Scrubber.new { |node| node.name = "h1" }
+    scrubber = Loofah::Scrubber.new { |node| node.replace("<h1>#{node.inner_html}</h1>") }
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber)
   end
 
   def test_custom_scrubber_takes_precedence_over_other_options
-    scrubber = Loofah::Scrubber.new { |node| node.name = "h1" }
+    scrubber = Loofah::Scrubber.new { |node| node.replace("<h1>#{node.inner_html}</h1>") }
     html = "<script>hello!</script>"
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber, tags: ["foo"])
   end
 
-  [%w(img src), %w(a href)].each do |(tag, attr)|
-    define_method "test_should_strip_#{attr}_attribute_in_#{tag}_with_bad_protocols" do
-      assert_sanitized %(<#{tag} #{attr}="javascript:bang" title="1">boo</#{tag}>), %(<#{tag} title="1">boo</#{tag}>)
-    end
+  def test_should_strip_src_attribute_in_img_with_bad_protocols
+    assert_sanitized %(<img src="javascript:bang" title="1">), %(<img title="1">)
+  end
+
+  def test_should_strip_href_attribute_in_a_with_bad_protocols
+    assert_sanitized %(<a href="javascript:bang" title="1">boo</a>), %(<a title="1">boo</a>)
   end
 
   def test_should_block_script_tag
@@ -366,7 +458,16 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_tag_broken_up_by_null
-    assert_sanitized %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>), ""
+    input = %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>)
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2
+      "",
+      # xerces+neko
+      'alert("XSS")',
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_sanitize_invalid_script_tag
@@ -375,7 +476,19 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_script_tag_with_multiple_open_brackets
     assert_sanitized %(<<SCRIPT>alert("XSS");//<</SCRIPT>), "&lt;alert(\"XSS\");//&lt;"
-    assert_sanitized %(<iframe src=http://ha.ckers.org/scriptlet.html\n<a), ""
+  end
+
+  def test_should_sanitize_script_tag_with_multiple_open_brackets_2
+    input = %(<iframe src=http://ha.ckers.org/scriptlet.html\n<a)
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2
+      "",
+      # xerces+neko
+      "&lt;a",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_sanitize_unclosed_script
@@ -392,7 +505,10 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_attributes
-    assert_sanitized %(<SPAN title="'><script>alert()</script>">blah</SPAN>), %(<span title="#{CGI.escapeHTML "'><script>alert()</script>"}">blah</span>)
+    assert_sanitized(
+      %(<SPAN title="'><script>alert()</script>">blah</SPAN>),
+      %(<span title="'&gt;&lt;script&gt;alert()&lt;/script&gt;">blah</span>),
+    )
   end
 
   def test_should_sanitize_illegal_style_properties
@@ -421,11 +537,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_invalid_tag_names_in_single_tags
-    assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', "<img />")
+    assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', "<img>")
   end
 
   def test_should_sanitize_img_dynsrc_lowsrc
-    assert_sanitized(%(<img lowsrc="javascript:alert('XSS')" />), "<img />")
+    assert_sanitized(%(<img lowsrc="javascript:alert('XSS')" />), "<img>")
   end
 
   def test_should_sanitize_div_background_image_unicode_encoded
@@ -446,6 +562,7 @@ class SanitizersTest < Minitest::Test
       convert_to_css_hex("rgb(255,0,0)", true),
     ].each do |propval|
       raw = "background-image:" + propval
+
       assert_includes(sanitize_css(raw), "background-image")
     end
   end
@@ -461,19 +578,38 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_img_vbscript
-    assert_sanitized %(<img src='vbscript:msgbox("XSS")' />), "<img />"
+    assert_sanitized %(<img src='vbscript:msgbox("XSS")' />), "<img>"
   end
 
   def test_should_sanitize_cdata_section
     input = "<![CDATA[<span>section</span>]]>"
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{&lt;![CDATA[<span>section</span>]]&gt;} : %{section]]&gt;}
-    assert_sanitized(input, expected)
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{&lt;![CDATA[<span>section</span>]]&gt;},
+      # other libxml2
+      %{section]]&gt;},
+      # xerces+neko
+      "",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_sanitize_unterminated_cdata_section
     input = "<![CDATA[<span>neverending..."
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{&lt;![CDATA[<span>neverending...</span>} : %{neverending...}
-    assert_sanitized(input, expected)
+    result = safe_list_sanitize(input)
+
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{&lt;![CDATA[<span>neverending...</span>},
+      # other libxml2
+      %{neverending...},
+      # xerces+neko
+      ""
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_not_mangle_urls_with_ampersand
@@ -481,7 +617,8 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_neverending_attribute
-    assert_sanitized "<span class=\"\\", "<span class=\"\\\">"
+    # note that assert_dom_equal chokes in this case! so avoid using assert_sanitized
+    assert_equal("<span class=\"\\\"></span>", safe_list_sanitize("<span class=\"\\\">"))
   end
 
   [
@@ -491,13 +628,13 @@ class SanitizersTest < Minitest::Test
     %(<a href="javascript&#x003A;alert('XSS');">)
   ].each_with_index do |enc_hack, i|
     define_method "test_x03a_handling_#{i + 1}" do
-      assert_sanitized enc_hack, "<a>"
+      assert_sanitized enc_hack, "<a></a>"
     end
   end
 
   def test_x03a_legitimate
-    assert_sanitized %(<a href="http&#x3a;//legit">), %(<a href="http://legit">)
-    assert_sanitized %(<a href="http&#x3A;//legit">), %(<a href="http://legit">)
+    assert_sanitized %(<a href="http&#x3a;//legit">asdf</a>), %(<a href="http://legit">asdf</a>)
+    assert_sanitized %(<a href="http&#x3A;//legit">asdf</a>), %(<a href="http://legit">asdf</a>)
   end
 
   def test_sanitize_ascii_8bit_string
@@ -517,6 +654,31 @@ class SanitizersTest < Minitest::Test
     assert_equal %(<a data-foo="foo">foo</a>), safe_list_sanitize(text, attributes: ["data-foo"])
   end
 
+  # https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+  VOID_ELEMENTS = %w[area base br col embed hr img input keygen link meta param source track wbr]
+
+  %w(strong em b i p code pre tt samp kbd var sub
+     sup dfn cite big small address hr br div span h1 h2 h3 h4 h5 h6 ul ol li dl dt dd abbr
+     acronym a img blockquote del ins time).each do |tag_name|
+    define_method "test_default_safelist_should_allow_#{tag_name}" do
+      if VOID_ELEMENTS.include?(tag_name)
+        assert_sanitized("<#{tag_name}>")
+      else
+        assert_sanitized("<#{tag_name}>foo</#{tag_name}>")
+      end
+    end
+  end
+
+  def test_datetime_attribute
+    assert_sanitized("<time datetime=\"2023-01-01\">Today</time>")
+  end
+
+  def test_abbr_attribute
+    scope_allowed_tags(%w(table tr th td)) do
+      assert_sanitized(%(<table><tr><td abbr="UK">United Kingdom</td></tr></table>))
+    end
+  end
+
   def test_uri_escaping_of_href_attr_in_a_tag_in_safe_list_sanitizer
     skip if RUBY_VERSION < "2.3"
 
@@ -525,11 +687,14 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html)
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a href="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/ system libxml2
+      # system libxml2
       %{<a href="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a href="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>}
     ]
+
     assert_includes(acceptable_results, text)
   end
 
@@ -541,11 +706,14 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html)
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a src="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/system libxml2
+      # system libxml2
       %{<a src="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a src="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>}
     ]
+
     assert_includes(acceptable_results, text)
   end
 
@@ -557,11 +725,14 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html)
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a name="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/system libxml2
+      # system libxml2
       %{<a name="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a name="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>}
     ]
+
     assert_includes(acceptable_results, text)
   end
 
@@ -573,16 +744,28 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html, attributes: ["action"])
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a action="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/system libxml2
+      # system libxml2
       %{<a action="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a action="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>},
     ]
+
     assert_includes(acceptable_results, text)
   end
 
   def test_exclude_node_type_processing_instructions
-    assert_equal("<div>text</div><b>text</b>", safe_list_sanitize("<div>text</div><?div content><b>text</b>"))
+    input = "<div>text</div><?div content><b>text</b>"
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # jruby cyberneko (nokogiri < 1.14.0)
+      "<div>text</div>",
+      # everything else
+      "<div>text</div><b>text</b>",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_exclude_node_type_comment
@@ -687,7 +870,9 @@ class SanitizersTest < Minitest::Test
     actual = safe_list_sanitize(input, tags: tags)
 
     assert_equal(expected, actual)
+  end
 
+  def test_combination_of_math_and_style_with_img_payload_2
     input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style", "img"]
     expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
     actual = safe_list_sanitize(input, tags: tags)
@@ -701,7 +886,9 @@ class SanitizersTest < Minitest::Test
     actual = safe_list_sanitize(input, tags: tags)
 
     assert_equal(expected, actual)
+  end
 
+  def test_combination_of_svg_and_style_with_img_payload_2
     input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style", "img"]
     expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
     actual = safe_list_sanitize(input, tags: tags)
@@ -727,11 +914,7 @@ protected
   end
 
   def assert_sanitized(input, expected = nil)
-    if input
-      assert_dom_equal expected || input, safe_list_sanitize(input)
-    else
-      assert_nil safe_list_sanitize(input)
-    end
+    assert_equal((expected || input), safe_list_sanitize(input))
   end
 
   def sanitize_css(input)
@@ -763,16 +946,5 @@ protected
         format('\00%02X', c.ord)
       end
     end.join
-  end
-
-  def libxml_2_9_14_recovery_lt?
-    # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
-    Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?(">= 2.9.14")
-  end
-
-  def libxml_2_9_14_recovery_lt_bang?
-    # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
-    # then reverted in 2.10.0, see https://gitlab.gnome.org/GNOME/libxml2/-/issues/380
-    Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?("= 2.9.14")
   end
 end
