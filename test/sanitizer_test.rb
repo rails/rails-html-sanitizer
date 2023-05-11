@@ -6,6 +6,21 @@ require "rails/dom/testing/assertions/dom_assertions"
 
 puts Nokogiri::VERSION_INFO
 
+#
+#  NOTE that many of these tests contain multiple acceptable results.
+#
+#  In some cases, this is because of how the HTML4 parser's recovery behavior changed in libxml2
+#  2.9.14 and 2.10.0. For more details, see:
+#
+#  - https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
+#  - https://gitlab.gnome.org/GNOME/libxml2/-/issues/380
+#
+#  In other cases, multiple acceptable results are provided because Nokogiri's vendored libxml2 is
+#  patched to entity-escape server-side includes (aks "SSI", aka `<!-- #directive param=value -->`).
+#
+#  In many other cases, it's because the parser used by Nokogiri on JRuby (xerces+nekohtml) parses
+#  slightly differently than libxml2 in edge cases.
+#
 class SanitizersTest < Minitest::Test
   include Rails::Dom::Testing::Assertions::DomAssertions
 
@@ -20,7 +35,16 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_nested_script_in_style
-    assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', safe_list_sanitize('<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>', tags: %w(em))
+    input = '<style><script></style>alert("XSS");<style><</style>/</style><style>script></style>'
+    result = safe_list_sanitize(input, tags: %w(em))
+    acceptable_results = [
+      # libxml2
+      %{&lt;script&gt;alert("XSS");&lt;/script&gt;},
+      # xerces+neko. unavoidable double-escaping, see loofah/docs/2022-10-decision-on-cdata-nodes.md
+      %{&amp;lt;script&amp;gt;alert(\"XSS\");&amp;lt;&amp;lt;/style&amp;gt;/script&amp;gt;},
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   class XpathRemovalTestSanitizer < Rails::Html::Sanitizer
@@ -56,8 +80,15 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_tags_with_quote
     input = '<" <img src="trollface.gif" onload="alert(1)"> hi'
-    expected = libxml_2_9_14_recovery_lt? ? %{&lt;"  hi} : %{ hi}
-    assert_equal(expected, full_sanitize(input))
+    result = full_sanitize(input)
+    acceptable_results = [
+      # libxml2 >= 2.9.14 and xerces+neko
+      %{&lt;"  hi},
+      # other libxml2
+      %{ hi},
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_invalid_html
@@ -72,27 +103,54 @@ class SanitizersTest < Minitest::Test
 
   def test_strip_tags_multiline
     expected = %{This is a test.\n\n\n\nIt no longer contains any HTML.\n}
-    input = %{<title>This is <b>a <a href="" target="_blank">test</a></b>.</title>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}
+    input = %{<h1>This is <b>a <a href="" target="_blank">test</a></b>.</h1>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}
 
     assert_equal expected, full_sanitize(input)
   end
 
   def test_remove_unclosed_tags
     input = "This is <-- not\n a comment here."
-    expected = libxml_2_9_14_recovery_lt? ? %{This is &lt;-- not\n a comment here.} : %{This is }
-    assert_equal(expected, full_sanitize(input))
+    result = full_sanitize(input)
+    acceptable_results = [
+      # libxml2 >= 2.9.14 and xerces+neko
+      %{This is &lt;-- not\n a comment here.},
+      # other libxml2
+      %{This is },
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_cdata
     input = "This has a <![CDATA[<section>]]> here."
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{This has a &lt;![CDATA[]]&gt; here.} : %{This has a ]]&gt; here.}
-    assert_equal(expected, full_sanitize(input))
+    result = full_sanitize(input)
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{This has a &lt;![CDATA[]]&gt; here.},
+      # other libxml2
+      %{This has a ]]&gt; here.},
+      # xerces+neko
+      %{This has a  here.},
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_unclosed_cdata
     input = "This has an unclosed <![CDATA[<section>]] here..."
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{This has an unclosed &lt;![CDATA[]] here...} : %{This has an unclosed ]] here...}
-    assert_equal(expected, full_sanitize(input))
+
+    result = safe_list_sanitize(input)
+
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{This has an unclosed &lt;![CDATA[]] here...},
+      # other libxml2
+      %{This has an unclosed ]] here...},
+      # xerces+neko
+      %{This has an unclosed }
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_strip_blank_string
@@ -168,7 +226,18 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_sanitize_plaintext
-    assert_sanitized "<plaintext><span>foo</span></plaintext>", "<span>foo</span>"
+    # note that the `plaintext` tag has been deprecated since HTML 2
+    # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/plaintext
+    input = "<plaintext><span>foo</span></plaintext>"
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2
+      "<span>foo</span>",
+      # xerces+nekohtml
+      "&lt;span&gt;foo&lt;/span&gt;&lt;/plaintext&gt;",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_sanitize_script
@@ -302,6 +371,7 @@ class SanitizersTest < Minitest::Test
   def test_scrub_style_if_style_attribute_option_is_passed
     input = '<p style="color: #000; background-image: url(http://www.ragingplatypus.com/i/cam-full.jpg);"></p>'
     actual = safe_list_sanitize(input, attributes: %w(style))
+
     assert_includes(['<p style="color: #000;"></p>', '<p style="color:#000;"></p>'], actual)
   end
 
@@ -381,7 +451,16 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_tag_broken_up_by_null
-    assert_sanitized %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>), ""
+    input = %(<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>)
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2
+      "",
+      # xerces+neko
+      'alert("XSS")',
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_sanitize_invalid_script_tag
@@ -390,7 +469,19 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_script_tag_with_multiple_open_brackets
     assert_sanitized %(<<SCRIPT>alert("XSS");//<</SCRIPT>), "&lt;alert(\"XSS\");//&lt;"
-    assert_sanitized %(<iframe src=http://ha.ckers.org/scriptlet.html\n<a), ""
+  end
+
+  def test_should_sanitize_script_tag_with_multiple_open_brackets_2
+    input = %(<iframe src=http://ha.ckers.org/scriptlet.html\n<a)
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2
+      "",
+      # xerces+neko
+      "&lt;a",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_sanitize_unclosed_script
@@ -461,6 +552,7 @@ class SanitizersTest < Minitest::Test
       convert_to_css_hex("rgb(255,0,0)", true),
     ].each do |propval|
       raw = "background-image:" + propval
+
       assert_includes(sanitize_css(raw), "background-image")
     end
   end
@@ -481,14 +573,33 @@ class SanitizersTest < Minitest::Test
 
   def test_should_sanitize_cdata_section
     input = "<![CDATA[<span>section</span>]]>"
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{&lt;![CDATA[<span>section</span>]]&gt;} : %{section]]&gt;}
-    assert_sanitized(input, expected)
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{&lt;![CDATA[<span>section</span>]]&gt;},
+      # other libxml2
+      %{section]]&gt;},
+      # xerces+neko
+      "",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_sanitize_unterminated_cdata_section
     input = "<![CDATA[<span>neverending..."
-    expected = libxml_2_9_14_recovery_lt_bang? ? %{&lt;![CDATA[<span>neverending...</span>} : %{neverending...}
-    assert_sanitized(input, expected)
+    result = safe_list_sanitize(input)
+
+    acceptable_results = [
+      # libxml2 = 2.9.14
+      %{&lt;![CDATA[<span>neverending...</span>},
+      # other libxml2
+      %{neverending...},
+      # xerces+neko
+      ""
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_should_not_mangle_urls_with_ampersand
@@ -496,7 +607,8 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_neverending_attribute
-    assert_sanitized "<span class=\"\\", "<span class=\"\\\">"
+    # note that assert_dom_equal chokes in this case! so avoid using assert_sanitized
+    assert_equal("<span class=\"\\\"></span>", safe_list_sanitize("<span class=\"\\\">"))
   end
 
   [
@@ -565,11 +677,14 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html)
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a href="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/ system libxml2
+      # system libxml2
       %{<a href="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a href="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>}
     ]
+
     assert_includes(acceptable_results, text)
   end
 
@@ -581,11 +696,14 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html)
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a src="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/system libxml2
+      # system libxml2
       %{<a src="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a src="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>}
     ]
+
     assert_includes(acceptable_results, text)
   end
 
@@ -597,11 +715,14 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html)
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a name="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/system libxml2
+      # system libxml2
       %{<a name="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a name="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>}
     ]
+
     assert_includes(acceptable_results, text)
   end
 
@@ -613,11 +734,14 @@ class SanitizersTest < Minitest::Test
     text = safe_list_sanitize(html, attributes: ["action"])
 
     acceptable_results = [
-      # nokogiri w/vendored+patched libxml2
+      # nokogiri's vendored+patched libxml2 (0002-Update-entities-to-remove-handling-of-ssi.patch)
       %{<a action="examp&lt;!--%22%20unsafeattr=foo()&gt;--&gt;le.com">test</a>},
-      # nokogiri w/system libxml2
+      # system libxml2
       %{<a action="examp<!--%22%20unsafeattr=foo()>-->le.com">test</a>},
+      # xerces+neko
+      %{<a action="examp&lt;!--%22 unsafeattr=foo()&gt;--&gt;le.com">test</a>},
     ]
+
     assert_includes(acceptable_results, text)
   end
 
@@ -727,7 +851,9 @@ class SanitizersTest < Minitest::Test
     actual = safe_list_sanitize(input, tags: tags)
 
     assert_equal(expected, actual)
+  end
 
+  def test_combination_of_math_and_style_with_img_payload_2
     input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style", "img"]
     expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
     actual = safe_list_sanitize(input, tags: tags)
@@ -741,7 +867,9 @@ class SanitizersTest < Minitest::Test
     actual = safe_list_sanitize(input, tags: tags)
 
     assert_equal(expected, actual)
+  end
 
+  def test_combination_of_svg_and_style_with_img_payload_2
     input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style", "img"]
     expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
     actual = safe_list_sanitize(input, tags: tags)
@@ -803,16 +931,5 @@ protected
         format('\00%02X', c.ord)
       end
     end.join
-  end
-
-  def libxml_2_9_14_recovery_lt?
-    # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
-    Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?(">= 2.9.14")
-  end
-
-  def libxml_2_9_14_recovery_lt_bang?
-    # changed in 2.9.14, see https://github.com/sparklemotion/nokogiri/releases/tag/v1.13.5
-    # then reverted in 2.10.0, see https://gitlab.gnome.org/GNOME/libxml2/-/issues/380
-    Nokogiri.method(:uses_libxml?).arity == -1 && Nokogiri.uses_libxml?("= 2.9.14")
   end
 end
