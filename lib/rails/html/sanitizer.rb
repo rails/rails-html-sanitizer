@@ -5,15 +5,15 @@ module Rails
     class Sanitizer
       class << self
         def full_sanitizer
-          Rails::HTML::FullSanitizer
+          Rails::HTML4::FullSanitizer
         end
 
         def link_sanitizer
-          Rails::HTML::LinkSanitizer
+          Rails::HTML4::LinkSanitizer
         end
 
         def safe_list_sanitizer
-          Rails::HTML::SafeListSanitizer
+          Rails::HTML4::SafeListSanitizer
         end
 
         def white_list_sanitizer # :nodoc:
@@ -36,8 +36,8 @@ module Rails
         end
     end
 
-    module Concern # :nodoc:
-      module ComposedSanitize # :nodoc:
+    module Concern
+      module ComposedSanitize
         def sanitize(html, options = {})
           return unless html
           return html if html.empty?
@@ -46,22 +46,22 @@ module Rails
         end
       end
 
-      module Parser # :nodoc:
-        module HTML4 # :nodoc:
+      module Parser
+        module HTML4
           def parse_fragment(html)
             Loofah.html4_fragment(html)
           end
         end
       end
 
-      module Scrubber # :nodoc:
-        module Full # :nodoc:
+      module Scrubber
+        module Full
           def scrub(fragment, options = {})
             fragment.scrub!(TextOnlyScrubber.new)
           end
         end
 
-        module Link # :nodoc:
+        module Link
           def initialize
             super
             @link_scrubber = TargetScrubber.new
@@ -74,7 +74,8 @@ module Rails
           end
         end
 
-        module SafeList # :nodoc:
+        module SafeList
+          # The default safe list for tags
           DEFAULT_ALLOWED_TAGS = Set.new([
                                            "a",
                                            "abbr",
@@ -119,6 +120,8 @@ module Rails
                                            "ul",
                                            "var",
                                          ]).freeze
+
+          # The default safe list for attributes
           DEFAULT_ALLOWED_ATTRIBUTES = Set.new([
                                                  "abbr",
                                                  "alt",
@@ -177,97 +180,116 @@ module Rails
         end
       end
 
-      module Serializer # :nodoc:
-        module UTF8Encode # :nodoc:
+      module Serializer
+        module UTF8Encode
           def serialize(fragment)
             properly_encode(fragment, encoding: "UTF-8")
           end
         end
 
-        module SimpleString # :nodoc:
+        module SimpleString
           def serialize(fragment)
             fragment.to_s
           end
         end
       end
     end
+  end
 
-    # === Rails::HTML::FullSanitizer
-    # Removes all tags but strips out scripts, forms and comments.
+  module HTML4
+    # == Rails::HTML4::FullSanitizer
     #
-    # full_sanitizer = Rails::HTML::FullSanitizer.new
-    # full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
-    # # => Bold no more!  See more here...
-    class FullSanitizer < Sanitizer
-      include Concern::ComposedSanitize
-      include Concern::Parser::HTML4
-      include Concern::Scrubber::Full
-      include Concern::Serializer::UTF8Encode
+    # Removes all tags from HTML4 but strips out scripts, forms and comments.
+    #
+    #   full_sanitizer = Rails::HTML4::FullSanitizer.new
+    #   full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
+    #   # => "Bold no more!  See more here..."
+    #
+    class FullSanitizer < Rails::HTML::Sanitizer
+      include HTML::Concern::ComposedSanitize
+      include HTML::Concern::Parser::HTML4
+      include HTML::Concern::Scrubber::Full
+      include HTML::Concern::Serializer::UTF8Encode
     end
 
-    # === Rails::HTML::LinkSanitizer
-    # Removes +a+ tags and +href+ attributes leaving only the link text.
+    # == Rails::HTML4::LinkSanitizer
     #
-    #  link_sanitizer = Rails::HTML::LinkSanitizer.new
-    #  link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+    # Removes +a+ tags and +href+ attributes from HTML4 leaving only the link text.
     #
-    #  => 'Only the link text will be kept.'
-    class LinkSanitizer < Sanitizer
-      include Concern::ComposedSanitize
-      include Concern::Parser::HTML4
-      include Concern::Scrubber::Link
-      include Concern::Serializer::SimpleString
+    #   link_sanitizer = Rails::HTML4::LinkSanitizer.new
+    #   link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+    #   # => "Only the link text will be kept."
+    #
+    class LinkSanitizer < Rails::HTML::Sanitizer
+      include HTML::Concern::ComposedSanitize
+      include HTML::Concern::Parser::HTML4
+      include HTML::Concern::Scrubber::Link
+      include HTML::Concern::Serializer::SimpleString
     end
 
-    # === Rails::HTML::SafeListSanitizer
-    # Sanitizes html and css from an extensive safe list (see link further down).
+    # == Rails::HTML4::SafeListSanitizer
+    #
+    # Sanitizes HTML4 and CSS from an extensive safe list.
     #
     # === Whitespace
-    # We can't make any guarantees about whitespace being kept or stripped.
-    # Loofah uses Nokogiri, which wraps either a C or Java parser for the
-    # respective Ruby implementation.
-    # Those two parsers determine how whitespace is ultimately handled.
     #
-    # When the stripped markup will be rendered the users browser won't take
-    # whitespace into account anyway. It might be better to suggest your users
-    # wrap their whitespace sensitive content in pre tags or that you do
-    # so automatically.
+    # We can't make any guarantees about whitespace being kept or stripped.  Loofah uses Nokogiri,
+    # which wraps either a C or Java parser for the respective Ruby implementation.  Those two
+    # parsers determine how whitespace is ultimately handled.
+    #
+    # When the stripped markup will be rendered the users browser won't take whitespace into account
+    # anyway. It might be better to suggest your users wrap their whitespace sensitive content in
+    # pre tags or that you do so automatically.
     #
     # === Options
-    # Sanitizes both html and css via the safe lists found here:
-    # https://github.com/flavorjones/loofah/blob/master/lib/loofah/html5/safelist.rb
     #
-    # SafeListSanitizer also accepts options to configure
-    # the safe list used when sanitizing html.
+    # Sanitizes both html and css via the safe lists found in
+    # Rails::HTML::Concern::Scrubber::SafeList
+    #
+    # SafeListSanitizer also accepts options to configure the safe list used when sanitizing html.
     # There's a class level option:
-    # Rails::HTML::SafeListSanitizer.allowed_tags = %w(table tr td)
-    # Rails::HTML::SafeListSanitizer.allowed_attributes = %w(id class style)
     #
-    # Tags and attributes can also be passed to +sanitize+.
-    # Passed options take precedence over the class level options.
+    #   Rails::HTML4::SafeListSanitizer.allowed_tags = %w(table tr td)
+    #   Rails::HTML4::SafeListSanitizer.allowed_attributes = %w(id class style)
+    #
+    # Tags and attributes can also be passed to +sanitize+.  Passed options take precedence over the
+    # class level options.
     #
     # === Examples
-    # safe_list_sanitizer = Rails::HTML::SafeListSanitizer.new
     #
-    # Sanitize css doesn't take options
-    # safe_list_sanitizer.sanitize_css('background-color: #000;')
+    #   safe_list_sanitizer = Rails::HTML4::SafeListSanitizer.new
     #
-    # Default: sanitize via a extensive safe list of allowed elements
-    # safe_list_sanitizer.sanitize(@article.body)
+    #   # default: sanitize via a extensive safe list of allowed elements
+    #   safe_list_sanitizer.sanitize(@article.body)
     #
-    # Safe list via the supplied tags and attributes
-    # safe_list_sanitizer.sanitize(@article.body, tags: %w(table tr td),
-    # attributes: %w(id class style))
+    #   # sanitize via the supplied tags and attributes
+    #   safe_list_sanitizer.sanitize(
+    #     @article.body,
+    #     tags: %w(table tr td),
+    #     attributes: %w(id class style),
+    #   )
     #
-    # Safe list via a custom scrubber
-    # safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
-    class SafeListSanitizer < Sanitizer
-      include Concern::ComposedSanitize
-      include Concern::Parser::HTML4
-      include Concern::Scrubber::SafeList
-      include Concern::Serializer::UTF8Encode
+    #   # sanitize via a custom Loofah scrubber
+    #   safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
+    #
+    #   # prune nodes from the tree instead of stripping tags and leaving inner content
+    #   safe_list_sanitizer = Rails::HTML4::SafeListSanitizer.new(prune: true)
+    #
+    #   # the sanitizer can also sanitize CSS
+    #   safe_list_sanitizer.sanitize_css('background-color: #000;')
+    #
+    class SafeListSanitizer < Rails::HTML::Sanitizer
+      include HTML::Concern::ComposedSanitize
+      include HTML::Concern::Parser::HTML4
+      include HTML::Concern::Scrubber::SafeList
+      include HTML::Concern::Serializer::UTF8Encode
     end
+  end
 
+  module HTML
+    FullSanitizer = HTML4::FullSanitizer # :nodoc:
+    LinkSanitizer = HTML4::LinkSanitizer # :nodoc:
+    SafeListSanitizer = HTML4::SafeListSanitizer # :nodoc:
     WhiteListSanitizer = SafeListSanitizer # :nodoc:
   end
 end

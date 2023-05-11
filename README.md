@@ -78,16 +78,16 @@ safe_list_sanitizer = Rails::Html::SafeListSanitizer.new
 # sanitize via an extensive safe list of allowed elements
 safe_list_sanitizer.sanitize(@article.body)
 
-# safe list only the supplied tags and attributes
+# sanitize only the supplied tags and attributes
 safe_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %w(id class style))
 
-# safe list via a custom scrubber
+# sanitize via a custom scrubber
 safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
 
-# safe list sanitizer can also sanitize css
+# the sanitizer can also sanitize css
 safe_list_sanitizer.sanitize_css('background-color: #000;')
 
-# fully prune nodes from the tree instead of stripping tags and leaving inner content
+# prune nodes from the tree instead of stripping tags and leaving inner content
 safe_list_sanitizer = Rails::Html::SafeListSanitizer.new(prune: true)
 ```
 
