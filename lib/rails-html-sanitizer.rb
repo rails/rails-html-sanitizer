@@ -7,6 +7,10 @@ require "loofah"
 require_relative "rails/html/scrubbers"
 require_relative "rails/html/sanitizer"
 
+module Rails
+  Html = HTML # :nodoc:
+end
+
 module ActionView
   module Helpers
     module SanitizeHelper

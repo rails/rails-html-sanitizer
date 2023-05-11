@@ -9,6 +9,11 @@
 
   *Mike Dalessio*
 
+* `Rails::Html` has been renamed to `Rails::HTML`, but this module is aliased to `Rails::Html` for
+  backwards compatibility.
+
+  *Mike Dalessio*
+
 
 ## 1.5.0 / 2023-01-20
 

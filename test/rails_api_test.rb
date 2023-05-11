@@ -4,6 +4,19 @@ require "minitest/autorun"
 require "rails-html-sanitizer"
 
 class RailsApiTest < Minitest::Test
+  def test_html_module_name_alias
+    assert_equal(Rails::Html, Rails::HTML)
+    assert_equal("Rails::HTML", Rails::Html.name)
+    assert_equal("Rails::HTML", Rails::HTML.name)
+  end
+
+  def test_html_scrubber_class_names
+    assert(Rails::Html::PermitScrubber)
+    assert(Rails::Html::TargetScrubber)
+    assert(Rails::Html::TextOnlyScrubber)
+    assert(Rails::Html::Sanitizer)
+  end
+
   def test_full_sanitizer_returns_a_full_sanitizer
     assert_equal(Rails::Html::FullSanitizer, Rails::Html::Sanitizer.full_sanitizer)
   end

@@ -5,7 +5,7 @@ require_relative "lib/rails/html/sanitizer/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "rails-html-sanitizer"
-  spec.version       = Rails::Html::Sanitizer::VERSION
+  spec.version       = Rails::HTML::Sanitizer::VERSION
   spec.authors       = ["Rafael Mendonça França", "Kasper Timm Hansen"]
   spec.email         = ["rafaelmfranca@gmail.com", "kaspth@gmail.com"]
   spec.description   = "HTML sanitization for Rails applications"
