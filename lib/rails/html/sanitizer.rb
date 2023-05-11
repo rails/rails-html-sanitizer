@@ -201,6 +201,6 @@ module Rails
         end
     end
 
-    WhiteListSanitizer = SafeListSanitizer
+    WhiteListSanitizer = SafeListSanitizer # :nodoc:
   end
 end
