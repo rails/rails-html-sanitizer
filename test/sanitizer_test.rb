@@ -22,8 +22,6 @@ puts Nokogiri::VERSION_INFO
 #  slightly differently than libxml2 in edge cases.
 #
 class SanitizersTest < Minitest::Test
-  include Rails::Dom::Testing::Assertions::DomAssertions
-
   def test_sanitizer_sanitize_raises_not_implemented_error
     assert_raises NotImplementedError do
       Rails::Html::Sanitizer.new.sanitize("")
@@ -256,7 +254,7 @@ class SanitizersTest < Minitest::Test
 
   def test_sanitize_image_src
     raw = %{src="javascript:bang" <img src="javascript:bang" width="5">foo</img>, <span src="javascript:bang">bar</span>}
-    assert_sanitized raw, %{src="javascript:bang" <img width="5">foo</img>, <span>bar</span>}
+    assert_sanitized raw, %{src="javascript:bang" <img width="5">foo, <span>bar</span>}
   end
 
   def test_should_allow_anchors
@@ -266,8 +264,20 @@ class SanitizersTest < Minitest::Test
   def test_video_poster_sanitization
     scope_allowed_tags(%w(video)) do
       scope_allowed_attributes %w(src poster) do
-        assert_sanitized %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>), %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
-        assert_sanitized %(<video src="videofile.ogg" poster=javascript:alert(1)></video>), %(<video src="videofile.ogg"></video>)
+        expected = if RUBY_PLATFORM == "java"
+          # xerces+nekohtml alphabetizes the attributes! FML.
+          %(<video poster="posterimage.jpg" src="videofile.ogg"></video>)
+        else
+          %(<video src="videofile.ogg" poster="posterimage.jpg"></video>)
+        end
+        assert_sanitized(
+          %(<video src="videofile.ogg" autoplay  poster="posterimage.jpg"></video>),
+          expected,
+        )
+        assert_sanitized(
+          %(<video src="videofile.ogg" poster=javascript:alert(1)></video>),
+          %(<video src="videofile.ogg"></video>),
+        )
       end
     end
   end
@@ -279,7 +289,7 @@ class SanitizersTest < Minitest::Test
 
   %w(src width height alt).each do |img_attr|
     define_method "test_should_allow_image_#{img_attr}_attribute" do
-      assert_sanitized %(<img #{img_attr}="foo" onclick="bar" />), %(<img #{img_attr}="foo" />)
+      assert_sanitized %(<img #{img_attr}="foo" onclick="bar" />), %(<img #{img_attr}="foo">)
     end
   end
 
@@ -303,7 +313,9 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_handle_blank_text
-    [nil, "", "   "].each { |blank| assert_sanitized blank }
+    assert_nil(safe_list_sanitize(nil))
+    assert_equal("", safe_list_sanitize(""))
+    assert_equal("   ", safe_list_sanitize("   "))
   end
 
   def test_setting_allowed_tags_affects_sanitization
@@ -407,10 +419,12 @@ class SanitizersTest < Minitest::Test
     assert_equal "<h1>hello!</h1>", safe_list_sanitize(html, scrubber: scrubber, tags: ["foo"])
   end
 
-  [%w(img src), %w(a href)].each do |(tag, attr)|
-    define_method "test_should_strip_#{attr}_attribute_in_#{tag}_with_bad_protocols" do
-      assert_sanitized %(<#{tag} #{attr}="javascript:bang" title="1">boo</#{tag}>), %(<#{tag} title="1">boo</#{tag}>)
-    end
+  def test_should_strip_src_attribute_in_img_with_bad_protocols
+    assert_sanitized %(<img src="javascript:bang" title="1">), %(<img title="1">)
+  end
+
+  def test_should_strip_href_attribute_in_a_with_bad_protocols
+    assert_sanitized %(<a href="javascript:bang" title="1">boo</a>), %(<a title="1">boo</a>)
   end
 
   def test_should_block_script_tag
@@ -489,7 +503,10 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_attributes
-    assert_sanitized %(<SPAN title="'><script>alert()</script>">blah</SPAN>), %(<span title="#{CGI.escapeHTML "'><script>alert()</script>"}">blah</span>)
+    assert_sanitized(
+      %(<SPAN title="'><script>alert()</script>">blah</SPAN>),
+      %(<span title="'&gt;&lt;script&gt;alert()&lt;/script&gt;">blah</span>),
+    )
   end
 
   def test_should_sanitize_illegal_style_properties
@@ -518,11 +535,11 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_invalid_tag_names_in_single_tags
-    assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', "<img />")
+    assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', "<img>")
   end
 
   def test_should_sanitize_img_dynsrc_lowsrc
-    assert_sanitized(%(<img lowsrc="javascript:alert('XSS')" />), "<img />")
+    assert_sanitized(%(<img lowsrc="javascript:alert('XSS')" />), "<img>")
   end
 
   def test_should_sanitize_div_background_image_unicode_encoded
@@ -559,7 +576,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_should_sanitize_img_vbscript
-    assert_sanitized %(<img src='vbscript:msgbox("XSS")' />), "<img />"
+    assert_sanitized %(<img src='vbscript:msgbox("XSS")' />), "<img>"
   end
 
   def test_should_sanitize_cdata_section
@@ -609,13 +626,13 @@ class SanitizersTest < Minitest::Test
     %(<a href="javascript&#x003A;alert('XSS');">)
   ].each_with_index do |enc_hack, i|
     define_method "test_x03a_handling_#{i + 1}" do
-      assert_sanitized enc_hack, "<a>"
+      assert_sanitized enc_hack, "<a></a>"
     end
   end
 
   def test_x03a_legitimate
-    assert_sanitized %(<a href="http&#x3a;//legit">), %(<a href="http://legit">)
-    assert_sanitized %(<a href="http&#x3A;//legit">), %(<a href="http://legit">)
+    assert_sanitized %(<a href="http&#x3a;//legit">asdf</a>), %(<a href="http://legit">asdf</a>)
+    assert_sanitized %(<a href="http&#x3A;//legit">asdf</a>), %(<a href="http://legit">asdf</a>)
   end
 
   def test_sanitize_ascii_8bit_string
@@ -651,7 +668,7 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_datetime_attribute
-    assert_sanitized("<time datetime=\"2023-01-01\">")
+    assert_sanitized("<time datetime=\"2023-01-01\">Today</time>")
   end
 
   def test_abbr_attribute
@@ -886,11 +903,7 @@ protected
   end
 
   def assert_sanitized(input, expected = nil)
-    if input
-      assert_dom_equal expected || input, safe_list_sanitize(input)
-    else
-      assert_nil safe_list_sanitize(input)
-    end
+    assert_equal((expected || input), safe_list_sanitize(input))
   end
 
   def sanitize_css(input)
