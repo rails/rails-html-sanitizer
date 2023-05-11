@@ -231,8 +231,10 @@ class SanitizersTest < Minitest::Test
     acceptable_results = [
       # libxml2
       "<span>foo</span>",
-      # xerces+nekohtml
+      # xerces+nekohtml-unit
       "&lt;span&gt;foo&lt;/span&gt;&lt;/plaintext&gt;",
+      # xerces+cyberneko
+      "&lt;span&gt;foo&lt;/span&gt;"
     ]
 
     assert_includes(acceptable_results, result)
@@ -754,7 +756,16 @@ class SanitizersTest < Minitest::Test
   end
 
   def test_exclude_node_type_processing_instructions
-    assert_equal("<div>text</div><b>text</b>", safe_list_sanitize("<div>text</div><?div content><b>text</b>"))
+    input = "<div>text</div><?div content><b>text</b>"
+    result = safe_list_sanitize(input)
+    acceptable_results = [
+      # jruby cyberneko (nokogiri < 1.14.0)
+      "<div>text</div>",
+      # everything else
+      "<div>text</div><b>text</b>",
+    ]
+
+    assert_includes(acceptable_results, result)
   end
 
   def test_exclude_node_type_comment
