@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Rails
-  module Html
+  module HTML
     class Sanitizer
       VERSION = "1.6.0.dev"
     end

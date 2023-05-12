@@ -8,27 +8,7 @@ require_relative "rails/html/scrubbers"
 require_relative "rails/html/sanitizer"
 
 module Rails
-  module Html
-    class Sanitizer
-      class << self
-        def full_sanitizer
-          Html::FullSanitizer
-        end
-
-        def link_sanitizer
-          Html::LinkSanitizer
-        end
-
-        def safe_list_sanitizer
-          Html::SafeListSanitizer
-        end
-
-        def white_list_sanitizer
-          safe_list_sanitizer
-        end
-      end
-    end
-  end
+  Html = HTML # :nodoc:
 end
 
 module ActionView

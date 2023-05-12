@@ -6,7 +6,6 @@ gemspec
 
 gem "rake"
 gem "minitest"
-gem "rails-dom-testing"
 
 group :rubocop do
   gem "rubocop", ">= 1.25.1", require: false
