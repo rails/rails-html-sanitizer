@@ -1,29 +1,15 @@
-# Rails Html Sanitizers
+# Rails HTML Sanitizers
 
 In Rails 4.2 and above this gem will be responsible for sanitizing HTML fragments in Rails
 applications, i.e. in the `sanitize`, `sanitize_css`, `strip_tags` and `strip_links` methods.
 
-Rails Html Sanitizer is only intended to be used with Rails applications. If you need similar functionality in non Rails apps consider using [Loofah](https://github.com/flavorjones/loofah) directly (that's what handles sanitization under the hood).
-
-## Installation
-
-Add this line to your application's Gemfile:
-
-    gem 'rails-html-sanitizer'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install rails-html-sanitizer
+Rails HTML Sanitizer is only intended to be used with Rails applications. If you need similar functionality in non Rails apps consider using [Loofah](https://github.com/flavorjones/loofah) directly (that's what handles sanitization under the hood).
 
 ## Usage
 
 ### A note on HTML entities
 
-__Rails::HTML sanitizers are intended to be used by the view layer, at page-render time. They are *not* intended to sanitize persisted strings that will sanitized *again* at page-render time.__
+__Rails HTML sanitizers are intended to be used by the view layer, at page-render time. They are *not* intended to sanitize persisted strings that will sanitized *again* at page-render time.__
 
 Proper HTML sanitization will replace some characters with HTML entities. For example, `<` will be replaced with `&lt;` to ensure that the markup is well-formed.
 
@@ -47,33 +33,72 @@ You might simply choose to persist the untrusted string as-is (the raw input), a
 
 That raw string, if rendered in an non-HTML context (like SMS), must also be sanitized by a method appropriate for that context. You may wish to look into using [Loofah](https://github.com/flavorjones/loofah) or [Sanitize](https://github.com/rgrove/sanitize) to customize how this sanitization works, including omitting HTML entities in the final string.
 
-If you really want to sanitize the string that's stored in your database, you may wish to look into  [Loofah::ActiveRecord](https://github.com/flavorjones/loofah-activerecord) rather than use the Rails::HTML sanitizers.
+If you really want to sanitize the string that's stored in your database, you may wish to look into  [Loofah::ActiveRecord](https://github.com/flavorjones/loofah-activerecord) rather than use the Rails HTML sanitizers.
+
+
+### A note on module names
+
+In versions < 1.6, the only module defined by this library was `Rails::Html`. Starting in 1.6, we define three additional modules:
+
+- `Rails::HTML` for general functionality (replacing `Rails::Html`)
+- `Rails::HTML4` containing sanitizers that parse content as HTML4
+- `Rails::HTML5` containing sanitizers that parse content as HTML5
+
+The following aliases are maintained for backwards compatibility:
+
+- `Rails::Html` points to `Rails::HTML`
+- `Rails::HTML::FullSanitizer` points to `Rails::HTML4::FullSanitizer`
+- `Rails::HTML::LinkSanitizer` points to `Rails::HTML4::LinkSanitizer`
+- `Rails::HTML::SafeListSanitizer` points to `Rails::HTML4::SafeListSanitizer`
 
 
 ### Sanitizers
 
-All sanitizers respond to `sanitize`.
+All sanitizers respond to `sanitize`, and are available in variants that use either HTML4 or HTML5 parsing, under the `Rails::HTML4` and `Rails::HTML5` namespaces, respectively.
 
 #### FullSanitizer
 
 ```ruby
-full_sanitizer = Rails::Html::FullSanitizer.new
+full_sanitizer = Rails::HTML5::FullSanitizer.new
 full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
 # => Bold no more!  See more here...
 ```
 
+or, if you insist on parsing the content as HTML4:
+
+```ruby
+full_sanitizer = Rails::HTML4::FullSanitizer.new
+full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
+# => Bold no more!  See more here...
+```
+
+HTML5 version:
+
+
+
 #### LinkSanitizer
 
 ```ruby
-link_sanitizer = Rails::Html::LinkSanitizer.new
+link_sanitizer = Rails::HTML5::LinkSanitizer.new
 link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
 # => Only the link text will be kept.
 ```
 
-#### SafeListSanitizer
+or, if you insist on parsing the content as HTML4:
 
 ```ruby
-safe_list_sanitizer = Rails::Html::SafeListSanitizer.new
+link_sanitizer = Rails::HTML4::LinkSanitizer.new
+link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+# => Only the link text will be kept.
+```
+
+
+#### SafeListSanitizer
+
+This sanitizer is also available as an HTML4 variant, but for simplicity we'll document only the HTML5 variant below.
+
+```ruby
+safe_list_sanitizer = Rails::HTML5::SafeListSanitizer.new
 
 # sanitize via an extensive safe list of allowed elements
 safe_list_sanitizer.sanitize(@article.body)
@@ -84,25 +109,25 @@ safe_list_sanitizer.sanitize(@article.body, tags: %w(table tr td), attributes: %
 # sanitize via a custom scrubber
 safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
 
+# prune nodes from the tree instead of stripping tags and leaving inner content
+safe_list_sanitizer = Rails::HTML5::SafeListSanitizer.new(prune: true)
+
 # the sanitizer can also sanitize css
 safe_list_sanitizer.sanitize_css('background-color: #000;')
-
-# prune nodes from the tree instead of stripping tags and leaving inner content
-safe_list_sanitizer = Rails::Html::SafeListSanitizer.new(prune: true)
 ```
 
 ### Scrubbers
 
 Scrubbers are objects responsible for removing nodes or attributes you don't want in your HTML document.
 
-This gem includes two scrubbers `Rails::Html::PermitScrubber` and `Rails::Html::TargetScrubber`.
+This gem includes two scrubbers `Rails::HTML::PermitScrubber` and `Rails::HTML::TargetScrubber`.
 
-#### `Rails::Html::PermitScrubber`
+#### `Rails::HTML::PermitScrubber`
 
 This scrubber allows you to permit only the tags and attributes you want.
 
 ```ruby
-scrubber = Rails::Html::PermitScrubber.new
+scrubber = Rails::HTML::PermitScrubber.new
 scrubber.tags = ['a']
 
 html_fragment = Loofah.fragment('<a><img/ ></a>')
@@ -113,14 +138,14 @@ html_fragment.to_s # => "<a></a>"
 By default, inner content is left, but it can be removed as well.
 
 ```ruby
-scrubber = Rails::Html::PermitScrubber.new
+scrubber = Rails::HTML::PermitScrubber.new
 scrubber.tags = ['a']
 
 html_fragment = Loofah.fragment('<a><span>text</span></a>')
 html_fragment.scrub!(scrubber)
 html_fragment.to_s # => "<a>text</a>"
 
-scrubber = Rails::Html::PermitScrubber.new(prune: true)
+scrubber = Rails::HTML::PermitScrubber.new(prune: true)
 scrubber.tags = ['a']
 
 html_fragment = Loofah.fragment('<a><span>text</span></a>')
@@ -128,16 +153,16 @@ html_fragment.scrub!(scrubber)
 html_fragment.to_s # => "<a></a>"
 ```
 
-#### `Rails::Html::TargetScrubber`
+#### `Rails::HTML::TargetScrubber`
 
 Where `PermitScrubber` picks out tags and attributes to permit in sanitization,
-`Rails::Html::TargetScrubber` targets them for removal. See https://github.com/flavorjones/loofah/blob/main/lib/loofah/html5/safelist.rb for the tag list.
+`Rails::HTML::TargetScrubber` targets them for removal. See https://github.com/flavorjones/loofah/blob/main/lib/loofah/html5/safelist.rb for the tag list.
 
 **Note:** by default, it will scrub anything that is not part of the permitted tags from
 loofah `HTML5::Scrub.allowed_element?`.
 
 ```ruby
-scrubber = Rails::Html::TargetScrubber.new
+scrubber = Rails::HTML::TargetScrubber.new
 scrubber.tags = ['img']
 
 html_fragment = Loofah.fragment('<a><img/ ></a>')
@@ -148,14 +173,14 @@ html_fragment.to_s # => "<a></a>"
 Similarly to `PermitScrubber`, nodes can be fully pruned.
 
 ```ruby
-scrubber = Rails::Html::TargetScrubber.new
+scrubber = Rails::HTML::TargetScrubber.new
 scrubber.tags = ['span']
 
 html_fragment = Loofah.fragment('<a><span>text</span></a>')
 html_fragment.scrub!(scrubber)
 html_fragment.to_s # => "<a>text</a>"
 
-scrubber = Rails::Html::TargetScrubber.new(prune: true)
+scrubber = Rails::HTML::TargetScrubber.new(prune: true)
 scrubber.tags = ['span']
 
 html_fragment = Loofah.fragment('<a><span>text</span></a>')
@@ -167,7 +192,7 @@ html_fragment.to_s # => "<a></a>"
 You can also create custom scrubbers in your application if you want to.
 
 ```ruby
-class CommentScrubber < Rails::Html::PermitScrubber
+class CommentScrubber < Rails::HTML::PermitScrubber
   def initialize
     super
     self.tags = %w( form script comment blockquote )
@@ -180,7 +205,7 @@ class CommentScrubber < Rails::Html::PermitScrubber
 end
 ```
 
-See `Rails::Html::PermitScrubber` documentation to learn more about which methods can be overridden.
+See `Rails::HTML::PermitScrubber` documentation to learn more about which methods can be overridden.
 
 #### Custom Scrubber in a Rails app
 
@@ -190,18 +215,36 @@ Using the `CommentScrubber` from above, you can use this in a Rails view like so
 <%= sanitize @comment, scrubber: CommentScrubber.new %>
 ```
 
+## Installation
+
+Add this line to your application's Gemfile:
+
+    gem 'rails-html-sanitizer'
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install rails-html-sanitizer
+
+
 ## Read more
 
 Loofah is what underlies the sanitizers and scrubbers of rails-html-sanitizer.
+
 - [Loofah and Loofah Scrubbers](https://github.com/flavorjones/loofah)
 
 The `node` argument passed to some methods in a custom scrubber is an instance of `Nokogiri::XML::Node`.
+
 - [`Nokogiri::XML::Node`](https://nokogiri.org/rdoc/Nokogiri/XML/Node.html)
 - [Nokogiri](http://nokogiri.org)
 
-## Contributing to Rails Html Sanitizers
 
-Rails Html Sanitizers is work of many contributors. You're encouraged to submit pull requests, propose features and discuss issues.
+## Contributing to Rails HTML Sanitizers
+
+Rails HTML Sanitizers is work of many contributors. You're encouraged to submit pull requests, propose features and discuss issues.
 
 See [CONTRIBUTING](CONTRIBUTING.md).
 
@@ -211,5 +254,7 @@ Trying to report a possible security vulnerability in this project? Please
 check out our [security policy](https://rubyonrails.org/security) for
 guidelines about how to proceed.
 
+
 ## License
-Rails Html Sanitizers is released under the [MIT License](MIT-LICENSE).
+
+Rails HTML Sanitizers is released under the [MIT License](MIT-LICENSE).
