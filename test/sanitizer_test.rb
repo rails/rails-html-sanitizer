@@ -553,7 +553,16 @@ module SanitizerTests
     end
 
     def test_should_sanitize_half_open_scripts
-      assert_sanitized %(<IMG SRC="javascript:alert('XSS')"), "<img>"
+      input = %(<IMG SRC="javascript:alert('XSS')")
+      result = safe_list_sanitize(input)
+      acceptable_results = [
+        # libxml2
+        "<img>",
+        # libgumbo
+        "",
+      ]
+
+      assert_includes(acceptable_results, result)
     end
 
     def test_should_not_fall_for_ridiculous_hack
@@ -562,10 +571,18 @@ module SanitizerTests
     end
 
     def test_should_sanitize_attributes
-      assert_sanitized(
-        %(<SPAN title="'><script>alert()</script>">blah</SPAN>),
+      input = %(<SPAN title="'><script>alert()</script>">blah</SPAN>)
+      result = safe_list_sanitize(input)
+      acceptable_results = [
+        # libxml2
         %(<span title="'&gt;&lt;script&gt;alert()&lt;/script&gt;">blah</span>),
-      )
+        # libgumbo
+        # this looks scary, but it's fine. for a more detailed analysis check out:
+        # https://github.com/discourse/discourse/pull/21522#issuecomment-1545697968
+        %(<span title="'><script>alert()</script>">blah</span>)
+      ]
+
+      assert_includes(acceptable_results, result)
     end
 
     def test_should_sanitize_invalid_tag_names
@@ -577,7 +594,16 @@ module SanitizerTests
     end
 
     def test_should_sanitize_invalid_tag_names_in_single_tags
-      assert_sanitized('<img/src="http://ha.ckers.org/xss.js"/>', "<img>")
+      input = %(<img/src="http://ha.ckers.org/xss.js"/>)
+      result = safe_list_sanitize(input)
+      acceptable_results = [
+        # libxml2
+        "<img>",
+        # libgumbo
+        %(<img src="http://ha.ckers.org/xss.js">),
+      ]
+
+      assert_includes(acceptable_results, result)
     end
 
     def test_should_sanitize_img_dynsrc_lowsrc
@@ -841,66 +867,106 @@ module SanitizerTests
 
     def test_style_with_css_payload
       input, tags = "<style>div > span { background: \"red\"; }</style>", ["style"]
-      expected = "<style>div &gt; span { background: \"red\"; }</style>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<style>div &gt; span { background: \"red\"; }</style>",
+        # libgumbo
+        "<style>div > span { background: \"red\"; }</style>",
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_combination_of_select_and_style_with_css_payload
       input, tags = "<select><style>div > span { background: \"red\"; }</style></select>", ["select", "style"]
-      expected = "<select><style>div &gt; span { background: \"red\"; }</style></select>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<select><style>div &gt; span { background: \"red\"; }</style></select>",
+        # libgumbo
+        "<select>div &gt; span { background: \"red\"; }</select>",
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_combination_of_select_and_style_with_script_payload
       input, tags = "<select><style><script>alert(1)</script></style></select>", ["select", "style"]
-      expected = "<select><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></select>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<select><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></select>",
+        # libgumbo
+        "<select>alert(1)</select>",
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_combination_of_svg_and_style_with_script_payload
       input, tags = "<svg><style><script>alert(1)</script></style></svg>", ["svg", "style"]
-      expected = "<svg><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></svg>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<svg><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></svg>",
+        # libgumbo
+        "<svg><style>alert(1)</style></svg>"
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_combination_of_math_and_style_with_img_payload
       input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style"]
-      expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>",
+        # libgumbo
+        "<math><style></style></math>",
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_combination_of_math_and_style_with_img_payload_2
       input, tags = "<math><style><img src=x onerror=alert(1)></style></math>", ["math", "style", "img"]
-      expected = "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<math><style>&lt;img src=x onerror=alert(1)&gt;</style></math>",
+        # libgumbo
+        "<math><style></style></math><img src=\"x\">",
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_combination_of_svg_and_style_with_img_payload
       input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style"]
-      expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>",
+        # libgumbo
+        "<svg><style></style></svg>",
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_combination_of_svg_and_style_with_img_payload_2
       input, tags = "<svg><style><img src=x onerror=alert(1)></style></svg>", ["svg", "style", "img"]
-      expected = "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>"
       actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<svg><style>&lt;img src=x onerror=alert(1)&gt;</style></svg>",
+        # libgumbo
+        "<svg><style></style></svg><img src=\"x\">",
+      ]
 
-      assert_equal(expected, actual)
+      assert_includes(acceptable_results, actual)
     end
 
     def test_should_sanitize_illegal_style_properties
