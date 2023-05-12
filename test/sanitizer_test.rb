@@ -2,7 +2,6 @@
 
 require "minitest/autorun"
 require "rails-html-sanitizer"
-require "rails/dom/testing/assertions/dom_assertions"
 
 puts Nokogiri::VERSION_INFO
 
