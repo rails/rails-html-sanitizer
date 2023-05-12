@@ -20,18 +20,22 @@ puts Nokogiri::VERSION_INFO
 #  In many other cases, it's because the parser used by Nokogiri on JRuby (xerces+nekohtml) parses
 #  slightly differently than libxml2 in edge cases.
 #
-module TestRailsSanitizers
-  class XpathRemovalTestSanitizer < Rails::Html::Sanitizer
-    def sanitize(html, options = {})
-      fragment = Loofah.fragment(html)
-      remove_xpaths(fragment, options[:xpaths]).to_s
-    end
+module SanitizerTests
+  def self.loofah_html5_support?
+    Loofah.respond_to?(:html5_support?) && Loofah.html5_support?
   end
 
   class BaseSanitizerTest < Minitest::Test
+    class XpathRemovalTestSanitizer < Rails::HTML::Sanitizer
+      def sanitize(html, options = {})
+        fragment = Loofah.fragment(html)
+        remove_xpaths(fragment, options[:xpaths]).to_s
+      end
+    end
+
     def test_sanitizer_sanitize_raises_not_implemented_error
       assert_raises NotImplementedError do
-        Rails::Html::Sanitizer.new.sanitize("asdf")
+        Rails::HTML::Sanitizer.new.sanitize("asdf")
       end
     end
 
@@ -65,7 +69,15 @@ module TestRailsSanitizers
       end
   end
 
-  class FullSanitizerTest < Minitest::Test
+  module ModuleUnderTest
+    def module_under_test
+      self.class.instance_variable_get(:@module_under_test)
+    end
+  end
+
+  module FullSanitizerTest
+    include ModuleUnderTest
+
     def test_strip_tags_with_quote
       input = '<" <img src="trollface.gif" onload="alert(1)"> hi'
       result = full_sanitize(input)
@@ -164,11 +176,23 @@ module TestRailsSanitizers
 
     protected
       def full_sanitize(input, options = {})
-        Rails::Html::FullSanitizer.new.sanitize(input, options)
+        module_under_test::FullSanitizer.new.sanitize(input, options)
       end
   end
 
-  class LinkSanitizerTest < Minitest::Test
+  class HTML4FullSanitizerTest < Minitest::Test
+    @module_under_test = Rails::HTML4
+    include FullSanitizerTest
+  end
+
+  class HTML5FullSanitizerTest < Minitest::Test
+    @module_under_test = Rails::HTML5
+    include FullSanitizerTest
+  end if loofah_html5_support?
+
+  module LinkSanitizerTest
+    include ModuleUnderTest
+
     def test_strip_links_with_tags_in_tags
       expected = "&lt;a href='hello'&gt;all <b>day</b> long&lt;/a&gt;"
       input = "<<a>a href='hello'>all <b>day</b> long<</A>/a>"
@@ -201,11 +225,23 @@ module TestRailsSanitizers
 
     protected
       def link_sanitize(input, options = {})
-        Rails::Html::LinkSanitizer.new.sanitize(input, options)
+        module_under_test::LinkSanitizer.new.sanitize(input, options)
       end
   end
 
-  class SafeListSanitizerTest < Minitest::Test
+  class HTML4LinkSanitizerTest < Minitest::Test
+    @module_under_test = Rails::HTML4
+    include LinkSanitizerTest
+  end
+
+  class HTML5LinkSanitizerTest < Minitest::Test
+    @module_under_test = Rails::HTML5
+    include LinkSanitizerTest
+  end if loofah_html5_support?
+
+  module SafeListSanitizerTest
+    include ModuleUnderTest
+
     def test_sanitize_nested_script
       assert_equal '&lt;script&gt;alert("XSS");&lt;/script&gt;', safe_list_sanitize('<script><script></script>alert("XSS");<script><</script>/</script><script>script></script>', tags: %w(em))
     end
@@ -369,7 +405,7 @@ module TestRailsSanitizers
     end
 
     def test_should_allow_prune
-      sanitizer = Rails::Html::SafeListSanitizer.new(prune: true)
+      sanitizer = module_under_test::SafeListSanitizer.new(prune: true)
       text = "<u>leave me <b>now</b></u>"
       assert_equal "<u>leave me </u>", sanitizer.sanitize(text, tags: %w(u))
     end
@@ -919,7 +955,7 @@ module TestRailsSanitizers
 
     protected
       def safe_list_sanitize(input, options = {})
-        Rails::Html::SafeListSanitizer.new.sanitize(input, options)
+        module_under_test::SafeListSanitizer.new.sanitize(input, options)
       end
 
       def assert_sanitized(input, expected = nil)
@@ -927,23 +963,23 @@ module TestRailsSanitizers
       end
 
       def scope_allowed_tags(tags)
-        old_tags = Rails::Html::SafeListSanitizer.allowed_tags
-        Rails::Html::SafeListSanitizer.allowed_tags = tags
-        yield Rails::Html::SafeListSanitizer.new
+        old_tags = module_under_test::SafeListSanitizer.allowed_tags
+        module_under_test::SafeListSanitizer.allowed_tags = tags
+        yield module_under_test::SafeListSanitizer.new
       ensure
-        Rails::Html::SafeListSanitizer.allowed_tags = old_tags
+        module_under_test::SafeListSanitizer.allowed_tags = old_tags
       end
 
       def scope_allowed_attributes(attributes)
-        old_attributes = Rails::Html::SafeListSanitizer.allowed_attributes
-        Rails::Html::SafeListSanitizer.allowed_attributes = attributes
-        yield Rails::Html::SafeListSanitizer.new
+        old_attributes = module_under_test::SafeListSanitizer.allowed_attributes
+        module_under_test::SafeListSanitizer.allowed_attributes = attributes
+        yield module_under_test::SafeListSanitizer.new
       ensure
-        Rails::Html::SafeListSanitizer.allowed_attributes = old_attributes
+        module_under_test::SafeListSanitizer.allowed_attributes = old_attributes
       end
 
       def sanitize_css(input)
-        Rails::HTML4::SafeListSanitizer.new.sanitize_css(input)
+        module_under_test::SafeListSanitizer.new.sanitize_css(input)
       end
 
       # note that this is used for testing CSS hex encoding: \\[0-9a-f]{1,6}
@@ -957,4 +993,14 @@ module TestRailsSanitizers
         end.join
       end
   end
+
+  class HTML4SafeListSanitizerTest < Minitest::Test
+    @module_under_test = Rails::HTML4
+    include SafeListSanitizerTest
+  end
+
+  class HTML5SafeListSanitizerTest < Minitest::Test
+    @module_under_test = Rails::HTML5
+    include SafeListSanitizerTest
+  end if loofah_html5_support?
 end

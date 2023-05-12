@@ -19,6 +19,14 @@ module Rails
         def white_list_sanitizer # :nodoc:
           safe_list_sanitizer
         end
+
+        def html5_support?
+          unless @html5_support_set
+            @html5_support = Loofah.respond_to?(:html5_support?) && Loofah.html5_support?
+            @html5_support_set = true
+          end
+          @html5_support
+        end
       end
 
       def sanitize(html, options = {})
@@ -52,6 +60,12 @@ module Rails
             Loofah.html4_fragment(html)
           end
         end
+
+        module HTML5
+          def parse_fragment(html)
+            Loofah.html5_fragment(html)
+          end
+        end if Rails::HTML::Sanitizer.html5_support?
       end
 
       module Scrubber
@@ -285,6 +299,96 @@ module Rails
       include HTML::Concern::Serializer::UTF8Encode
     end
   end
+
+  module HTML5
+    # == Rails::HTML5::FullSanitizer
+    #
+    # Removes all tags from HTML5 but strips out scripts, forms and comments.
+    #
+    #   full_sanitizer = Rails::HTML5::FullSanitizer.new
+    #   full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
+    #   # => "Bold no more!  See more here..."
+    #
+    class FullSanitizer < Rails::HTML::Sanitizer
+      include HTML::Concern::ComposedSanitize
+      include HTML::Concern::Parser::HTML5
+      include HTML::Concern::Scrubber::Full
+      include HTML::Concern::Serializer::UTF8Encode
+    end
+
+    # == Rails::HTML5::LinkSanitizer
+    #
+    # Removes +a+ tags and +href+ attributes from HTML5 leaving only the link text.
+    #
+    #   link_sanitizer = Rails::HTML5::LinkSanitizer.new
+    #   link_sanitizer.sanitize('<a href="example.com">Only the link text will be kept.</a>')
+    #   # => "Only the link text will be kept."
+    #
+    class LinkSanitizer < Rails::HTML::Sanitizer
+      include HTML::Concern::ComposedSanitize
+      include HTML::Concern::Parser::HTML5
+      include HTML::Concern::Scrubber::Link
+      include HTML::Concern::Serializer::SimpleString
+    end
+
+    # == Rails::HTML5::SafeListSanitizer
+    #
+    # Sanitizes HTML5 and CSS from an extensive safe list.
+    #
+    # === Whitespace
+    #
+    # We can't make any guarantees about whitespace being kept or stripped.  Loofah uses Nokogiri,
+    # which wraps either a C or Java parser for the respective Ruby implementation.  Those two
+    # parsers determine how whitespace is ultimately handled.
+    #
+    # When the stripped markup will be rendered the users browser won't take whitespace into account
+    # anyway. It might be better to suggest your users wrap their whitespace sensitive content in
+    # pre tags or that you do so automatically.
+    #
+    # === Options
+    #
+    # Sanitizes both html and css via the safe lists found in
+    # Rails::HTML::Concern::Scrubber::SafeList
+    #
+    # SafeListSanitizer also accepts options to configure the safe list used when sanitizing html.
+    # There's a class level option:
+    #
+    #   Rails::HTML5::SafeListSanitizer.allowed_tags = %w(table tr td)
+    #   Rails::HTML5::SafeListSanitizer.allowed_attributes = %w(id class style)
+    #
+    # Tags and attributes can also be passed to +sanitize+.  Passed options take precedence over the
+    # class level options.
+    #
+    # === Examples
+    #
+    #   safe_list_sanitizer = Rails::HTML5::SafeListSanitizer.new
+    #
+    #   # default: sanitize via a extensive safe list of allowed elements
+    #   safe_list_sanitizer.sanitize(@article.body)
+    #
+    #   # sanitize via the supplied tags and attributes
+    #   safe_list_sanitizer.sanitize(
+    #     @article.body,
+    #     tags: %w(table tr td),
+    #     attributes: %w(id class style),
+    #   )
+    #
+    #   # sanitize via a custom Loofah scrubber
+    #   safe_list_sanitizer.sanitize(@article.body, scrubber: ArticleScrubber.new)
+    #
+    #   # prune nodes from the tree instead of stripping tags and leaving inner content
+    #   safe_list_sanitizer = Rails::HTML5::SafeListSanitizer.new(prune: true)
+    #
+    #   # the sanitizer can also sanitize CSS
+    #   safe_list_sanitizer.sanitize_css('background-color: #000;')
+    #
+    class SafeListSanitizer < Rails::HTML::Sanitizer
+      include HTML::Concern::ComposedSanitize
+      include HTML::Concern::Parser::HTML5
+      include HTML::Concern::Scrubber::SafeList
+      include HTML::Concern::Serializer::UTF8Encode
+    end
+  end if Rails::HTML::Sanitizer.html5_support?
 
   module HTML
     FullSanitizer = HTML4::FullSanitizer # :nodoc:
