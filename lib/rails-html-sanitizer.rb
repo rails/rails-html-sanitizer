@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
-require "rails/html/sanitizer/version"
+require_relative "rails/html/sanitizer/version"
+
 require "loofah"
-require "rails/html/scrubbers"
-require "rails/html/sanitizer"
+
+require_relative "rails/html/scrubbers"
+require_relative "rails/html/sanitizer"
 
 module Rails
   module Html
