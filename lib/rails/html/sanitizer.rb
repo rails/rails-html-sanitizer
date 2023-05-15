@@ -21,11 +21,9 @@ module Rails
         end
 
         def html5_support?
-          unless @html5_support_set
-            @html5_support = Loofah.respond_to?(:html5_support?) && Loofah.html5_support?
-            @html5_support_set = true
-          end
-          @html5_support
+          return @html5_support if defined?(@html5_support)
+
+          @html5_support = Loofah.respond_to?(:html5_support?) && Loofah.html5_support?
         end
       end
 
