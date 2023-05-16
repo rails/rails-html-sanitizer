@@ -66,6 +66,19 @@ module Rails
         end if Rails::HTML::Sanitizer.html5_support?
       end
 
+      module Sanitizer
+        module PreserveWhitespace
+          def sanitize(html, options = {})
+            return unless html
+            if options[:preserve_whitespace]
+              parse_fragment(html).to_text
+            else
+              super
+            end
+          end
+        end
+      end
+
       module Scrubber
         module Full
           def scrub(fragment, options = {})
@@ -217,11 +230,20 @@ module Rails
     #   full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
     #   # => "Bold no more!  See more here..."
     #
+    # === Options
+    #
+    # If whitespace is significant you can pass preserve_whitespace: true.
+    # This option is slower, but is clever about whitespace around block elements and line break elements.
+    #
+    # full_sanitizer = Rails::HTML4::FullSanitizer.new
+    # full_sanitizer.sanitize("<p>Paragraphs</p> and <br> newlines", preserve_whitespace: true)
+    # # => \nParagraphs\n and \n newlines
     class FullSanitizer < Rails::HTML::Sanitizer
       include HTML::Concern::ComposedSanitize
       include HTML::Concern::Parser::HTML4
       include HTML::Concern::Scrubber::Full
       include HTML::Concern::Serializer::UTF8Encode
+      include HTML::Concern::Sanitizer::PreserveWhitespace
     end
 
     # == Rails::HTML4::LinkSanitizer
@@ -307,11 +329,20 @@ module Rails
     #   full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
     #   # => "Bold no more!  See more here..."
     #
+    # === Options
+    #
+    # If whitespace is significant you can pass preserve_whitespace: true.
+    # This option is slower, but is clever about whitespace around block elements and line break elements.
+    #
+    # full_sanitizer = Rails::HTML5::FullSanitizer.new
+    # full_sanitizer.sanitize("<p>Paragraphs</p> and <br> newlines", preserve_whitespace: true)
+    # # => \nParagraphs\n and \n newlines
     class FullSanitizer < Rails::HTML::Sanitizer
       include HTML::Concern::ComposedSanitize
       include HTML::Concern::Parser::HTML5
       include HTML::Concern::Scrubber::Full
       include HTML::Concern::Serializer::UTF8Encode
+      include HTML::Concern::Sanitizer::PreserveWhitespace
     end
 
     # == Rails::HTML5::LinkSanitizer

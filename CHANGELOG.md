@@ -14,6 +14,9 @@
 
   *Mike Dalessio*
 
+* `FullSanitizer` now supports the optional argument `preserve_whitespace` to keep whitespace around block elements and line break elements.
+
+  *Earlopain*
 
 ## 1.5.0 / 2023-01-20
 

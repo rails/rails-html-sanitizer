@@ -62,19 +62,14 @@ All sanitizers respond to `sanitize`, and are available in variants that use eit
 full_sanitizer = Rails::HTML5::FullSanitizer.new
 full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
 # => Bold no more!  See more here...
+
+# Whitespace is swallowed by default. If whitespace is significant you must pass an option to preserve it.
+# This option is slower, but is clever about whitespace around block elements and line break elements.
+
+full_sanitizer = Rails::HTML5::FullSanitizer.new
+full_sanitizer.sanitize("<p>Paragraphs</p> and <br> newlines", preserve_whitespace: true)
+# => \nParagraphs\n and \n newlines
 ```
-
-or, if you insist on parsing the content as HTML4:
-
-```ruby
-full_sanitizer = Rails::HTML4::FullSanitizer.new
-full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here</a>...")
-# => Bold no more!  See more here...
-```
-
-HTML5 version:
-
-
 
 #### LinkSanitizer
 

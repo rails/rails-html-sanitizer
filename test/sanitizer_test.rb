@@ -80,37 +80,41 @@ module SanitizerTests
 
     def test_strip_tags_with_quote
       input = '<" <img src="trollface.gif" onload="alert(1)"> hi'
-      result = full_sanitize(input)
       acceptable_results = [
         # libxml2 >= 2.9.14 and xerces+neko
         %{&lt;"  hi},
         # other libxml2
         %{ hi},
+        # preserve_whitespace: true
+        "&lt;&quot;  hi",
       ]
 
-      assert_includes(acceptable_results, result)
+      assert_full_sanitized(acceptable_results, input)
     end
 
     def test_strip_invalid_html
-      assert_equal "&lt;&lt;", full_sanitize("<<<bad html")
+      assert_full_sanitized "&lt;&lt;", "<<<bad html"
     end
 
     def test_strip_nested_tags
       expected = "Wei&lt;a onclick='alert(document.cookie);'/&gt;rdos"
       input = "Wei<<a>a onclick='alert(document.cookie);'</a>/>rdos"
-      assert_equal expected, full_sanitize(input)
+      assert_full_sanitized expected, input
     end
 
     def test_strip_tags_multiline
-      expected = %{This is a test.\n\n\n\nIt no longer contains any HTML.\n}
       input = %{<h1>This is <b>a <a href="" target="_blank">test</a></b>.</h1>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}
+      acceptable_results = [
+        %{This is a test.\n\n\n\nIt no longer contains any HTML.\n},
+        # preserve_whitespace: true
+        %{\nThis is a test.\n\nIt no longer contains any HTML.\n\n}
+      ]
 
-      assert_equal expected, full_sanitize(input)
+      assert_full_sanitized acceptable_results, input
     end
 
     def test_remove_unclosed_tags
       input = "This is <-- not\n a comment here."
-      result = full_sanitize(input)
       acceptable_results = [
         # libxml2 >= 2.9.14 and xerces+neko
         %{This is &lt;-- not\n a comment here.},
@@ -118,12 +122,11 @@ module SanitizerTests
         %{This is },
       ]
 
-      assert_includes(acceptable_results, result)
+      assert_full_sanitized(acceptable_results, input)
     end
 
     def test_strip_cdata
       input = "This has a <![CDATA[<section>]]> here."
-      result = full_sanitize(input)
       acceptable_results = [
         # libxml2 = 2.9.14
         %{This has a &lt;![CDATA[]]&gt; here.},
@@ -133,50 +136,67 @@ module SanitizerTests
         %{This has a  here.},
       ]
 
-      assert_includes(acceptable_results, result)
+      assert_full_sanitized(acceptable_results, input)
     end
 
     def test_strip_blank_string
       assert_nil full_sanitize(nil)
-      assert_equal "", full_sanitize("")
-      assert_equal "   ", full_sanitize("   ")
+      assert_nil full_sanitize(nil, preserve_whitespace: true)
+      assert_full_sanitized "", ""
+      assert_full_sanitized "   ", "   "
     end
 
     def test_strip_tags_with_plaintext
-      assert_equal "Don't touch me", full_sanitize("Don't touch me")
+      assert_full_sanitized "Don't touch me", "Don't touch me"
     end
 
     def test_strip_tags_with_tags
-      assert_equal "This is a test.", full_sanitize("<p>This <u>is<u> a <a href='test.html'><strong>test</strong></a>.</p>")
+      assert_full_sanitized "This is a test.", "<b>This <u>is<u> a <a href='test.html'><strong>test</strong></a>.</b>"
     end
 
     def test_escape_tags_with_many_open_quotes
-      assert_equal "&lt;&lt;", full_sanitize("<<<bad html>")
+      assert_full_sanitized "&lt;&lt;", "<<<bad html>"
     end
 
     def test_strip_tags_with_sentence
-      assert_equal "This is a test.", full_sanitize("This is a test.")
+      assert_full_sanitized "This is a test.", "This is a test."
     end
 
     def test_strip_tags_with_comment
-      assert_equal "This has a  here.", full_sanitize("This has a <!-- comment --> here.")
+      assert_full_sanitized "This has a  here.", "This has a <!-- comment --> here."
     end
 
     def test_strip_tags_with_frozen_string
-      assert_equal "Frozen string with no tags", full_sanitize("Frozen string with no tags")
+      assert_full_sanitized "Frozen string with no tags", "Frozen string with no tags"
     end
 
     def test_full_sanitize_respect_html_escaping_of_the_given_string
-      assert_equal 'test\r\nstring', full_sanitize('test\r\nstring')
-      assert_equal "&amp;", full_sanitize("&")
-      assert_equal "&amp;", full_sanitize("&amp;")
-      assert_equal "&amp;amp;", full_sanitize("&amp;amp;")
-      assert_equal "omg &lt;script&gt;BOM&lt;/script&gt;", full_sanitize("omg &lt;script&gt;BOM&lt;/script&gt;")
+      assert_full_sanitized 'test\r\nstring', 'test\r\nstring'
+      assert_full_sanitized "&amp;", "&"
+      assert_full_sanitized "&amp;", "&amp;"
+      assert_full_sanitized "&amp;amp;", "&amp;amp;"
+      assert_full_sanitized "omg &lt;script&gt;BOM&lt;/script&gt;", "omg &lt;script&gt;BOM&lt;/script&gt;"
+    end
+
+    def test_full_sanitize_preserve_whitespace
+      assert_equal "\nParagraphs\n and \n newlines", full_sanitize("<p>Paragraphs</p> and <br> newlines", preserve_whitespace: true)
+    end
+
+    def test_full_sanitize_preserve_whitespace_ascii_8bit_string
+      full_sanitize("<a>hello</a>".encode("ASCII-8BIT")).tap do |sanitized|
+        assert_equal "hello", sanitized
+        assert_equal Encoding::UTF_8, sanitized.encoding
+      end
     end
 
     protected
       def full_sanitize(input, options = {})
         module_under_test::FullSanitizer.new.sanitize(input, options)
+      end
+
+      def assert_full_sanitized(acceptable_results, input)
+        assert_includes(Array(acceptable_results), full_sanitize(input))
+        assert_includes(Array(acceptable_results), full_sanitize(input, preserve_whitespace: true))
       end
   end
 
