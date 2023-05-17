@@ -4,22 +4,6 @@ module Rails
   module HTML
     class Sanitizer
       class << self
-        def full_sanitizer
-          Rails::HTML4::FullSanitizer
-        end
-
-        def link_sanitizer
-          Rails::HTML4::LinkSanitizer
-        end
-
-        def safe_list_sanitizer
-          Rails::HTML4::SafeListSanitizer
-        end
-
-        def white_list_sanitizer # :nodoc:
-          safe_list_sanitizer
-        end
-
         def html5_support?
           return @html5_support if defined?(@html5_support)
 
@@ -209,6 +193,28 @@ module Rails
   end
 
   module HTML4
+    module Sanitizer
+      module VendorMethods
+        def full_sanitizer
+          Rails::HTML4::FullSanitizer
+        end
+
+        def link_sanitizer
+          Rails::HTML4::LinkSanitizer
+        end
+
+        def safe_list_sanitizer
+          Rails::HTML4::SafeListSanitizer
+        end
+
+        def white_list_sanitizer # :nodoc:
+          safe_list_sanitizer
+        end
+      end
+
+      extend VendorMethods
+    end
+
     # == Rails::HTML4::FullSanitizer
     #
     # Removes all tags from HTML4 but strips out scripts, forms and comments.
@@ -299,6 +305,26 @@ module Rails
   end
 
   module HTML5
+    class Sanitizer
+      class << self
+        def full_sanitizer
+          Rails::HTML5::FullSanitizer
+        end
+
+        def link_sanitizer
+          Rails::HTML5::LinkSanitizer
+        end
+
+        def safe_list_sanitizer
+          Rails::HTML5::SafeListSanitizer
+        end
+
+        def white_list_sanitizer # :nodoc:
+          safe_list_sanitizer
+        end
+      end
+    end
+
     # == Rails::HTML5::FullSanitizer
     #
     # Removes all tags from HTML5 but strips out scripts, forms and comments.
@@ -389,6 +415,7 @@ module Rails
   end if Rails::HTML::Sanitizer.html5_support?
 
   module HTML
+    Sanitizer.extend(HTML4::Sanitizer::VendorMethods) # :nodoc:
     FullSanitizer = HTML4::FullSanitizer # :nodoc:
     LinkSanitizer = HTML4::LinkSanitizer # :nodoc:
     SafeListSanitizer = HTML4::SafeListSanitizer # :nodoc:
