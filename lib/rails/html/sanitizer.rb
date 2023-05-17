@@ -182,12 +182,6 @@ module Rails
             properly_encode(fragment, encoding: "UTF-8")
           end
         end
-
-        module SimpleString
-          def serialize(fragment)
-            fragment.to_s
-          end
-        end
       end
     end
   end
@@ -242,7 +236,7 @@ module Rails
       include HTML::Concern::ComposedSanitize
       include HTML::Concern::Parser::HTML4
       include HTML::Concern::Scrubber::Link
-      include HTML::Concern::Serializer::SimpleString
+      include HTML::Concern::Serializer::UTF8Encode
     end
 
     # == Rails::HTML4::SafeListSanitizer
@@ -352,7 +346,7 @@ module Rails
       include HTML::Concern::ComposedSanitize
       include HTML::Concern::Parser::HTML5
       include HTML::Concern::Scrubber::Link
-      include HTML::Concern::Serializer::SimpleString
+      include HTML::Concern::Serializer::UTF8Encode
     end
 
     # == Rails::HTML5::SafeListSanitizer

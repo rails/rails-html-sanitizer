@@ -174,6 +174,13 @@ module SanitizerTests
       assert_equal "omg &lt;script&gt;BOM&lt;/script&gt;", full_sanitize("omg &lt;script&gt;BOM&lt;/script&gt;")
     end
 
+    def test_sanitize_ascii_8bit_string
+      full_sanitize("<div><a>hello</a></div>".encode("ASCII-8BIT")).tap do |sanitized|
+        assert_equal "hello", sanitized
+        assert_equal Encoding::UTF_8, sanitized.encoding
+      end
+    end
+
     protected
       def full_sanitize(input, options = {})
         module_under_test::FullSanitizer.new.sanitize(input, options)
@@ -221,6 +228,13 @@ module SanitizerTests
 
     def test_strip_links_with_linkception
       assert_equal "Magic", link_sanitize("<a href='http://www.rubyonrails.com/'>Mag<a href='http://www.ruby-lang.org/'>ic")
+    end
+
+    def test_sanitize_ascii_8bit_string
+      link_sanitize("<div><a>hello</a></div>".encode("ASCII-8BIT")).tap do |sanitized|
+        assert_equal "<div>hello</div>", sanitized
+        assert_equal Encoding::UTF_8, sanitized.encoding
+      end
     end
 
     protected
@@ -671,8 +685,8 @@ module SanitizerTests
     end
 
     def test_sanitize_ascii_8bit_string
-      safe_list_sanitize("<a>hello</a>".encode("ASCII-8BIT")).tap do |sanitized|
-        assert_equal "<a>hello</a>", sanitized
+      safe_list_sanitize("<div><a>hello</a></div>".encode("ASCII-8BIT")).tap do |sanitized|
+        assert_equal "<div><a>hello</a></div>", sanitized
         assert_equal Encoding::UTF_8, sanitized.encoding
       end
     end

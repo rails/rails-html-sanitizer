@@ -32,12 +32,17 @@
 
   *Mike Dalessio*
 
+* `LinkSanitizer` always returns UTF-8 encoded strings. `SafeListSanitizer` and `FullSanitizer`
+  already ensured this encoding.
+
+  *Mike Dalessio*
+
 * `SafeListSanitizer` allows `time` tag and `lang` attribute by default.
 
   *Mike Dalessio*
 
-* `Rails::Html::XPATHS_TO_REMOVE` has been removed. It's not necessary with the existing sanitizers,
-  and should have been a private constant all along anyway.
+* The constant `Rails::Html::XPATHS_TO_REMOVE` has been removed. It's not necessary with the
+  existing sanitizers, and should have been a private constant all along anyway.
 
   *Mike Dalessio*
 
