@@ -1,16 +1,43 @@
 ## next / unreleased
 
+* Sanitizers that use an HTML5 parser are now available on platforms supported by
+  Nokogiri::HTML5. These are available as:
+
+  - `Rails::HTML5::FullSanitizer`
+  - `Rails::HTML5::LinkSanitizer`
+  - `Rails::HTML5::SafeListSanitizer`
+
+  And a new "vendor" is provided at `Rails::HTML5::Sanitizer` that can be used in a future version
+  of Rails.
+
+  Note that for symmetry `Rails::HTML4::Sanitizer` is also added, though its behavior is identical
+  to the vendor class methods on `Rails::HTML::Sanitizer`.
+
+  *Mike Dalessio*
+
+* Module namespaces have changed, but backwards compatibility is provided by aliases.
+
+  The library defines three additional modules:
+
+  - `Rails::HTML` for general functionality (replacing `Rails::Html`)
+  - `Rails::HTML4` containing sanitizers that parse content as HTML4
+  - `Rails::HTML5` containing sanitizers that parse content as HTML5
+
+  The following aliases are maintained for backwards compatibility:
+
+  - `Rails::Html` points to `Rails::HTML`
+  - `Rails::HTML::FullSanitizer` points to `Rails::HTML4::FullSanitizer`
+  - `Rails::HTML::LinkSanitizer` points to `Rails::HTML4::LinkSanitizer`
+  - `Rails::HTML::SafeListSanitizer` points to `Rails::HTML4::SafeListSanitizer`
+
+  *Mike Dalessio*
+
 * `SafeListSanitizer` allows `time` tag and `lang` attribute by default.
 
   *Mike Dalessio*
 
 * `Rails::Html::XPATHS_TO_REMOVE` has been removed. It's not necessary with the existing sanitizers,
   and should have been a private constant all along anyway.
-
-  *Mike Dalessio*
-
-* `Rails::Html` has been renamed to `Rails::HTML`, but this module is aliased to `Rails::Html` for
-  backwards compatibility.
 
   *Mike Dalessio*
 
@@ -23,6 +50,7 @@
   and its children from the document by passing `prune: true` to any of these classes' constructors.
 
   *seyerian*
+
 
 ## 1.4.4 / 2022-12-13
 
@@ -69,6 +97,7 @@
 
   *Mike Dalessio*
 
+
 ## 1.4.2 / 2021-08-23
 
 * Slightly improve performance.
@@ -76,6 +105,7 @@
   Assuming elements are more common than comments, make one less method call per node.
 
   *Mike Dalessio*
+
 
 ## 1.4.1 / 2021-08-18
 
@@ -89,6 +119,7 @@
 
   *Mike Dalessio*
 
+
 ## 1.4.0 / 2021-08-18
 
 * Processing Instructions are no longer allowed by Rails::Html::PermitScrubber
@@ -101,11 +132,13 @@
 
   *Mike Dalessio*
 
+
 ## 1.3.0
 
 * Address deprecations in Loofah 2.3.0.
 
   *Josh Goodall*
+
 
 ## 1.2.0
 
@@ -120,6 +153,7 @@
   Rails 6 can use the updated naming.
 
   *Kasper Timm Hansen*
+
 
 ## 1.1.0
 
@@ -138,9 +172,11 @@
 
   *Kasper Timm Hansen*
 
+
 ## 1.0.1
 
 * Added support for Rails 4.2.0.beta2 and above
+
 
 ## 1.0.0
 
