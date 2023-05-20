@@ -71,4 +71,9 @@ class RailsApiTest < Minitest::Test
     skip("no HTML5 support on this platform") unless Rails::HTML::Sanitizer.html5_support?
     assert_equal(Rails::HTML5::SafeListSanitizer, Rails::HTML5::Sanitizer.white_list_sanitizer)
   end
+
+  def test_html5_sanitizer_not_defined_if_not_supported
+    skip("HTML5 is supported on this platform") if Rails::HTML::Sanitizer.html5_support?
+    assert_nil(defined?(Rails::HTML5::Sanitizer))
+  end
 end
