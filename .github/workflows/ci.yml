@@ -40,6 +40,18 @@ jobs:
           bundler-cache: true
       - run: bundle exec rake
 
+  cruby-old-dependencies:
+    runs-on: ubuntu-latest
+    env:
+      TEST_WITH_OLD_DEPENDENCIES: t
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "2.5"
+          bundler-cache: true
+      - run: bundle exec rake
+
   cruby-nokogiri-system-libraries:
     runs-on: ubuntu-20.04
     steps:

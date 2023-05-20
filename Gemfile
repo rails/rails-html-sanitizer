@@ -15,6 +15,7 @@ group :rubocop do
   gem "rubocop-rails", require: false
 end
 
-# specify gem versions for old rubies
-gem "nokogiri", RUBY_VERSION < "2.1" ? "~> 1.6.0" : ">= 1.7"
-gem "activesupport", RUBY_VERSION < "2.2.2" ? "~> 4.2.0" : ">= 5"
+if ENV["TEST_WITH_OLD_DEPENDENCIES"]
+  gem "nokogiri", "< 1.12.0"
+  gem "loofah", "< 2.21.0"
+end
