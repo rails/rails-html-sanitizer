@@ -1,17 +1,17 @@
 # Rails HTML Sanitizers
 
-In Rails 4.2 and above this gem will be responsible for sanitizing HTML fragments in Rails
-applications, i.e. in the `sanitize`, `sanitize_css`, `strip_tags` and `strip_links` methods.
+This gem is responsible for sanitizing HTML fragments in Rails applications. Specifically, this is the set of sanitizers used to implement the Action View `SanitizerHelper` methods `sanitize`, `sanitize_css`, `strip_tags` and `strip_links`.
 
-Rails HTML Sanitizer is only intended to be used with Rails applications. If you need similar functionality in non Rails apps consider using [Loofah](https://github.com/flavorjones/loofah) directly (that's what handles sanitization under the hood).
+Rails HTML Sanitizer is only intended to be used with Rails applications. If you need similar functionality but aren't using Rails, consider using the underlying sanitization library [Loofah](https://github.com/flavorjones/loofah) directly.
+
 
 ## Usage
 
 ### A note on HTML entities
 
-__Rails HTML sanitizers are intended to be used by the view layer, at page-render time. They are *not* intended to sanitize persisted strings that will sanitized *again* at page-render time.__
+__Rails HTML sanitizers are intended to be used by the view layer, at page-render time. They are *not* intended to sanitize persisted strings that will be sanitized *again* at page-render time.__
 
-Proper HTML sanitization will replace some characters with HTML entities. For example, `<` will be replaced with `&lt;` to ensure that the markup is well-formed.
+Proper HTML sanitization will replace some characters with HTML entities. For example, text containing a `<` character will be updated to contain `&lt;` to ensure that the markup is well-formed.
 
 This is important to keep in mind because __HTML entities will render improperly if they are sanitized twice.__
 
@@ -42,7 +42,7 @@ In versions < 1.6, the only module defined by this library was `Rails::Html`. St
 
 - `Rails::HTML` for general functionality (replacing `Rails::Html`)
 - `Rails::HTML4` containing sanitizers that parse content as HTML4
-- `Rails::HTML5` containing sanitizers that parse content as HTML5
+- `Rails::HTML5` containing sanitizers that parse content as HTML5 (if supported)
 
 The following aliases are maintained for backwards compatibility:
 
@@ -187,6 +187,7 @@ html_fragment = Loofah.fragment('<a><span>text</span></a>')
 html_fragment.scrub!(scrubber)
 html_fragment.to_s # => "<a></a>"
 ```
+
 #### Custom Scrubbers
 
 You can also create custom scrubbers in your application if you want to.
@@ -250,9 +251,7 @@ See [CONTRIBUTING](CONTRIBUTING.md).
 
 ### Security reports
 
-Trying to report a possible security vulnerability in this project? Please
-check out our [security policy](https://rubyonrails.org/security) for
-guidelines about how to proceed.
+Trying to report a possible security vulnerability in this project? Please check out the [Rails project's security policy](https://rubyonrails.org/security) for instructions.
 
 
 ## License
