@@ -3,7 +3,8 @@
 require "minitest/autorun"
 require "rails-html-sanitizer"
 
-puts Nokogiri::VERSION_INFO
+puts "nokogiri version info: #{Nokogiri::VERSION_INFO}"
+puts "html5 support: #{Rails::HTML::Sanitizer.html5_support?}"
 
 #
 #  NOTE that many of these tests contain multiple acceptable results.
