@@ -39,7 +39,7 @@ module Rails
       module Parser
         module HTML4
           def parse_fragment(html)
-            Loofah.html4_fragment(html)
+            Loofah.fragment(html) # TODO: update to html4_fragment when we require Loofah >= 2.21
           end
         end
 
