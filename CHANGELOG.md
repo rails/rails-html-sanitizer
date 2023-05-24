@@ -1,4 +1,4 @@
-## next / unreleased
+## 1.6.0.rc1 / 2023-05-24
 
 * Sanitizers that use an HTML5 parser are now available on platforms supported by
   Nokogiri::HTML5. These are available as:
