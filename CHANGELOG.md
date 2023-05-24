@@ -1,6 +1,6 @@
 ## 1.6.0.rc1 / 2023-05-24
 
-* Sanitizers that use an HTML5 parser are now available on platforms supported by
+* HTML5 standards-compliant sanitizers are now available on platforms supported by
   Nokogiri::HTML5. These are available as:
 
   - `Rails::HTML5::FullSanitizer`
@@ -12,6 +12,9 @@
 
   Note that for symmetry `Rails::HTML4::Sanitizer` is also added, though its behavior is identical
   to the vendor class methods on `Rails::HTML::Sanitizer`.
+
+  Users may call `Rails::HTML::Sanitizer.best_supported_vendor` to get back the HTML5 vendor if it's
+  supported, else the legacy HTML4 vendor.
 
   *Mike Dalessio*
 
