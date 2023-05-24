@@ -1,4 +1,4 @@
-## 1.6.0.rc1 / 2023-05-24
+## 1.6.0.rc2 / 2023-05-24
 
 * HTML5 standards-compliant sanitizers are now available on platforms supported by
   Nokogiri::HTML5. These are available as:
