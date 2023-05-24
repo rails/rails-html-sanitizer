@@ -9,6 +9,10 @@ module Rails
 
           @html5_support = Loofah.respond_to?(:html5_support?) && Loofah.html5_support?
         end
+
+        def best_supported_vendor
+          html5_support? ? Rails::HTML5::Sanitizer : Rails::HTML4::Sanitizer
+        end
       end
 
       def sanitize(html, options = {})
