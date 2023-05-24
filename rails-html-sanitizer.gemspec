@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/rails/rails-html-sanitizer"
   spec.license       = "MIT"
 
-  spec.required_ruby_version = ">= 2.5.0"
+  spec.required_ruby_version = ">= 2.7.0"
 
   spec.metadata = {
     "bug_tracker_uri"   => "https://github.com/rails/rails-html-sanitizer/issues",
@@ -26,7 +26,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = Dir["test/**/*"]
   spec.require_paths = ["lib"]
 
-  # NOTE: There's no need to update this dependency for Loofah CVEs
-  # in minor releases when users can simply run `bundle update loofah`.
-  spec.add_dependency "loofah", "~> 2.19", ">= 2.19.1"
+  # NOTE: There's no need to update dependencies for CVEs in minor releases
+  # when users can simply run `bundle update loofah`.
+  spec.add_dependency "loofah", "~> 2.21"
+  spec.add_dependency "nokogiri", "~> 1.14"
 end

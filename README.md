@@ -56,6 +56,9 @@ The following aliases are maintained for backwards compatibility:
 
 All sanitizers respond to `sanitize`, and are available in variants that use either HTML4 or HTML5 parsing, under the `Rails::HTML4` and `Rails::HTML5` namespaces, respectively.
 
+NOTE: The HTML5 sanitizers are not supported on JRuby. Users may programmatically check for support by calling `Rails::HTML::Sanitizer.html5_support?`.
+
+
 #### FullSanitizer
 
 ```ruby
