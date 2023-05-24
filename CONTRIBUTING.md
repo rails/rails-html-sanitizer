@@ -5,6 +5,8 @@ Contributing to Rails Html Sanitizers
 
 Rails Html Sanitizers is work of [many contributors](https://github.com/rails/rails-html-sanitizer/graphs/contributors). You're encouraged to submit [pull requests](https://github.com/rails/rails-html-sanitizer/pulls), [propose features and discuss issues](https://github.com/rails/rails-html-sanitizer/issues).
 
+### How to submit a pull request
+
 #### Fork the Project
 
 Fork the [project on Github](https://github.com/rails/rails-html-sanitizer) and check out your copy.
@@ -97,3 +99,19 @@ It's likely that your change will not be merged and that the nitpicky maintainer
 #### Thank You
 
 Please do know that we really appreciate and value your time and work. We love you, really.
+
+### How to cut a release
+
+A quick checklist:
+
+- [ ] make sure CI is green! https://github.com/rails/rails-html-sanitizer/actions/workflows/ci.yml
+- [ ] update `CHANGELOG.md` and `lib/rails/html/sanitizer/version.rb`
+- [ ] run `bundle exec rake build`
+- [ ] create a git tag
+- [ ] `git push && git push --tags`
+- [ ] `gem push pkg/*.gem`
+- [ ] create a release at https://github.com/rails/rails-html-sanitizer/releases
+- if security-related,
+  - [ ] publish the CVE
+  - [ ] post to https://discuss.rubyonrails.org/c/security-announcements
+  - [ ] submit a PR to https://github.com/rubysec/ruby-advisory-db
