@@ -1,4 +1,13 @@
 ## 1.6.0.rc2 / 2023-05-24
+* Dependencies have been updated:
+
+  - Loofah `~>2.21` and Nokogiri `~>1.14` for HTML5 parser support
+  - As a result, required Ruby version is now `>= 2.7.0`
+
+  Security updates will continue to be made on the `1.5.x` release branch as long as Rails 6.1
+  (which supports Ruby 2.5) is still in security support.
+
+  *Mike Dalessio*
 
 * HTML5 standards-compliant sanitizers are now available on platforms supported by
   Nokogiri::HTML5. These are available as:

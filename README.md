@@ -234,6 +234,15 @@ Or install it yourself as:
     $ gem install rails-html-sanitizer
 
 
+## Support matrix
+
+| branch | ruby support | actively maintained | security support                       |
+|--------|--------------|---------------------|----------------------------------------|
+| 1.6.x  | >= 2.7       | yes                 | yes                                    |
+| 1.5.x  | >= 2.5       | no                  | while Rails 6.1 is in security support |
+| 1.4.x  | >= 1.8.7     | no                  | no                                     |
+
+
 ## Read more
 
 Loofah is what underlies the sanitizers and scrubbers of rails-html-sanitizer.
