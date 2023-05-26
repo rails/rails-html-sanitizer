@@ -1,4 +1,5 @@
-## 1.6.0.rc2 / 2023-05-24
+## 1.6.0 / 2023-05-26
+
 * Dependencies have been updated:
 
   - Loofah `~>2.21` and Nokogiri `~>1.14` for HTML5 parser support
