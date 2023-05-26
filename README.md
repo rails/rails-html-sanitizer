@@ -7,51 +7,6 @@ Rails HTML Sanitizer is only intended to be used with Rails applications. If you
 
 ## Usage
 
-### A note on HTML entities
-
-__Rails HTML sanitizers are intended to be used by the view layer, at page-render time. They are *not* intended to sanitize persisted strings that will be sanitized *again* at page-render time.__
-
-Proper HTML sanitization will replace some characters with HTML entities. For example, text containing a `<` character will be updated to contain `&lt;` to ensure that the markup is well-formed.
-
-This is important to keep in mind because __HTML entities will render improperly if they are sanitized twice.__
-
-
-#### A concrete example showing the problem that can arise
-
-Imagine the user is asked to enter their employer's name, which will appear on their public profile page. Then imagine they enter `JPMorgan Chase & Co.`.
-
-If you sanitize this before persisting it in the database, the stored string will be `JPMorgan Chase &amp; Co.`
-
-When the page is rendered, if this string is sanitized a second time by the view layer, the HTML will contain `JPMorgan Chase &amp;amp; Co.` which will render as "JPMorgan Chase &amp;amp; Co.".
-
-Another problem that can arise is rendering the sanitized string in a non-HTML context (for example, if it ends up being part of an SMS message). In this case, it may contain inappropriate HTML entities.
-
-
-#### Suggested alternatives
-
-You might simply choose to persist the untrusted string as-is (the raw input), and then ensure that the string will be properly sanitized by the view layer.
-
-That raw string, if rendered in an non-HTML context (like SMS), must also be sanitized by a method appropriate for that context. You may wish to look into using [Loofah](https://github.com/flavorjones/loofah) or [Sanitize](https://github.com/rgrove/sanitize) to customize how this sanitization works, including omitting HTML entities in the final string.
-
-If you really want to sanitize the string that's stored in your database, you may wish to look into  [Loofah::ActiveRecord](https://github.com/flavorjones/loofah-activerecord) rather than use the Rails HTML sanitizers.
-
-
-### A note on module names
-
-In versions < 1.6, the only module defined by this library was `Rails::Html`. Starting in 1.6, we define three additional modules:
-
-- `Rails::HTML` for general functionality (replacing `Rails::Html`)
-- `Rails::HTML4` containing sanitizers that parse content as HTML4
-- `Rails::HTML5` containing sanitizers that parse content as HTML5 (if supported)
-
-The following aliases are maintained for backwards compatibility:
-
-- `Rails::Html` points to `Rails::HTML`
-- `Rails::HTML::FullSanitizer` points to `Rails::HTML4::FullSanitizer`
-- `Rails::HTML::LinkSanitizer` points to `Rails::HTML4::LinkSanitizer`
-- `Rails::HTML::SafeListSanitizer` points to `Rails::HTML4::SafeListSanitizer`
-
-
 ### Sanitizers
 
 All sanitizers respond to `sanitize`, and are available in variants that use either HTML4 or HTML5 parsing, under the `Rails::HTML4` and `Rails::HTML5` namespaces, respectively.
@@ -218,6 +173,51 @@ Using the `CommentScrubber` from above, you can use this in a Rails view like so
 ```ruby
 <%= sanitize @comment, scrubber: CommentScrubber.new %>
 ```
+
+### A note on HTML entities
+
+__Rails HTML sanitizers are intended to be used by the view layer, at page-render time. They are *not* intended to sanitize persisted strings that will be sanitized *again* at page-render time.__
+
+Proper HTML sanitization will replace some characters with HTML entities. For example, text containing a `<` character will be updated to contain `&lt;` to ensure that the markup is well-formed.
+
+This is important to keep in mind because __HTML entities will render improperly if they are sanitized twice.__
+
+
+#### A concrete example showing the problem that can arise
+
+Imagine the user is asked to enter their employer's name, which will appear on their public profile page. Then imagine they enter `JPMorgan Chase & Co.`.
+
+If you sanitize this before persisting it in the database, the stored string will be `JPMorgan Chase &amp; Co.`
+
+When the page is rendered, if this string is sanitized a second time by the view layer, the HTML will contain `JPMorgan Chase &amp;amp; Co.` which will render as "JPMorgan Chase &amp;amp; Co.".
+
+Another problem that can arise is rendering the sanitized string in a non-HTML context (for example, if it ends up being part of an SMS message). In this case, it may contain inappropriate HTML entities.
+
+
+#### Suggested alternatives
+
+You might simply choose to persist the untrusted string as-is (the raw input), and then ensure that the string will be properly sanitized by the view layer.
+
+That raw string, if rendered in an non-HTML context (like SMS), must also be sanitized by a method appropriate for that context. You may wish to look into using [Loofah](https://github.com/flavorjones/loofah) or [Sanitize](https://github.com/rgrove/sanitize) to customize how this sanitization works, including omitting HTML entities in the final string.
+
+If you really want to sanitize the string that's stored in your database, you may wish to look into  [Loofah::ActiveRecord](https://github.com/flavorjones/loofah-activerecord) rather than use the Rails HTML sanitizers.
+
+
+### A note on module names
+
+In versions < 1.6, the only module defined by this library was `Rails::Html`. Starting in 1.6, we define three additional modules:
+
+- `Rails::HTML` for general functionality (replacing `Rails::Html`)
+- `Rails::HTML4` containing sanitizers that parse content as HTML4
+- `Rails::HTML5` containing sanitizers that parse content as HTML5 (if supported)
+
+The following aliases are maintained for backwards compatibility:
+
+- `Rails::Html` points to `Rails::HTML`
+- `Rails::HTML::FullSanitizer` points to `Rails::HTML4::FullSanitizer`
+- `Rails::HTML::LinkSanitizer` points to `Rails::HTML4::LinkSanitizer`
+- `Rails::HTML::SafeListSanitizer` points to `Rails::HTML4::SafeListSanitizer`
+
 
 ## Installation
 
