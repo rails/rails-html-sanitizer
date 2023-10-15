@@ -59,3 +59,5 @@ module ActionView
     end
   end
 end
+
+require_relative "railtie"
