@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-module Rails
+module ActionView
   module HTML
-    # === Rails::HTML::PermitScrubber
+    # === ActionView::HTML::PermitScrubber
     #
-    # +Rails::HTML::PermitScrubber+ allows you to permit only your own tags and/or attributes.
+    # +ActionView::HTML::PermitScrubber+ allows you to permit only your own tags and/or attributes.
     #
-    # +Rails::HTML::PermitScrubber+ can be subclassed to determine:
+    # +ActionView::HTML::PermitScrubber+ can be subclassed to determine:
     # - When a node should be skipped via +skip_node?+.
     # - When a node is allowed via +allowed_node?+.
     # - When an attribute should be scrubbed via +scrub_attribute?+.
@@ -29,7 +29,7 @@ module Rails
     # If set, attributes excluded will be removed.
     # If not, attributes are removed based on Loofahs +HTML5::Scrub.scrub_attributes+.
     #
-    #  class CommentScrubber < Rails::HTML::PermitScrubber
+    #  class CommentScrubber < ActionView::HTML::PermitScrubber
     #    def initialize
     #      super
     #      self.tags = %w(form script comment blockquote)
@@ -158,10 +158,10 @@ module Rails
         end
     end
 
-    # === Rails::HTML::TargetScrubber
+    # === ActionView::HTML::TargetScrubber
     #
-    # Where +Rails::HTML::PermitScrubber+ picks out tags and attributes to permit in
-    # sanitization, +Rails::HTML::TargetScrubber+ targets them for removal.
+    # Where +ActionView::HTML::PermitScrubber+ picks out tags and attributes to permit in
+    # sanitization, +ActionView::HTML::TargetScrubber+ targets them for removal.
     #
     # +tags=+
     # If set, elements included will be stripped.
@@ -178,9 +178,9 @@ module Rails
       end
     end
 
-    # === Rails::HTML::TextOnlyScrubber
+    # === ActionView::HTML::TextOnlyScrubber
     #
-    # +Rails::HTML::TextOnlyScrubber+ allows you to permit text nodes.
+    # +ActionView::HTML::TextOnlyScrubber+ allows you to permit text nodes.
     #
     # Unallowed elements will be stripped, i.e. element is removed but its subtree kept.
     class TextOnlyScrubber < Loofah::Scrubber

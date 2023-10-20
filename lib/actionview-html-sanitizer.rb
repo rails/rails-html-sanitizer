@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "rails/html/sanitizer/version"
+require_relative "action_view/html/sanitizer/version"
 
 require "loofah"
 
-require_relative "rails/html/scrubbers"
-require_relative "rails/html/sanitizer"
+require_relative "action_view/html/scrubbers"
+require_relative "action_view/html/sanitizer"
 
-module Rails
+module ActionView
   Html = HTML # :nodoc:
 end
 
@@ -17,7 +17,7 @@ module ActionView
       module ClassMethods
         # Replaces the allowed tags for the +sanitize+ helper.
         #
-        #   class Application < Rails::Application
+        #   class Application < ActionView::Application
         #     config.action_view.sanitized_allowed_tags = 'table', 'tr', 'td'
         #   end
         #
@@ -27,7 +27,7 @@ module ActionView
 
         # Replaces the allowed HTML attributes for the +sanitize+ helper.
         #
-        #   class Application < Rails::Application
+        #   class Application < ActionView::Application
         #     config.action_view.sanitized_allowed_attributes = ['onclick', 'longdesc']
         #   end
         #
@@ -51,9 +51,9 @@ module ActionView
         private
           def deprecate_option(name)
             ActiveSupport::Deprecation.warn "The #{name} option is deprecated " \
-              "and has no effect. Until Rails 5 the old behavior can still be " \
+              "and has no effect. Until ActionView 5 the old behavior can still be " \
               "installed. To do this add the `rails-deprecated-sanitizer` to " \
-              "your Gemfile. Consult the Rails 4.2 upgrade guide for more information."
+              "your Gemfile. Consult the ActionView 4.2 upgrade guide for more information."
           end
       end
     end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
-require "rails-html-sanitizer"
+require "actionview-html-sanitizer"
 
 class ScrubberTest < Minitest::Test
   protected
@@ -34,7 +34,7 @@ end
 
 class PermitScrubberTest < ScrubberTest
   def setup
-    @scrubber = Rails::HTML::PermitScrubber.new
+    @scrubber = ActionView::HTML::PermitScrubber.new
   end
 
   def test_responds_to_scrub
@@ -80,7 +80,7 @@ class PermitScrubberTest < ScrubberTest
   end
 
   def test_prunes_tags
-    @scrubber = Rails::HTML::PermitScrubber.new(prune: true)
+    @scrubber = ActionView::HTML::PermitScrubber.new(prune: true)
     @scrubber.tags = %w(tag)
     html = "<tag>leave me <span>now</span></tag>"
     assert_scrubbed html, "<tag>leave me </tag>"
@@ -150,7 +150,7 @@ end
 
 class TargetScrubberTest < ScrubberTest
   def setup
-    @scrubber = Rails::HTML::TargetScrubber.new
+    @scrubber = ActionView::HTML::TargetScrubber.new
   end
 
   def test_targeting_tags_removes_only_them
@@ -179,7 +179,7 @@ class TargetScrubberTest < ScrubberTest
   end
 
   def test_prunes_tags
-    @scrubber = Rails::HTML::TargetScrubber.new(prune: true)
+    @scrubber = ActionView::HTML::TargetScrubber.new(prune: true)
     @scrubber.tags = %w(span)
     html = "<tag>leave me <span>now</span></tag>"
     assert_scrubbed html, "<tag>leave me </tag>"
@@ -188,7 +188,7 @@ end
 
 class TextOnlyScrubberTest < ScrubberTest
   def setup
-    @scrubber = Rails::HTML::TextOnlyScrubber.new
+    @scrubber = ActionView::HTML::TextOnlyScrubber.new
   end
 
   def test_removes_all_tags_and_keep_the_content
@@ -201,7 +201,7 @@ class TextOnlyScrubberTest < ScrubberTest
 end
 
 class ReturningStopFromScrubNodeTest < ScrubberTest
-  class ScrubStopper < Rails::HTML::PermitScrubber
+  class ScrubStopper < ActionView::HTML::PermitScrubber
     def scrub_node(node)
       Loofah::Scrubber::STOP
     end

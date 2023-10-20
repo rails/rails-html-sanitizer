@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
-require "rails-html-sanitizer"
+require "actionview-html-sanitizer"
 
 puts "nokogiri version info: #{Nokogiri::VERSION_INFO}"
-puts "html5 support: #{Rails::HTML::Sanitizer.html5_support?}"
+puts "html5 support: #{ActionView::HTML::Sanitizer.html5_support?}"
 
 #
 #  NOTE that many of these tests contain multiple acceptable results.
@@ -27,7 +27,7 @@ module SanitizerTests
   end
 
   class BaseSanitizerTest < Minitest::Test
-    class XpathRemovalTestSanitizer < Rails::HTML::Sanitizer
+    class XpathRemovalTestSanitizer < ActionView::HTML::Sanitizer
       def sanitize(html, options = {})
         fragment = Loofah.fragment(html)
         remove_xpaths(fragment, options[:xpaths]).to_s
@@ -36,7 +36,7 @@ module SanitizerTests
 
     def test_sanitizer_sanitize_raises_not_implemented_error
       assert_raises NotImplementedError do
-        Rails::HTML::Sanitizer.new.sanitize("asdf")
+        ActionView::HTML::Sanitizer.new.sanitize("asdf")
       end
     end
 
@@ -189,12 +189,12 @@ module SanitizerTests
   end
 
   class HTML4FullSanitizerTest < Minitest::Test
-    @module_under_test = Rails::HTML4
+    @module_under_test = ActionView::HTML4
     include FullSanitizerTest
   end
 
   class HTML5FullSanitizerTest < Minitest::Test
-    @module_under_test = Rails::HTML5
+    @module_under_test = ActionView::HTML5
     include FullSanitizerTest
   end if loofah_html5_support?
 
@@ -245,12 +245,12 @@ module SanitizerTests
   end
 
   class HTML4LinkSanitizerTest < Minitest::Test
-    @module_under_test = Rails::HTML4
+    @module_under_test = ActionView::HTML4
     include LinkSanitizerTest
   end
 
   class HTML5LinkSanitizerTest < Minitest::Test
-    @module_under_test = Rails::HTML5
+    @module_under_test = ActionView::HTML5
     include LinkSanitizerTest
   end if loofah_html5_support?
 
@@ -1076,12 +1076,12 @@ module SanitizerTests
   end
 
   class HTML4SafeListSanitizerTest < Minitest::Test
-    @module_under_test = Rails::HTML4
+    @module_under_test = ActionView::HTML4
     include SafeListSanitizerTest
   end
 
   class HTML5SafeListSanitizerTest < Minitest::Test
-    @module_under_test = Rails::HTML5
+    @module_under_test = ActionView::HTML5
     include SafeListSanitizerTest
   end if loofah_html5_support?
 end

@@ -1,3 +1,7 @@
+## Unreleased
+
+* Rename actionview-html-sanitizer. Related: https://github.com/rails/rails/pull/49643
+
 ## 1.6.0 / 2023-05-26
 
 * Dependencies have been updated:

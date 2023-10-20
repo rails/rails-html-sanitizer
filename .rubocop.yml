@@ -24,19 +24,19 @@ Performance:
     - '**/test/**/*'
 
 # Prefer assert_not over assert !
-Rails/AssertNot:
+ActionView/AssertNot:
   Include:
     - '**/test/**/*'
 
 # Prefer assert_not_x over refute_x
-Rails/RefuteMethods:
+ActionView/RefuteMethods:
   Include:
     - '**/test/**/*'
 
-Rails/IndexBy:
+ActionView/IndexBy:
   Enabled: true
 
-Rails/IndexWith:
+ActionView/IndexWith:
   Enabled: true
 
 # Prefer &&/|| over and/or.
