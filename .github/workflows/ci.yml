@@ -19,10 +19,10 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2"
+          ruby-version: "3.3"
           bundler-cache: true
       - run: bundle exec rubocop
 
@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["2.7", "3.0", "3.1", "3.2", '3.3', "ruby-head", "truffleruby-head", "jruby-9.4", "jruby-head"]
+        ruby: ["2.7", "3.0", "3.1", "3.2", "3.3", "ruby-head", "truffleruby-head", "jruby-9.4", "jruby-head"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -43,10 +43,10 @@ jobs:
   cruby-nokogiri-system-libraries:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2"
+          ruby-version: "3.3"
       - name: Install nokogiri with system libraries
         run: |
           sudo apt install pkg-config libxml2-dev libxslt-dev
