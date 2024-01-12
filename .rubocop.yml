@@ -223,11 +223,23 @@ Lint/ErbNewArguments:
 Lint/EnsureReturn:
   Enabled: true
 
+Lint/MissingCopEnableDirective:
+  Enabled: true
+
 # Use my_method(my_arg) not my_method( my_arg ) or my_method my_arg.
 Lint/RequireParentheses:
   Enabled: true
 
+Lint/RedundantCopDisableDirective:
+  Enabled: true
+
+Lint/RedundantCopEnableDirective:
+  Enabled: true
+
 Lint/RedundantStringCoercion:
+  Enabled: true
+
+Lint/RedundantSafeNavigation:
   Enabled: true
 
 Lint/UriEscapeUnescape:
@@ -237,6 +249,14 @@ Lint/UselessAssignment:
   Enabled: true
 
 Lint/DeprecatedClassMethods:
+  Enabled: true
+
+Lint/InterpolationCheck:
+  Enabled: true
+  Exclude:
+    - '**/test/**/*'
+
+Lint/SafeNavigationChain:
   Enabled: true
 
 Style/EvalWithLocation:
@@ -278,6 +298,12 @@ Style/TrivialAccessors:
 Style/RedundantCondition:
   Enabled: true
 
+Style/RedundantDoubleSplatHashBraces:
+  Enabled: true
+
+Style/ArrayIntersect:
+  Enabled: true
+
 Performance/BindCall:
   Enabled: true
 
@@ -308,9 +334,6 @@ Performance/ReverseEach:
 Performance/StringReplacement:
   Enabled: true
 
-Performance/UnfreezeString:
-  Enabled: true
-
 Performance/DeletePrefix:
   Enabled: true
 
@@ -332,10 +355,19 @@ Performance/RedundantStringChars:
 Performance/StringInclude:
   Enabled: true
 
+Minitest/AssertPredicate:
+  Enabled: true
+
 Minitest/AssertRaisesWithRegexpArgument:
   Enabled: true
 
 Minitest/AssertWithExpectedArgument:
+  Enabled: true
+
+Minitest/LiteralAsActualArgument:
+  Enabled: true
+
+Minitest/NonExecutableTestMethod:
   Enabled: true
 
 Minitest/SkipEnsure:
