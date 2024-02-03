@@ -728,8 +728,6 @@ module SanitizerTests
     end
 
     def test_uri_escaping_of_href_attr_in_a_tag_in_safe_list_sanitizer
-      skip if RUBY_VERSION < "2.3"
-
       html = %{<a href='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
       text = safe_list_sanitize(html)
@@ -747,8 +745,6 @@ module SanitizerTests
     end
 
     def test_uri_escaping_of_src_attr_in_a_tag_in_safe_list_sanitizer
-      skip if RUBY_VERSION < "2.3"
-
       html = %{<a src='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
       text = safe_list_sanitize(html)
@@ -766,8 +762,6 @@ module SanitizerTests
     end
 
     def test_uri_escaping_of_name_attr_in_a_tag_in_safe_list_sanitizer
-      skip if RUBY_VERSION < "2.3"
-
       html = %{<a name='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
       text = safe_list_sanitize(html)
@@ -785,8 +779,6 @@ module SanitizerTests
     end
 
     def test_uri_escaping_of_name_action_in_a_tag_in_safe_list_sanitizer
-      skip if RUBY_VERSION < "2.3"
-
       html = %{<a action='examp<!--" unsafeattr=foo()>-->le.com'>test</a>}
 
       text = safe_list_sanitize(html, attributes: ["action"])
