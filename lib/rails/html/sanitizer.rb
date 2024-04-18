@@ -106,6 +106,7 @@ module Rails
                                            "ins",
                                            "kbd",
                                            "li",
+                                           "mark",
                                            "ol",
                                            "p",
                                            "pre",
