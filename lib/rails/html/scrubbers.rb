@@ -195,5 +195,33 @@ module Rails
         end
       end
     end
+
+    # === Rails::HTML::SpaceBlockElementScrubber
+    #
+    # +Rails::HTML::SpaceBlockElementScrubber+ removes all undisplayable tags and contents.
+    #
+    # It preserves text contents and inserts a space around block level elements.
+    class SpaceBlockElementScrubber < Loofah::Scrubber # :nodoc:
+      def initialize
+        @direction = :bottom_up
+      end
+
+      def scrub(node)
+        if Loofah::Elements::LINEBREAKERS.include?(node.name)
+          replacement = if Loofah::Elements::INLINE_LINE_BREAK.include?(node.name)
+                          " "
+                        else
+                          " #{node.content} "
+                        end
+          node.add_next_sibling(Nokogiri::XML::Text.new(replacement, node.document))
+          node.remove
+        elsif node.text?
+          return CONTINUE
+        else
+          node.before node.children
+          node.remove
+        end
+      end
+    end
   end
 end
