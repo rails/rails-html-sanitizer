@@ -209,14 +209,14 @@ module Rails
       def scrub(node)
         if Loofah::Elements::LINEBREAKERS.include?(node.name)
           replacement = if Loofah::Elements::INLINE_LINE_BREAK.include?(node.name)
-                          " "
-                        else
-                          " #{node.content} "
-                        end
+            " "
+          else
+            " #{node.content} "
+          end
           node.add_next_sibling(Nokogiri::XML::Text.new(replacement, node.document))
           node.remove
         elsif node.text?
-          return CONTINUE
+          CONTINUE
         else
           node.before node.children
           node.remove
