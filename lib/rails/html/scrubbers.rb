@@ -108,8 +108,11 @@ module Rails
         def scrub_attributes(node)
           if @attributes
             node.attribute_nodes.each do |attr|
-              attr.remove if scrub_attribute?(attr.name)
-              scrub_attribute(node, attr)
+              if scrub_attribute?(attr.name)
+                attr.remove
+              else
+                scrub_attribute(node, attr)
+              end
             end
 
             scrub_css_attribute(node)

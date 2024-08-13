@@ -249,6 +249,16 @@ class PermitScrubberMinimalOperationsTest < ScrubberTest
     end
   end
 
+  def test_does_not_scrub_removed_attributes
+    @scrubber = TestPermitScrubber.new
+
+    input = "<div class='foo' href='bar'></div>"
+    frag = scrub_fragment(input)
+    assert_equal("<div class=\"foo\"></div>", frag)
+
+    assert_equal([["div", "class"]], @scrubber.instance_variable_get(:@scrub_attribute_args))
+  end
+
   def test_does_not_scrub_attributes_of_a_removed_node
     @scrubber = TestPermitScrubber.new
 
