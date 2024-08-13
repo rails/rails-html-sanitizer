@@ -207,11 +207,55 @@ class ReturningStopFromScrubNodeTest < ScrubberTest
     end
   end
 
-  def setup
-    @scrubber = ScrubStopper.new
+  class ScrubContinuer < Rails::HTML::PermitScrubber
+    def scrub_node(node)
+      Loofah::Scrubber::CONTINUE
+    end
   end
 
   def test_returns_stop_from_scrub_if_scrub_node_does
+    @scrubber = ScrubStopper.new
     assert_scrub_stopped "<script>remove me</script>"
+  end
+
+  def test_returns_continue_from_scrub_if_scrub_node_does
+    @scrubber = ScrubContinuer.new
+    assert_node_skipped "<script>keep me</script>"
+  end
+end
+
+class PermitScrubberMinimalOperationsTest < ScrubberTest
+  class TestPermitScrubber < Rails::HTML::PermitScrubber
+    def initialize
+      @scrub_attribute_args = []
+      @scrub_attributes_args = []
+
+      super
+
+      self.tags = ["div"]
+      self.attributes = ["class"]
+    end
+
+    def scrub_attributes(node)
+      @scrub_attributes_args << node.name
+
+      super
+    end
+
+    def scrub_attribute(node, attr)
+      @scrub_attribute_args << [node.name, attr.name]
+
+      super
+    end
+  end
+
+  def test_does_not_scrub_attributes_of_a_removed_node
+    @scrubber = TestPermitScrubber.new
+
+    input = "<div class='foo' href='bar'><svg xlink:href='asdf'><set></set></svg></div>"
+    frag = scrub_fragment(input)
+    assert_equal("<div class=\"foo\"></div>", frag)
+
+    assert_equal(["div"], @scrubber.instance_variable_get(:@scrub_attributes_args))
   end
 end

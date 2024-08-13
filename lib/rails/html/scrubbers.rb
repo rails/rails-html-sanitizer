@@ -72,10 +72,11 @@ module Rails
         return CONTINUE if skip_node?(node)
 
         unless (node.element? || node.comment?) && keep_node?(node)
-          return STOP if scrub_node(node) == STOP
+          return STOP unless scrub_node(node) == CONTINUE
         end
 
         scrub_attributes(node)
+        CONTINUE
       end
 
       protected
