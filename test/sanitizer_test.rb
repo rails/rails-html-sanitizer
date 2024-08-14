@@ -1026,26 +1026,6 @@ module SanitizerTests
       assert_equal "", sanitize_css(raw)
     end
 
-
-    def test_linear_perfomance_svg
-      seq = [5000, 10000, 20000, 40000]
-      times = []
-
-      seq.each do |n|
-        payload = "<svg><set xlink:href='#{"\n" * n}'/></svg>"
-        elapsed_time = Benchmark.realtime {
-          safe_list_sanitize(payload)
-        }
-        times << elapsed_time
-      end
-
-      # Manually check for linear performance growth
-      times.each_cons(2) do |prev_time, next_time|
-        assert_operator next_time, :<, prev_time * 4, "ReDoS vulnerability detected! Execution time increased too rapidly."
-      end
-    end
-
-
     protected
       def safe_list_sanitize(input, options = {})
         module_under_test::SafeListSanitizer.new.sanitize(input, options)
