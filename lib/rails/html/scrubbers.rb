@@ -150,7 +150,7 @@ module Rails
             Loofah::HTML5::Scrub.scrub_attribute_that_allows_local_ref(attr_node)
           end
 
-          if Loofah::HTML5::SafeList::SVG_ALLOW_LOCAL_HREF.include?(node.name) && attr_name == "xlink:href" && attr_node.value =~ /^\s*[^#\s].*/m
+          if Loofah::HTML5::SafeList::SVG_ALLOW_LOCAL_HREF.include?(node.name) && attr_name == "xlink:href" && attr_node.value =~ /^\s*[^#].*/m
             attr_node.remove
           end
 
