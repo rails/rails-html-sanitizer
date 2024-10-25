@@ -30,10 +30,6 @@ full_sanitizer.sanitize("<b>Bold</b> no more!  <a href='more.html'>See more here
 # => Bold no more!  See more here...
 ```
 
-HTML5 version:
-
-
-
 #### LinkSanitizer
 
 ```ruby
