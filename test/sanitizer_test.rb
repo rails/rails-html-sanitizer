@@ -1026,6 +1026,24 @@ module SanitizerTests
       assert_equal "", sanitize_css(raw)
     end
 
+    def test_should_prune_noscript
+      # https://hackerone.com/reports/2509647
+      input, tags = "<div><noscript><p id='</noscript><script>alert(1)</script>'></noscript>", ["p", "div", "noscript"]
+      actual = nil
+      assert_output(nil, /WARNING: 'noscript' tags cannot be allowed by the PermitScrubber/) do
+        actual = safe_list_sanitize(input, tags: tags, attributes: %w(id))
+      end
+
+      acceptable_results = [
+        # libxml2
+        "<div><p id=\"&lt;/noscript&gt;&lt;script&gt;alert(1)&lt;/script&gt;\"></p></div>",
+        # libgumbo
+        "<div><p id=\"</noscript><script>alert(1)</script>\"></p></div>",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
     protected
       def safe_list_sanitize(input, options = {})
         module_under_test::SafeListSanitizer.new.sanitize(input, options)
@@ -1075,5 +1093,22 @@ module SanitizerTests
   class HTML5SafeListSanitizerTest < Minitest::Test
     @module_under_test = Rails::HTML5
     include SafeListSanitizerTest
+
+    def test_should_not_be_vulnerable_to_noscript_attacks
+      # https://hackerone.com/reports/2509647
+      skip("browser assertion requires parse_noscript_content_as_text") unless Nokogiri::VERSION >= "1.17"
+
+      input = '<noscript><p id="</noscript><script>alert(1)</script>"></noscript>'
+
+      result = nil
+      assert_output(nil, /WARNING/) do
+        result = Rails::HTML5::SafeListSanitizer.new.sanitize(input, tags: %w(p div noscript), attributes: %w(id class style))
+      end
+
+      browser = Nokogiri::HTML5::Document.parse(result, parse_noscript_content_as_text: true)
+      xss = browser.at_xpath("//script")
+
+      assert_nil(xss)
+    end
   end if loofah_html5_support?
 end

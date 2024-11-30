@@ -134,6 +134,12 @@ module Rails
           if var && !var.is_a?(Enumerable)
             raise ArgumentError, "You should pass :#{name} as an Enumerable"
           end
+
+          if var && name == :tags && var.include?("noscript")
+            warn("WARNING: 'noscript' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+            var.delete("noscript")
+          end
+
           var
         end
 
