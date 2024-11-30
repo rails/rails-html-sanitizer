@@ -1,3 +1,10 @@
+## next / unreleased
+
+* Improve performance by eliminating needless operations on attributes that are being removed. #188
+
+  *Mike Dalessio*
+
+
 ## 1.6.0 / 2023-05-26
 
 * Dependencies have been updated:
