@@ -14,7 +14,3 @@ group :rubocop do
   gem "rubocop-performance", require: false
   gem "rubocop-rails", require: false
 end
-
-# specify gem versions for old rubies
-gem "nokogiri", ">= 1.7"
-gem "activesupport", ">= 5"
