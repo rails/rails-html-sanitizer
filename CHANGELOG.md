@@ -1,4 +1,38 @@
-## next / unreleased
+## 1.6.1 / unreleased
+
+This is a performance and security release which addresses several possible XSS vulnerabilities.
+
+* The dependency on Nokogiri is updated to v1.15.7 or >=1.16.8.
+
+  This change addresses CVE-TODO (GHSA-w8gc-x259-rc7x).
+
+  *Mike Dalessio*
+
+* Disallowed tags will be pruned when they appear in foreign content (i.e. SVG or MathML content),
+  regardless of the `prune:` option value. Previously, disallowed tags were "stripped" unless the
+  gem was configured with the `prune: true` option.
+
+  The CVEs addressed by this change are:
+
+  - CVE-TODO (GHSA-638j-pmjw-jq48)
+  - CVE-TODO (GHSA-2x5m-9ch4-qgrr)
+
+  *Mike Dalessio*
+
+* The tags "noscript", "mglyph", and "malignmark" will not be allowed, even if explicitly added to
+  the allowlist. If applications try to allow any of these tags, a warning is emitted and the tags
+  are removed from the allow-list.
+
+  The CVEs addressed by this change are:
+
+  - CVE-TODO (GHSA-cfjx-w229-hgx5)
+  - CVE-TODO (GHSA-rxv5-gxqc-xx8g)
+
+  Please note that we _may_ restore support for allowing "noscript" in a future release. We do not
+  expect to ever allow "mglyph" or "malignmark", though, especially since browser support is minimal
+  for these tags.
+
+  *Mike Dalessio*
 
 * Improve performance by eliminating needless operations on attributes that are being removed. #188
 
