@@ -1096,6 +1096,46 @@ module SanitizerTests
       assert_equal "", sanitize_css(raw)
     end
 
+    def test_should_prune_mglyph
+      # https://hackerone.com/reports/2519936
+      input = "<math><mtext><table><mglyph><style><img src=: onerror=alert(1)>"
+      tags = %w(math mtext table mglyph style)
+
+      actual = nil
+      assert_output(nil, /WARNING: 'mglyph' tags cannot be allowed by the PermitScrubber/) do
+        actual = safe_list_sanitize(input, tags: tags)
+      end
+
+      acceptable_results = [
+        # libxml2
+        "<math><mtext><table><style>&lt;img src=: onerror=alert(1)&gt;</style></table></mtext></math>",
+        # libgumbo
+        "<math><mtext><style><img src=: onerror=alert(1)></style><table></table></mtext></math>",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
+    def test_should_prune_malignmark
+      # https://hackerone.com/reports/2519936
+      input = "<math><mtext><table><malignmark><style><img src=: onerror=alert(1)>"
+      tags = %w(math mtext table malignmark style)
+
+      actual = nil
+      assert_output(nil, /WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber/) do
+        actual = safe_list_sanitize(input, tags: tags)
+      end
+
+      acceptable_results = [
+        # libxml2
+        "<math><mtext><table><style>&lt;img src=: onerror=alert(1)&gt;</style></table></mtext></math>",
+        # libgumbo
+        "<math><mtext><style><img src=: onerror=alert(1)></style><table></table></mtext></math>",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
     protected
       def safe_list_sanitize(input, options = {})
         module_under_test::SafeListSanitizer.new.sanitize(input, options)
@@ -1170,6 +1210,38 @@ module SanitizerTests
       # https://hackerone.com/reports/2519941
       input = "<math><mtext><table><mglyph><style><img src=: onerror=alert(1)>"
       result = Rails::HTML5::SafeListSanitizer.new.sanitize(input, tags: %w(math style))
+      browser = Nokogiri::HTML5::Document.parse(result)
+      xss = browser.at_xpath("//img/@onerror")
+
+      assert_nil(xss)
+    end
+
+    def test_should_not_be_vulnerable_to_mglyph_namespace_confusion
+      # https://hackerone.com/reports/2519936
+      input = "<math><mtext><table><mglyph><style><img src=: onerror=alert(1)>"
+      tags = %w(math mtext table mglyph style)
+
+      result = nil
+      assert_output(nil, /WARNING/) do
+        result = safe_list_sanitize(input, tags: tags)
+      end
+
+      browser = Nokogiri::HTML5::Document.parse(result)
+      xss = browser.at_xpath("//img/@onerror")
+
+      assert_nil(xss)
+    end
+
+    def test_should_not_be_vulnerable_to_malignmark_namespace_confusion
+      # https://hackerone.com/reports/2519936
+      input = "<math><mtext><table><malignmark><style><img src=: onerror=alert(1)>"
+      tags = %w(math mtext table malignmark style)
+
+      result = nil
+      assert_output(nil, /WARNING/) do
+        result = safe_list_sanitize(input, tags: tags)
+      end
+
       browser = Nokogiri::HTML5::Document.parse(result)
       xss = browser.at_xpath("//img/@onerror")
 
