@@ -151,6 +151,11 @@ module Rails
             end
           end
 
+          if var && name == :tags && var.include?("noscript")
+            warn("WARNING: 'noscript' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+            var.delete("noscript")
+          end
+
           var
         end
 

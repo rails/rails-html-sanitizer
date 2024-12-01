@@ -129,6 +129,22 @@ class PermitScrubberTest < ScrubberTest
     assert_equal(["div", "span"], @scrubber.tags)
   end
 
+  def test_does_not_allow_safelisted_malignmark
+    # https://hackerone.com/reports/2519936
+    assert_output(nil, /WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber/) do
+      @scrubber.tags = ["div", "malignmark", "span"]
+    end
+    assert_equal(["div", "span"], @scrubber.tags)
+  end
+
+  def test_does_not_allow_safelisted_noscript
+    # https://hackerone.com/reports/2509647
+    assert_output(nil, /WARNING: 'noscript' tags cannot be allowed by the PermitScrubber/) do
+      @scrubber.tags = ["div", "noscript", "span"]
+    end
+    assert_equal(["div", "span"], @scrubber.tags)
+  end
+
   def test_leaves_text
     assert_scrubbed("some text")
   end
