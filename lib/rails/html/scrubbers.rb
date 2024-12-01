@@ -149,11 +149,11 @@ module Rails
               warn("WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber and will be scrubbed")
               var.delete("malignmark")
             end
-          end
 
-          if var && name == :tags && var.include?("noscript")
-            warn("WARNING: 'noscript' tags cannot be allowed by the PermitScrubber and will be scrubbed")
-            var.delete("noscript")
+            if var.include?("noscript")
+              warn("WARNING: 'noscript' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+              var.delete("noscript")
+            end
           end
 
           var
