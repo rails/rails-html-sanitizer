@@ -101,7 +101,11 @@ module Rails
         end
 
         def scrub_node(node)
-          node.before(node.children) unless prune # strip
+          # If a node has a namespace, then it's a tag in either a `math` or `svg` foreign context,
+          # and we should always prune it to avoid namespace confusion and mutation XSS vectors.
+          unless prune || node.namespace
+            node.before(node.children)
+          end
           node.remove
         end
 

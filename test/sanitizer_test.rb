@@ -918,7 +918,7 @@ module SanitizerTests
         # libxml2
         "<svg><style>&lt;script&gt;alert(1)&lt;/script&gt;</style></svg>",
         # libgumbo
-        "<svg><style>alert(1)</style></svg>"
+        "<svg><style></style></svg>",
       ]
 
       assert_includes(acceptable_results, actual)
@@ -999,6 +999,48 @@ module SanitizerTests
         "<math><style>&amp;lt;img src onerror=alert(1)&gt;</style></math>",
         # libgumbo
         "<math><style>&lt;img src onerror=alert(1)&gt;</style></math>",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
+    def test_combination_of_style_and_disallowed_svg_with_script_payload
+      # https://hackerone.com/reports/2519936
+      input, tags = "<svg><style><style class='</style><script>alert(1)</script>'>", ["style"]
+      actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<style>&lt;style class='</style>alert(1)'&gt;",
+        # libgumbo
+        "",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
+    def test_combination_of_style_and_disallowed_math_with_script_payload
+      # https://hackerone.com/reports/2519936
+      input, tags = "<math><style><style class='</style><script>alert(1)</script>'>", ["style"]
+      actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<style>&lt;style class='</style>alert(1)'&gt;",
+        # libgumbo
+        "",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
+    def test_math_with_disallowed_mtext_and_img_payload
+      # https://hackerone.com/reports/2519941
+      input, tags = "<math><mtext><table><mglyph><style><img src=: onerror=alert(1)>", ["math", "style"]
+      actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<math><style>&lt;img src=: onerror=alert(1)&gt;</style></math>",
+        # libgumbo
+        "<math></math>",
       ]
 
       assert_includes(acceptable_results, actual)
@@ -1108,6 +1150,26 @@ module SanitizerTests
       # https://hackerone.com/reports/2503220
       input = "<svg><style>&lt;img src onerror=alert(1)>"
       result = Rails::HTML5::SafeListSanitizer.new.sanitize(input, tags: ["svg", "style"])
+      browser = Nokogiri::HTML5::Document.parse(result)
+      xss = browser.at_xpath("//img/@onerror")
+
+      assert_nil(xss)
+    end
+
+    def test_should_not_be_vulnerable_to_ns_confusion_2519936
+      # https://hackerone.com/reports/2519936
+      input = "<math><style><style class='</style><script>alert(1)</script>'>"
+      result = Rails::HTML5::SafeListSanitizer.new.sanitize(input, tags: ["style"])
+      browser = Nokogiri::HTML5::Document.parse(result)
+      xss = browser.at_xpath("//script")
+
+      assert_nil(xss)
+    end
+
+    def test_should_not_be_vulnerable_to_ns_confusion_2519941
+      # https://hackerone.com/reports/2519941
+      input = "<math><mtext><table><mglyph><style><img src=: onerror=alert(1)>"
+      result = Rails::HTML5::SafeListSanitizer.new.sanitize(input, tags: %w(math style))
       browser = Nokogiri::HTML5::Document.parse(result)
       xss = browser.at_xpath("//img/@onerror")
 
