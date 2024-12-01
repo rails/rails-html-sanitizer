@@ -26,8 +26,10 @@ Gem::Specification.new do |spec|
   spec.test_files    = Dir["test/**/*"]
   spec.require_paths = ["lib"]
 
-  # NOTE: There's no need to update dependencies for CVEs in minor releases
-  # when users can simply run `bundle update loofah`.
   spec.add_dependency "loofah", "~> 2.21"
-  spec.add_dependency "nokogiri", "~> 1.14"
+
+  # A fix was shipped in nokogiri v1.15.7 and v1.16.8 without which there is a vulnerability in this gem.
+  spec.add_dependency "nokogiri", [">=1.15.7",
+                                   "!=1.16.0", "!=1.16.0.rc1", "!=1.16.1", "!=1.16.2", "!=1.16.3",
+                                   "!=1.16.4", "!=1.16.5", "!=1.16.6", "!=1.16.7"]
 end

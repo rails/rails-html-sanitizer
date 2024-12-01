@@ -976,6 +976,34 @@ module SanitizerTests
       assert_includes(acceptable_results, actual)
     end
 
+    def test_combination_of_svg_and_style_with_escaped_img_payload
+      # https://hackerone.com/reports/2503220
+      input, tags = "<svg><style>&lt;img src onerror=alert(1)>", ["svg", "style"]
+      actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<svg><style>&amp;lt;img src onerror=alert(1)&gt;</style></svg>",
+        # libgumbo
+        "<svg><style>&lt;img src onerror=alert(1)&gt;</style></svg>",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
+    def test_combination_of_math_and_style_with_escaped_img_payload
+      # https://hackerone.com/reports/2503220
+      input, tags = "<math><style>&lt;img src onerror=alert(1)>", ["math", "style"]
+      actual = safe_list_sanitize(input, tags: tags)
+      acceptable_results = [
+        # libxml2
+        "<math><style>&amp;lt;img src onerror=alert(1)&gt;</style></math>",
+        # libgumbo
+        "<math><style>&lt;img src onerror=alert(1)&gt;</style></math>",
+      ]
+
+      assert_includes(acceptable_results, actual)
+    end
+
     def test_should_sanitize_illegal_style_properties
       raw      = %(display:block; position:absolute; left:0; top:0; width:100%; height:100%; z-index:1; background-color:black; background-image:url(http://www.ragingplatypus.com/i/cam-full.jpg); background-x:center; background-y:center; background-repeat:repeat;)
       expected = %(display:block;width:100%;height:100%;background-color:black;background-x:center;background-y:center;)
@@ -1075,5 +1103,15 @@ module SanitizerTests
   class HTML5SafeListSanitizerTest < Minitest::Test
     @module_under_test = Rails::HTML5
     include SafeListSanitizerTest
+
+    def test_should_not_be_vulnerable_to_nokogiri_foreign_style_serialization_bug
+      # https://hackerone.com/reports/2503220
+      input = "<svg><style>&lt;img src onerror=alert(1)>"
+      result = Rails::HTML5::SafeListSanitizer.new.sanitize(input, tags: ["svg", "style"])
+      browser = Nokogiri::HTML5::Document.parse(result)
+      xss = browser.at_xpath("//img/@onerror")
+
+      assert_nil(xss)
+    end
   end if loofah_html5_support?
 end
