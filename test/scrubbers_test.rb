@@ -121,6 +121,14 @@ class PermitScrubberTest < ScrubberTest
     assert_scrubbed html, '<tag></tag><tag cooler=""></tag>'
   end
 
+  def test_does_not_allow_safelisted_mglyph
+    # https://hackerone.com/reports/2519936
+    assert_output(nil, /WARNING: 'mglyph' tags cannot be allowed by the PermitScrubber/) do
+      @scrubber.tags = ["div", "mglyph", "span"]
+    end
+    assert_equal(["div", "span"], @scrubber.tags)
+  end
+
   def test_leaves_text
     assert_scrubbed("some text")
   end

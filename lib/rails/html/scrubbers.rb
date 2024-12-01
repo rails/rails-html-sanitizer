@@ -134,6 +134,19 @@ module Rails
           if var && !var.is_a?(Enumerable)
             raise ArgumentError, "You should pass :#{name} as an Enumerable"
           end
+
+          if var && name == :tags
+            if var.include?("mglyph")
+              warn("WARNING: 'mglyph' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+              var.delete("mglyph")
+            end
+
+            if var.include?("malignmark")
+              warn("WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+              var.delete("malignmark")
+            end
+          end
+
           var
         end
 
