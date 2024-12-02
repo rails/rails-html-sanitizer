@@ -1,4 +1,4 @@
-## 1.6.1 / unreleased
+## 1.6.1 / 2024-12-02
 
 This is a performance and security release which addresses several possible XSS vulnerabilities.
 
