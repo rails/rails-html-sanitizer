@@ -4,7 +4,7 @@ This is a performance and security release which addresses several possible XSS 
 
 * The dependency on Nokogiri is updated to v1.15.7 or >=1.16.8.
 
-  This change addresses CVE-TODO (GHSA-w8gc-x259-rc7x).
+  This change addresses CVE-2024-53985 (GHSA-w8gc-x259-rc7x).
 
   *Mike Dalessio*
 
@@ -14,8 +14,8 @@ This is a performance and security release which addresses several possible XSS 
 
   The CVEs addressed by this change are:
 
-  - CVE-TODO (GHSA-638j-pmjw-jq48)
-  - CVE-TODO (GHSA-2x5m-9ch4-qgrr)
+  - CVE-2024-53986 (GHSA-638j-pmjw-jq48)
+  - CVE-2024-53987 (GHSA-2x5m-9ch4-qgrr)
 
   *Mike Dalessio*
 
@@ -25,8 +25,8 @@ This is a performance and security release which addresses several possible XSS 
 
   The CVEs addressed by this change are:
 
-  - CVE-TODO (GHSA-cfjx-w229-hgx5)
-  - CVE-TODO (GHSA-rxv5-gxqc-xx8g)
+  - CVE-2024-53988 (GHSA-cfjx-w229-hgx5)
+  - CVE-2024-53989 (GHSA-rxv5-gxqc-xx8g)
 
   Please note that we _may_ restore support for allowing "noscript" in a future release. We do not
   expect to ever allow "mglyph" or "malignmark", though, especially since browser support is minimal
