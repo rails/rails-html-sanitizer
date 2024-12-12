@@ -1,4 +1,4 @@
-## next / unreleased
+## v1.6.2 / 2024-12-12
 
 * `PermitScrubber` fully supports frozen "allowed tags".
 
