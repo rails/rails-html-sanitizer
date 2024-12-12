@@ -1099,7 +1099,7 @@ module SanitizerTests
     def test_should_prune_mglyph
       # https://hackerone.com/reports/2519936
       input = "<math><mtext><table><mglyph><style><img src=: onerror=alert(1)>"
-      tags = %w(math mtext table mglyph style)
+      tags = %w(math mtext table mglyph style).freeze
 
       actual = nil
       assert_output(nil, /WARNING: 'mglyph' tags cannot be allowed by the PermitScrubber/) do
@@ -1119,7 +1119,7 @@ module SanitizerTests
     def test_should_prune_malignmark
       # https://hackerone.com/reports/2519936
       input = "<math><mtext><table><malignmark><style><img src=: onerror=alert(1)>"
-      tags = %w(math mtext table malignmark style)
+      tags = %w(math mtext table malignmark style).freeze
 
       actual = nil
       assert_output(nil, /WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber/) do
@@ -1138,7 +1138,9 @@ module SanitizerTests
 
     def test_should_prune_noscript
       # https://hackerone.com/reports/2509647
-      input, tags = "<div><noscript><p id='</noscript><script>alert(1)</script>'></noscript>", ["p", "div", "noscript"]
+      input = "<div><noscript><p id='</noscript><script>alert(1)</script>'></noscript>"
+      tags = ["p", "div", "noscript"].freeze
+
       actual = nil
       assert_output(nil, /WARNING: 'noscript' tags cannot be allowed by the PermitScrubber/) do
         actual = safe_list_sanitize(input, tags: tags, attributes: %w(id))
