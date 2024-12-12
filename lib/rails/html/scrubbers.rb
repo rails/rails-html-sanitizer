@@ -56,11 +56,11 @@ module Rails
       end
 
       def tags=(tags)
-        @tags = validate!(tags, :tags)
+        @tags = validate!(tags.dup, :tags)
       end
 
       def attributes=(attributes)
-        @attributes = validate!(attributes, :attributes)
+        @attributes = validate!(attributes.dup, :attributes)
       end
 
       def scrub(node)

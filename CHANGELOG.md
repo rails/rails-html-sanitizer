@@ -1,3 +1,16 @@
+## next / unreleased
+
+* `PermitScrubber` fully supports frozen "allowed tags".
+
+  v1.6.1 introduced safety checks that may remove unsafe tags from the allowed list, which
+  introduced a regression for applications passing a frozen array of allowed tags. Tags and
+  attributes are now properly copied when they are passed to the scrubber.
+
+  Fixes #195.
+
+  *Mike Dalessio*
+
+
 ## 1.6.1 / 2024-12-02
 
 This is a performance and security release which addresses several possible XSS vulnerabilities.
