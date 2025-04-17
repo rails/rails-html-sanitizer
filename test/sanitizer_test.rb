@@ -138,10 +138,10 @@ module SanitizerTests
     end
 
     def test_strip_passed_passed_duck_typed_range
-      input = 2000..2005
+      input = 2001..2005
       result = full_sanitize(input)
       acceptable_results = [
-        "2000..2005",
+        "2001..2005",
       ]
 
       assert_includes(acceptable_results, result)
@@ -222,6 +222,7 @@ module SanitizerTests
     end
 
     def test_strip_links_with_passed_duck_typed_range
+      assert_equal "2001..2005", link_sanitize(Range.new(2001, 2005))
       assert_equal "2001..2005", link_sanitize(2001..2005)
     end
 
@@ -310,6 +311,7 @@ module SanitizerTests
     end
 
     def test_sanitize_passed_duck_typed_range
+      assert_sanitized Range.new(2001, 2005), "2001..2005"
       assert_sanitized 2001..2005, "2001..2005"
     end
 
