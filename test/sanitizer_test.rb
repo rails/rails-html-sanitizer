@@ -137,6 +137,16 @@ module SanitizerTests
       assert_includes(acceptable_results, result)
     end
 
+    def test_strip_passed_passed_duck_typed_range
+      input = 2001..2005
+      result = full_sanitize(input)
+      acceptable_results = [
+        "2001..2005",
+      ]
+
+      assert_includes(acceptable_results, result)
+    end
+
     def test_strip_blank_string
       assert_nil full_sanitize(nil)
       assert_equal "", full_sanitize("")
@@ -209,6 +219,11 @@ module SanitizerTests
 
     def test_strip_links_with_unclosed_tags
       assert_equal "", link_sanitize("<a<a")
+    end
+
+    def test_strip_links_with_passed_duck_typed_range
+      assert_equal "2001..2005", link_sanitize(Range.new(2001, 2005))
+      assert_equal "2001..2005", link_sanitize(2001..2005)
     end
 
     def test_strip_links_with_plaintext
@@ -295,6 +310,11 @@ module SanitizerTests
       assert_sanitized "<form action=\"/foo/bar\" method=\"post\"><input></form>", ""
     end
 
+    def test_sanitize_passed_duck_typed_range
+      assert_sanitized Range.new(2001, 2005), "2001..2005"
+      assert_sanitized 2001..2005, "2001..2005"
+    end
+
     def test_sanitize_plaintext
       # note that the `plaintext` tag has been deprecated since HTML 2
       # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/plaintext
@@ -306,7 +326,19 @@ module SanitizerTests
         # xerces+nekohtml-unit
         "&lt;span&gt;foo&lt;/span&gt;&lt;/plaintext&gt;",
         # xerces+cyberneko
-        "&lt;span&gt;foo&lt;/span&gt;"
+        "&lt;span&gt;foo&lt;/span&gt;",
+      ]
+
+      assert_includes(acceptable_results, result)
+    end
+
+    def test_safe_sanitize_passed_duck_typed_range
+      # note that the `plaintext` tag has been deprecated since HTML 2
+      # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/plaintext
+      input = 2001..2005
+      result = safe_list_sanitize(input)
+      acceptable_results = [
+        "2001..2005",
       ]
 
       assert_includes(acceptable_results, result)

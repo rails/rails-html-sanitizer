@@ -34,6 +34,7 @@ module Rails
       module ComposedSanitize
         def sanitize(html, options = {})
           return unless html
+          html = html.instance_of?(Range) ? html.to_s : html
           return html if html.empty?
 
           serialize(scrub(parse_fragment(html), options))
