@@ -224,6 +224,20 @@ class TextOnlyScrubberTest < ScrubberTest
   end
 end
 
+class SpaceBlockElementScrubberTest < ScrubberTest
+  def setup
+    @scrubber = Rails::HTML::SpaceBlockElementScrubber.new
+  end
+
+  def test_removes_all_tags_and_keeps_the_text_content_and_adds_spaces
+    assert_scrubbed %(<div><h1>A list!</h1><ul><li>An element!</li></ul><script>alert("hi!")</script></div>), "  A list!   An element!   "
+  end
+
+  def test_skips_text_nodes
+    assert_node_skipped("some text")
+  end
+end
+
 class ReturningStopFromScrubNodeTest < ScrubberTest
   class ScrubStopper < Rails::HTML::PermitScrubber
     def scrub_node(node)
