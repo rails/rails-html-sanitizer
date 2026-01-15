@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
+require "minitest/mock"
 require "rails-html-sanitizer"
 
 class RailsApiTest < Minitest::Test
