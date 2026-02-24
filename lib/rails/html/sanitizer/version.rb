@@ -3,7 +3,7 @@
 module Rails
   module HTML
     class Sanitizer
-      VERSION = "1.7.0.dev"
+      VERSION = "1.7.0"
     end
   end
 end

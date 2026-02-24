@@ -1,4 +1,4 @@
-## unreleased
+## v1.7.0 / 2026-02-24
 
 * Add `Rails::HTML::Sanitizer.allowed_uri?` which delegates to `Loofah::HTML5::Scrub.allowed_uri?`,
   allowing the Rails framework to check URI safety without a direct dependency on Loofah.
