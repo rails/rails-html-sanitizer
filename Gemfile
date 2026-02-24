@@ -5,7 +5,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "rake"
-gem "minitest"
+gem "minitest", "< 6"
 
 group :rubocop do
   gem "rubocop", ">= 1.25.1", require: false
