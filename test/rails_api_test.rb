@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "rails-html-sanitizer"
+require_relative "test_helper"
 
 class RailsApiTest < Minitest::Test
   def test_html_module_name_alias
