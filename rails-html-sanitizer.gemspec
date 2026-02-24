@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = Dir["test/**/*"]
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "loofah", "~> 2.21"
+  spec.add_dependency "loofah", "~> 2.25"
 
   # A fix was shipped in nokogiri v1.15.7 and v1.16.8 without which there is a vulnerability in this gem.
   spec.add_dependency "nokogiri", [">=1.15.7",

@@ -23,16 +23,6 @@ Performance:
   Exclude:
     - '**/test/**/*'
 
-# Prefer assert_not over assert !
-Rails/AssertNot:
-  Include:
-    - '**/test/**/*'
-
-# Prefer assert_not_x over refute_x
-Rails/RefuteMethods:
-  Include:
-    - '**/test/**/*'
-
 Rails/IndexBy:
   Enabled: true
 

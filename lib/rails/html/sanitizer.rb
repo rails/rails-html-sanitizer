@@ -13,6 +13,10 @@ module Rails
         def best_supported_vendor
           html5_support? ? Rails::HTML5::Sanitizer : Rails::HTML4::Sanitizer
         end
+
+        def allowed_uri?(uri_string)
+          Loofah::HTML5::Scrub.allowed_uri?(uri_string)
+        end
       end
 
       def sanitize(html, options = {})

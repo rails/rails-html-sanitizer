@@ -1,3 +1,13 @@
+## unreleased
+
+* Add `Rails::HTML::Sanitizer.allowed_uri?` which delegates to `Loofah::HTML5::Scrub.allowed_uri?`,
+  allowing the Rails framework to check URI safety without a direct dependency on Loofah.
+
+  The minimum Loofah dependency is now `~> 2.25`.
+
+  *Mike Dalessio*
+
+
 ## v1.6.2 / 2024-12-12
 
 * `PermitScrubber` fully supports frozen "allowed tags".
