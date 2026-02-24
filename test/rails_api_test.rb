@@ -84,4 +84,18 @@ class RailsApiTest < Minitest::Test
     skip("no HTML5 support on this platform") unless Rails::HTML::Sanitizer.html5_support?
     assert_equal(Rails::HTML5::SafeListSanitizer, Rails::HTML5::Sanitizer.white_list_sanitizer)
   end
+
+  def test_allowed_uri_returns_true_for_allowed_protocols
+    assert(Rails::HTML::Sanitizer.allowed_uri?("https://example.com"))
+    assert(Rails::HTML::Sanitizer.allowed_uri?("http://example.com"))
+    assert(Rails::HTML::Sanitizer.allowed_uri?("mailto:user@example.com"))
+  end
+
+  def test_allowed_uri_returns_false_for_disallowed_protocols
+    refute(Rails::HTML::Sanitizer.allowed_uri?("javascript:alert(1)"))
+  end
+
+  def test_allowed_uri_returns_true_for_relative_uris
+    assert(Rails::HTML::Sanitizer.allowed_uri?("/relative/path"))
+  end
 end
