@@ -23,7 +23,6 @@ Gem::Specification.new do |spec|
   }
 
   spec.files         = Dir["lib/**/*", "README.md", "MIT-LICENSE", "CHANGELOG.md"]
-  spec.test_files    = Dir["test/**/*"]
   spec.require_paths = ["lib"]
 
   spec.add_dependency "loofah", "~> 2.25"
