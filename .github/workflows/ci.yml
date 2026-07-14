@@ -19,9 +19,9 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
         with:
           ruby-version: "4.0"
           bundler-cache: true
@@ -32,15 +32,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
       - name: Run actionlint
-        uses: rhysd/actionlint@v1.7.11
+        uses: rhysd/actionlint@393031adb9afb225ee52ae2ccd7a5af5525e03e8 # v1.7.11
 
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@v0.5.2
+        uses: zizmorcore/zizmor-action@71321a20a9ded102f6e9ce5718a2fcec2c4f70d8 # v0.5.2
         with:
           advanced-security: false
 
@@ -51,9 +51,9 @@ jobs:
         ruby: ["2.7", "3.0", "3.1", "3.2", "3.3", "3.4", "4.0", "ruby-head", "truffleruby-head", "jruby-9.4", "jruby-10.0", "jruby-head"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
         with:
           ruby-version: ${{matrix.ruby}}
           bundler-cache: true
@@ -62,9 +62,9 @@ jobs:
   cruby-nokogiri-system-libraries:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
         with:
           ruby-version: "4.0"
       - name: Install nokogiri with system libraries
