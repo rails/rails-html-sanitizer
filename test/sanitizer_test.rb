@@ -846,16 +846,59 @@ module SanitizerTests
       assert_equal(expected, actual)
     end
 
-    def test_mediatype_other_disallowed
-      input = '<a href="data:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
-      expected = "<a>foo</a>"
-      actual = safe_list_sanitize(input)
-      assert_equal(expected, actual)
+    # Loofah 2.25.2 changed the behavior of `data:` URLs with invalid mediatypes to be treated as
+    # text/plain, which is an allowed media type. So we need to adjust the test accordingly.
+    if Gem::Version.new(Loofah::VERSION) <= Gem::Version.new("2.25.1")
+      def test_mediatype_other_disallowed
+        input = '<a href="data:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = "<a>foo</a>"
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
 
-      input = '<a href="DATA:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
-      expected = "<a>foo</a>"
-      actual = safe_list_sanitize(input)
-      assert_equal(expected, actual)
+        input = '<a href="DATA:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = "<a>foo</a>"
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
+      end
+    else
+      def test_mediatype_other_disallowed
+        input = '<a href="data:foo/bar;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = "<a>foo</a>"
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
+
+        input = '<a href="DATA:foo/bar;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = "<a>foo</a>"
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
+      end
+
+      def test_mediatype_missing_treated_as_text_plain
+        # https://www.rfc-editor.org/rfc/rfc2397.html and https://fetch.spec.whatwg.org/#data-urls
+        # state browsers should treat this as text/plain, so we can allow it.
+        input = '<a href="data:,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = input
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
+
+        input = '<a href="DATA:,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = input
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
+      end
+
+      def test_mediatype_invalid_treated_as_text_plain
+        # https://fetch.spec.whatwg.org/#data-urls states browsers should treat this as text/plain, so we can allow it.
+        input = '<a href="data:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = input
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
+
+        input = '<a href="DATA:foo;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">foo</a>'
+        expected = input
+        actual = safe_list_sanitize(input)
+        assert_equal(expected, actual)
+      end
     end
 
     def test_scrubbing_svg_attr_values_that_allow_ref
