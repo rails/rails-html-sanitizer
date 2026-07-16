@@ -911,6 +911,44 @@ module SanitizerTests
       assert_equal(expected, actual)
     end
 
+    def test_use_xlink_href_local_ref_is_preserved
+      input = '<svg><use xlink:href="#p"></use></svg>'
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href xlink:href))
+
+      assert_equal(input, actual)
+    end
+
+    def test_use_xlink_href_external_ref_is_scrubbed
+      input = '<svg><use xlink:href="http://bad.com/x#p"></use></svg>'
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href xlink:href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_local_ref_is_preserved
+      input = '<svg><use href="#p"></use></svg>'
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href))
+
+      assert_equal(input, actual)
+    end
+
+    def test_use_href_external_ref_is_scrubbed
+      input = '<svg><use href="http://bad.com/x#p"></use></svg>'
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_external_ref_with_leading_newline_is_scrubbed
+      input = %(<svg><use href="\nhttp://bad.com/x#p"></use></svg>)
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href))
+
+      assert_equal(expected, actual)
+    end
+
     def test_style_with_css_payload
       input, tags = "<style>div > span { background: \"red\"; }</style>", ["style"]
       actual = safe_list_sanitize(input, tags: tags)
