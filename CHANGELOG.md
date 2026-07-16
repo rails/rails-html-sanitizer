@@ -1,3 +1,18 @@
+## v1.7.1 / 2026-07-15
+
+* SVG reference elements now restrict both `href` and `xlink:href` to local references.
+
+  Previously `PermitScrubber` restricted only `xlink:href` on elements in `SVG_ALLOW_LOCAL_HREF`,
+  so a plain `href` attribute on those elements could reference an external document. Applications
+  are only affected if the allowed tags are overridden to include an SVG reference element such as
+  `use`; the default configuration is not affected.
+
+  This change addresses GHSA-cj75-f6xr-r4g7 (CVE requested). The minimum Loofah dependency is now
+  `~> 2.25, >= 2.25.2`.
+
+  *Mike Dalessio*
+
+
 ## v1.7.0 / 2026-02-24
 
 * Add `Rails::HTML::Sanitizer.allowed_uri?` which delegates to `Loofah::HTML5::Scrub.allowed_uri?`,
