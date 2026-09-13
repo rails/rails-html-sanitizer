@@ -1273,6 +1273,24 @@ module SanitizerTests
       assert_includes(acceptable_results, actual)
     end
 
+    def test_reentrant_sanitize_call_does_not_share_scrubber_configuration
+      sanitizer = module_under_test::SafeListSanitizer.new
+      permissive_result = nil
+
+      strict_options = { tags: %w(div), attributes: [] }
+      strict_options.define_singleton_method(:[]) do |key|
+        if key == :attributes && permissive_result.nil?
+          permissive_result = sanitizer.sanitize("<script>alert(2)</script>", tags: %w(script), attributes: [])
+        end
+        super(key)
+      end
+
+      strict_result = sanitizer.sanitize("<div>x</div><script>alert(1)</script>", strict_options)
+
+      assert_equal("<script>alert(2)</script>", permissive_result)
+      assert_equal("<div>x</div>alert(1)", strict_result)
+    end
+
     protected
       def safe_list_sanitize(input, options = {})
         module_under_test::SafeListSanitizer.new.sanitize(input, options)

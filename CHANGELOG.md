@@ -18,6 +18,18 @@
 
   *Mike Dalessio*
 
+* `SafeListSanitizer` no longer shares a `PermitScrubber` across calls.
+
+  Previously one sanitizer instance reused a single `PermitScrubber`, assigning its `tags` and
+  `attributes` on every call. Action View memoizes one sanitizer per helper module, so two
+  concurrent `sanitize` calls with different `tags:` or `attributes:` options could interleave and
+  one call could be scrubbed with the other call's allowlist. Each call now builds its own
+  `PermitScrubber`.
+
+  This change addresses GHSA-h7wh-q2qr-458c.
+
+  *Mike Dalessio*
+
 
 ## v1.7.1 / 2026-07-15
 
