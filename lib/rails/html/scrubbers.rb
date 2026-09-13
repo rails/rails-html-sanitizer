@@ -160,21 +160,9 @@ module Rails
         end
 
         def scrub_attribute(node, attr_node)
-          attr_name = if attr_node.namespace
-            "#{attr_node.namespace.prefix}:#{attr_node.node_name}"
-          else
-            attr_node.node_name
-          end
+          attr_name = Loofah::HTML5::Scrub.prefixed_attribute_name(attr_node)
 
-          return if Loofah::HTML5::SafeList::ATTR_VAL_IS_URI.include?(attr_name) && Loofah::HTML5::Scrub.scrub_uri_attribute(attr_node)
-
-          if Loofah::HTML5::SafeList::SVG_ATTR_VAL_ALLOWS_REF.include?(attr_name)
-            Loofah::HTML5::Scrub.scrub_attribute_that_allows_local_ref(attr_node)
-          end
-
-          if Loofah::HTML5::SafeList::SVG_ALLOW_LOCAL_HREF.include?(node.name) && Loofah::HTML5::SafeList::SVG_HREF_ATTRIBUTES.include?(attr_name) && attr_node.value =~ /^\s*[^#\s].*/m
-            attr_node.remove
-          end
+          return if Loofah::HTML5::Scrub.scrub_attribute_value(node, attr_node, attr_name)
 
           node.remove_attribute(attr_node.name) if attr_name == "src" && attr_node.value !~ /[^[:space:]]/
 

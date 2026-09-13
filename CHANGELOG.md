@@ -1,3 +1,20 @@
+## next / unreleased
+
+* Deciding whether an SVG `href` or `xlink:href` is a local reference no longer takes quadratic time.
+
+  `PermitScrubber` matched the attribute value against a pattern that rescanned the value's
+  whitespace run from every line start, so an all-whitespace value took seconds to scrub. Only
+  Ruby 3.1 and earlier are affected, because Ruby 3.2 introduced linear-time regexp matching.
+  Through `PermitScrubber`, applications are only affected if the allowed tags are overridden to
+  include an SVG reference element such as `use`; the default configuration is not affected.
+
+  This change addresses GHSA-cpgf-5mjf-73p7. `PermitScrubber` now applies the html5lib attribute
+  value rules by calling `Loofah::HTML5::Scrub.scrub_attribute_value` rather than carrying its own
+  copy. The minimum Loofah dependency is now `~> 2.25, >= 2.25.3`.
+
+  *Mike Dalessio*
+
+
 ## v1.7.1 / 2026-07-15
 
 * SVG reference elements now restrict both `href` and `xlink:href` to local references.

@@ -949,6 +949,46 @@ module SanitizerTests
       assert_equal(expected, actual)
     end
 
+    def test_use_href_external_ref_after_a_local_ref_is_scrubbed
+      input = %(<svg><use href="#p\nhttp://bad.com/x"></use></svg>)
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_removal_does_not_skip_the_next_attribute
+      input = %(<svg><use href="http://bad.com/x" fill="url(http://bad.com/) #fff"></use></svg>)
+      expected = %(<svg><use fill="#fff"></use></svg>)
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href fill))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_unsafe_uri_is_scrubbed
+      input = %(<svg><use href="javascript:alert(1)"></use></svg>)
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_xlink_href_unsafe_uri_is_scrubbed
+      input = %(<svg><use xlink:href="javascript:alert(1)"></use></svg>)
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href xlink:href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_unsafe_uri_removal_does_not_skip_the_next_attribute
+      input = %(<svg><use href="javascript:alert(1)" fill="url(http://bad.com/) #fff"></use></svg>)
+      expected = %(<svg><use fill="#fff"></use></svg>)
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href fill))
+
+      assert_equal(expected, actual)
+    end
+
     def test_style_with_css_payload
       input, tags = "<style>div > span { background: \"red\"; }</style>", ["style"]
       actual = safe_list_sanitize(input, tags: tags)
