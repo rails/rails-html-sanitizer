@@ -27,7 +27,7 @@ jobs:
         with:
           persist-credentials: false
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.321.0
+      - uses: ruby/setup-ruby@bec3f19a76460dbe12f60def7d1a77585f07516c # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.322.0
         with:
           ruby-version: "4.0"
           bundler-cache: true
@@ -48,7 +48,7 @@ jobs:
         uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
 
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
+        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
         with:
           advanced-security: false
 
@@ -65,7 +65,7 @@ jobs:
         with:
           persist-credentials: false
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.321.0
+      - uses: ruby/setup-ruby@bec3f19a76460dbe12f60def7d1a77585f07516c # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.322.0
         with:
           ruby-version: ${{matrix.ruby}}
           bundler-cache: true
@@ -80,7 +80,7 @@ jobs:
         with:
           persist-credentials: false
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+      - uses: ruby/setup-ruby@bec3f19a76460dbe12f60def7d1a77585f07516c # v1.322.0
         with:
           ruby-version: "4.0"
       - name: Install nokogiri with system libraries
