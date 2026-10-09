@@ -27,7 +27,7 @@ jobs:
         with:
           persist-credentials: false
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@e8944e80fb94b20106697132f8c20c665fab29e9 # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.325.0
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.327.0
         with:
           ruby-version: "4.0"
           bundler-cache: true
@@ -65,7 +65,7 @@ jobs:
         with:
           persist-credentials: false
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@e8944e80fb94b20106697132f8c20c665fab29e9 # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.325.0
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # zizmor: ignore[cache-poisoning] -- cached gems are used for testing, not release artifact generation # v1.327.0
         with:
           ruby-version: ${{matrix.ruby}}
           bundler-cache: true
@@ -80,7 +80,7 @@ jobs:
         with:
           persist-credentials: false
       - run: rm Gemfile.lock
-      - uses: ruby/setup-ruby@e8944e80fb94b20106697132f8c20c665fab29e9 # v1.325.0
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
         with:
           ruby-version: "4.0"
       - name: Install nokogiri with system libraries
