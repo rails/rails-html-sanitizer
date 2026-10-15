@@ -431,6 +431,11 @@ module SanitizerTests
       assert_equal "<u>foo</u> with bar", safe_list_sanitize(text, tags: %w(u))
     end
 
+    def test_should_allow_symbol_and_uppercase_custom_tags
+      text = %(<u class="x">foo</u> with <i>bar</i>)
+      assert_equal %(<u class="x">foo</u> with bar), safe_list_sanitize(text, tags: [:u, :U], attributes: [:class, :CLASS])
+    end
+
     def test_should_allow_custom_tags_with_attributes
       text = %(<blockquote cite="http://example.com/">foo</blockquote>)
       assert_equal text, safe_list_sanitize(text)

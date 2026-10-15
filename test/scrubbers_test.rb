@@ -169,6 +169,23 @@ class PermitScrubberTest < ScrubberTest
     assert_equal "You should pass :attributes as an Enumerable", e.message
     assert_nil @scrubber.attributes, "Attributes should be nil when validation fails"
   end
+
+  def test_coerces_symbol_tags_and_attributes_to_lowercase_strings
+    @scrubber.tags = [:tag, :SPAN]
+    @scrubber.attributes = [:cooler, :ID]
+
+    assert_equal ["tag", "span"], @scrubber.tags
+    assert_equal ["cooler", "id"], @scrubber.attributes
+
+    html = '<tag cooler="hello"></tag><SPAN id="x">keep</SPAN><em drop="1">gone-tag</em>'
+    assert_scrubbed html, '<tag cooler="hello"></tag><span id="x">keep</span>gone-tag'
+  end
+
+  def test_coerces_uppercase_string_tags
+    @scrubber.tags = %w(TAG)
+    @scrubber.attributes = %w(COOLER)
+    assert_scrubbed '<tag cooler="hello"></tag>', '<tag cooler="hello"></tag>'
+  end
 end
 
 class TargetScrubberTest < ScrubberTest

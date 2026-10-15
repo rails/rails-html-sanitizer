@@ -139,20 +139,18 @@ module Rails
             raise ArgumentError, "You should pass :#{name} as an Enumerable"
           end
 
-          if var && name == :tags
-            if var.include?("mglyph")
-              warn("WARNING: 'mglyph' tags cannot be allowed by the PermitScrubber and will be scrubbed")
-              var.delete("mglyph")
-            end
+          return var unless var
 
-            if var.include?("malignmark")
-              warn("WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber and will be scrubbed")
-              var.delete("malignmark")
-            end
+          # Loofah/Nokogiri expose lowercase string names. Coerce so callers can
+          # pass symbols or mixed-case values without silently matching nothing.
+          var = var.map { |value| value.to_s.downcase }
 
-            if var.include?("noscript")
-              warn("WARNING: 'noscript' tags cannot be allowed by the PermitScrubber and will be scrubbed")
-              var.delete("noscript")
+          if name == :tags
+            %w(mglyph malignmark noscript).each do |forbidden|
+              if var.include?(forbidden)
+                warn("WARNING: '#{forbidden}' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+                var.delete(forbidden)
+              end
             end
           end
 
