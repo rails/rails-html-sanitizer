@@ -207,6 +207,24 @@ class TargetScrubberTest < ScrubberTest
     html = "<tag>leave me <span>now</span></tag>"
     assert_scrubbed html, "<tag>leave me </tag>"
   end
+
+  def test_targeting_mglyph
+    assert_silent { @scrubber.tags = %w(mglyph) }
+    assert_equal(%w(mglyph), @scrubber.tags)
+    assert_scrubbed "<div><mglyph>g</mglyph></div>", "<div>g</div>"
+  end
+
+  def test_targeting_malignmark
+    assert_silent { @scrubber.tags = %w(malignmark) }
+    assert_equal(%w(malignmark), @scrubber.tags)
+    assert_scrubbed "<div><malignmark>m</malignmark></div>", "<div>m</div>"
+  end
+
+  def test_targeting_noscript
+    assert_silent { @scrubber.tags = %w(noscript) }
+    assert_equal(%w(noscript), @scrubber.tags)
+    assert_scrubbed "<div><noscript><p>keep me</p></noscript></div>", "<div><p>keep me</p></div>"
+  end
 end
 
 class TextOnlyScrubberTest < ScrubberTest
