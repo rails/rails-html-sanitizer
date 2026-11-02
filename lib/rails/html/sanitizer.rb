@@ -154,7 +154,7 @@ module Rails
           end
 
           def initialize(prune: false)
-            @permit_scrubber = PermitScrubber.new(prune: prune)
+            @prune = prune
           end
 
           def scrub(fragment, options = {})
@@ -162,9 +162,10 @@ module Rails
               # No duck typing, Loofah ensures subclass of Loofah::Scrubber
               fragment.scrub!(scrubber)
             elsif allowed_tags(options) || allowed_attributes(options)
-              @permit_scrubber.tags = allowed_tags(options)
-              @permit_scrubber.attributes = allowed_attributes(options)
-              fragment.scrub!(@permit_scrubber)
+              permit_scrubber = PermitScrubber.new(prune: @prune)
+              permit_scrubber.tags = allowed_tags(options)
+              permit_scrubber.attributes = allowed_attributes(options)
+              fragment.scrub!(permit_scrubber)
             else
               fragment.scrub!(:strip)
             end

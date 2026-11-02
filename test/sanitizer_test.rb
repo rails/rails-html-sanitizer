@@ -949,6 +949,46 @@ module SanitizerTests
       assert_equal(expected, actual)
     end
 
+    def test_use_href_external_ref_after_a_local_ref_is_scrubbed
+      input = %(<svg><use href="#p\nhttp://bad.com/x"></use></svg>)
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_removal_does_not_skip_the_next_attribute
+      input = %(<svg><use href="http://bad.com/x" fill="url(http://bad.com/) #fff"></use></svg>)
+      expected = %(<svg><use fill="#fff"></use></svg>)
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href fill))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_unsafe_uri_is_scrubbed
+      input = %(<svg><use href="javascript:alert(1)"></use></svg>)
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_xlink_href_unsafe_uri_is_scrubbed
+      input = %(<svg><use xlink:href="javascript:alert(1)"></use></svg>)
+      expected = "<svg><use></use></svg>"
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href xlink:href))
+
+      assert_equal(expected, actual)
+    end
+
+    def test_use_href_unsafe_uri_removal_does_not_skip_the_next_attribute
+      input = %(<svg><use href="javascript:alert(1)" fill="url(http://bad.com/) #fff"></use></svg>)
+      expected = %(<svg><use fill="#fff"></use></svg>)
+      actual = safe_list_sanitize(input, tags: %w(svg use), attributes: %w(href fill))
+
+      assert_equal(expected, actual)
+    end
+
     def test_style_with_css_payload
       input, tags = "<style>div > span { background: \"red\"; }</style>", ["style"]
       actual = safe_list_sanitize(input, tags: tags)
@@ -1231,6 +1271,24 @@ module SanitizerTests
       ]
 
       assert_includes(acceptable_results, actual)
+    end
+
+    def test_reentrant_sanitize_call_does_not_share_scrubber_configuration
+      sanitizer = module_under_test::SafeListSanitizer.new
+      permissive_result = nil
+
+      strict_options = { tags: %w(div), attributes: [] }
+      strict_options.define_singleton_method(:[]) do |key|
+        if key == :attributes && permissive_result.nil?
+          permissive_result = sanitizer.sanitize("<script>alert(2)</script>", tags: %w(script), attributes: [])
+        end
+        super(key)
+      end
+
+      strict_result = sanitizer.sanitize("<div>x</div><script>alert(1)</script>", strict_options)
+
+      assert_equal("<script>alert(2)</script>", permissive_result)
+      assert_equal("<div>x</div>alert(1)", strict_result)
     end
 
     protected

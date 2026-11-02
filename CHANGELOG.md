@@ -1,3 +1,39 @@
+## next / unreleased
+
+* Deciding whether an SVG `href` or `xlink:href` is a local reference no longer takes quadratic time.
+
+  `PermitScrubber` matched the attribute value against a pattern that rescanned the value's
+  whitespace run from every line start, so an all-whitespace value took seconds to scrub. Only
+  Ruby 3.1 and earlier are affected, because Ruby 3.2 introduced linear-time regexp matching.
+  Through `PermitScrubber`, applications are only affected if the allowed tags are overridden to
+  include an SVG reference element such as `use`; the default configuration is not affected.
+
+  This change addresses GHSA-cpgf-5mjf-73p7. `PermitScrubber` now applies the html5lib attribute
+  value rules by calling `Loofah::HTML5::Scrub.scrub_attribute_value` rather than carrying its own
+  copy. The minimum Loofah dependency is now `~> 2.25, >= 2.25.3`.
+
+  *Mike Dalessio*
+
+* rails-html-sanitizer now requires Ruby >= 3.2, because Loofah 2.25.3 requires it.
+
+  The `1.6.x` and `1.5.x` release branches no longer receive security updates. Every Rails release
+  in security support accepts rails-html-sanitizer 1.7 and requires Ruby >= 3.2.
+
+  *Mike Dalessio*
+
+* `SafeListSanitizer` no longer shares a `PermitScrubber` across calls.
+
+  Previously one sanitizer instance reused a single `PermitScrubber`, assigning its `tags` and
+  `attributes` on every call. Action View memoizes one sanitizer per helper module, so two
+  concurrent `sanitize` calls with different `tags:` or `attributes:` options could interleave and
+  one call could be scrubbed with the other call's allowlist. Each call now builds its own
+  `PermitScrubber`.
+
+  This change addresses GHSA-h7wh-q2qr-458c.
+
+  *Mike Dalessio*
+
+
 ## v1.7.1 / 2026-07-15
 
 * SVG reference elements now restrict both `href` and `xlink:href` to local references.

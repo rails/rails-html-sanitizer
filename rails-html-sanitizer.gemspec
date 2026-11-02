@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/rails/rails-html-sanitizer"
   spec.license       = "MIT"
 
-  spec.required_ruby_version = ">= 2.7.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata = {
     "bug_tracker_uri"   => "https://github.com/rails/rails-html-sanitizer/issues",
@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["lib/**/*", "README.md", "MIT-LICENSE", "CHANGELOG.md"]
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "loofah", "~> 2.25", ">= 2.25.2"
+  spec.add_dependency "loofah", "~> 2.25", ">= 2.25.3"
 
   # A fix was shipped in nokogiri v1.15.7 and v1.16.8 without which there is a vulnerability in this gem.
   spec.add_dependency "nokogiri", [">=1.15.7",
