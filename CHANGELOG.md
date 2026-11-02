@@ -16,6 +16,9 @@
 
 * rails-html-sanitizer now requires Ruby >= 3.2, because Loofah 2.25.3 requires it.
 
+  The `1.6.x` and `1.5.x` release branches no longer receive security updates. Every Rails release
+  in security support accepts rails-html-sanitizer 1.7 and requires Ruby >= 3.2.
+
   *Mike Dalessio*
 
 * `SafeListSanitizer` no longer shares a `PermitScrubber` across calls.

@@ -234,8 +234,9 @@ Or install it yourself as:
 
 | branch | ruby support | actively maintained | security support                       |
 |--------|--------------|---------------------|----------------------------------------|
-| 1.6.x  | >= 2.7       | yes                 | yes                                    |
-| 1.5.x  | >= 2.5       | no                  | while Rails 6.1 is in security support |
+| 1.7.x  | >= 3.2       | yes                 | yes                                    |
+| 1.6.x  | >= 2.7       | no                  | no                                     |
+| 1.5.x  | >= 2.5       | no                  | no                                     |
 | 1.4.x  | >= 1.8.7     | no                  | no                                     |
 
 
