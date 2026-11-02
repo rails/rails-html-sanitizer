@@ -1,5 +1,8 @@
 ## next / unreleased
 
+
+## v1.7.2 / 2026-11-02
+
 * Deciding whether an SVG `href` or `xlink:href` is a local reference no longer takes quadratic time.
 
   `PermitScrubber` matched the attribute value against a pattern that rescanned the value's
