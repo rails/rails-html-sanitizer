@@ -14,6 +14,10 @@
 
   *Mike Dalessio*
 
+* rails-html-sanitizer now requires Ruby >= 3.2, because Loofah 2.25.3 requires it.
+
+  *Mike Dalessio*
+
 
 ## v1.7.1 / 2026-07-15
 
