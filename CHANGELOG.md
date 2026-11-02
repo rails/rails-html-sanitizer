@@ -1,3 +1,15 @@
+## next / unreleased
+
+* `TargetScrubber` removes `mglyph`, `malignmark` and `noscript` when they are listed in its `tags`.
+
+  Since v1.6.1, setting `tags` deleted those three names from the list with a warning, which is
+  correct for `PermitScrubber`'s allowlist. `TargetScrubber` inherited the deletion, but its `tags`
+  are a deny list, so a listed tag was kept instead of removed. `TargetScrubber` now leaves `tags`
+  as given and no longer prints the warning. Fixes #241.
+
+  *Mike Dalessio*
+
+
 ## v1.7.1 / 2026-07-15
 
 * SVG reference elements now restrict both `href` and `xlink:href` to local references.

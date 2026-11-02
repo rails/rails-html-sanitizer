@@ -139,24 +139,26 @@ module Rails
             raise ArgumentError, "You should pass :#{name} as an Enumerable"
           end
 
-          if var && name == :tags
-            if var.include?("mglyph")
-              warn("WARNING: 'mglyph' tags cannot be allowed by the PermitScrubber and will be scrubbed")
-              var.delete("mglyph")
-            end
-
-            if var.include?("malignmark")
-              warn("WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber and will be scrubbed")
-              var.delete("malignmark")
-            end
-
-            if var.include?("noscript")
-              warn("WARNING: 'noscript' tags cannot be allowed by the PermitScrubber and will be scrubbed")
-              var.delete("noscript")
-            end
-          end
+          validate_tags!(var) if var && name == :tags
 
           var
+        end
+
+        def validate_tags!(tags)
+          if tags.include?("mglyph")
+            warn("WARNING: 'mglyph' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+            tags.delete("mglyph")
+          end
+
+          if tags.include?("malignmark")
+            warn("WARNING: 'malignmark' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+            tags.delete("malignmark")
+          end
+
+          if tags.include?("noscript")
+            warn("WARNING: 'noscript' tags cannot be allowed by the PermitScrubber and will be scrubbed")
+            tags.delete("noscript")
+          end
         end
 
         def scrub_attribute(node, attr_node)
@@ -200,6 +202,11 @@ module Rails
       def scrub_attribute?(name)
         !super
       end
+
+      protected
+        def validate_tags!(tags)
+          # Removing a tag from a deny list would allow it, so keep every tag.
+        end
     end
 
     # === Rails::HTML::TextOnlyScrubber
